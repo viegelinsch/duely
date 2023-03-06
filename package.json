@@ -74,7 +74,7 @@
     "@angular/router": "^4.4.6",
     "@ngx-translate/core": "^7.0.0",
     "@ngx-translate/http-loader": "^0.1.0",
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^3.4.1",
     "compression": "^1.7.2",
     "core-js": "^2.5.3",
     "date-input-polyfill": "^2.14.0",
