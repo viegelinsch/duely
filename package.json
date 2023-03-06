@@ -83,7 +83,7 @@
     "file-saver": "^1.3.3",
     "ical-generator": "https://github.com/MKBraun/ical-generator",
     "intl": "^1.2.5",
-    "moment": "^2.21.0",
+    "moment": "^2.29.4",
     "moment-timezone": "^0.5.14",
     "ng2-datepicker": "https://github.com/schmop/ng2-datepicker/tarball/master",
     "ng2-slimscroll": "^2.0.1",
