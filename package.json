@@ -101,7 +101,7 @@
     "@types/node": "^6.0.80",
     "@types/zone.js": "0.0.27",
     "asar": "^0.14.3",
-    "autoprefixer": "^8.1.0",
+    "autoprefixer": "^10.4.13",
     "awesome-typescript-loader": "^3.2.1",
     "codelyzer": "~4.2.1",
     "concurrently": "^3.5.1",
