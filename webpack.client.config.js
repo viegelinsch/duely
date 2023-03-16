@@ -1,17 +1,17 @@
 const path = require('path');
 const ProgressPlugin = require('webpack/lib/ProgressPlugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const autoprefixer = require('autoprefixer');
 const postcssUrl = require('postcss-url');
 
 const { NoEmitOnErrorsPlugin, LoaderOptionsPlugin } = require('webpack');
-const { BaseHrefWebpackPlugin } = require('@angular/cli/plugins/webpack');
-const { CommonsChunkPlugin } = require('webpack').optimize;
-const { AotPlugin } = require('@ngtools/webpack');
+//TODO const { BaseHrefWebpackPlugin } = require('@angular/cli/plugins/webpack');
+//TODO const { CommonsChunkPlugin } = require('webpack').optimize;
+//TODO const { AotPlugin } = require('@ngtools/webpack');
 
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin');
+const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
 
 const nodeModules = path.join(process.cwd(), 'node_modules');
 const entryPoints = ["inline","polyfills","sw-register","styles","vendor","main"];
@@ -126,29 +126,18 @@ module.exports = function(isElectron) {
             path.join(__dirname, "client/styles.scss")
           ],
           "test": /\.css$/,
-          "loaders": ExtractTextPlugin.extract({
-            "use": [
-              "css-loader?{\"sourceMap\":false,\"importLoaders\":1}",
-              "postcss-loader"
-            ],
-            "fallback": "style-loader",
-            "publicPath": ""
-          })
+          "use": [MiniCssExtractPlugin.loader, "css-loader"],
+          "fallback": "style-loader",
+          "publicPath": ""
         },
         {
           "include": [
             path.join(__dirname, "client/styles.scss")
           ],
           "test": /\.scss$|\.sass$/,
-          "loaders": ExtractTextPlugin.extract({
-          "use": [
-            "css-loader?{\"sourceMap\":false,\"importLoaders\":1}",
-            "postcss-loader",
-            "sass-loader"
-          ],
+          "use": [MiniCssExtractPlugin.loader, "css-loader"],
           "fallback": "style-loader",
           "publicPath": ""
-        })
         },
         {
           "test": /\.ts$/,
@@ -158,16 +147,11 @@ module.exports = function(isElectron) {
     },
     "plugins": [
       new NoEmitOnErrorsPlugin(),
-      new CopyWebpackPlugin([
-        {
-          from: 'client/assets',
-          to: 'assets'
-        },
-        {
-          from: 'client/favicon.ico',
-          to: 'favicon.ico'
-        }
-      ]),
+      new CopyWebpackPlugin({
+        patterns: [
+          {from: 'client/assets', to: 'assets'},
+          {from: 'client/favicon.ico', to: 'favicon.ico'},
+      ]}),
       new ProgressPlugin(),
       new HtmlWebpackPlugin({
         "template": "./client/index.html",
@@ -189,21 +173,23 @@ module.exports = function(isElectron) {
           return leftIndex > rightindex ? 1 : leftIndex < rightindex ? -1 : 0;
         }
       }),
-      new BaseHrefWebpackPlugin({}),
+      /**TODO new BaseHrefWebpackPlugin({}),
       new CommonsChunkPlugin({
         "name": "inline",
         "minChunks": null
       }),
-      new CommonsChunkPlugin({
+      **/
+      /** TODO new CommonsChunkPlugin({
         "name": "vendor",
         "minChunks": (module) => module.resource && module.resource.startsWith(nodeModules),
         "chunks": [
           "main"
         ]
       }),
-      new ExtractTextPlugin({
-        "filename": "[name].bundle.css",
-        "disable": true
+      **/
+      new MiniCssExtractPlugin({
+        filename: "[name].bundle.css",
+        chunkFilename: "[id].css"
       }),
       new LoaderOptionsPlugin({
         "sourceMap": false,
@@ -237,10 +223,11 @@ module.exports = function(isElectron) {
           },
           "lessLoader": {
             "sourceMap": false
-          },
-          "context": ""
+          }/** ,
+          "context": "" */
         }
       }),
+      /** TODO
       new AotPlugin({
         "mainPath": "main.ts",
         "exclude": [],
@@ -250,14 +237,14 @@ module.exports = function(isElectron) {
           "environments/environment.ts": environmentPath
         },
       }),
-      new SWPrecacheWebpackPlugin({
+      */
+      new WorkboxWebpackPlugin.GenerateSW({
        cacheId: 'duely',
-       filename: 'service-worker.js',
-       minify: isProduction,
+       swDest: 'service-worker.js',
        navigateFallback: '/index.html',
        runtimeCaching: [{
          urlPattern: /\/vendor\.bundle\.js/,
-         handler: 'fastest'
+         handler: 'StaleWhileRevalidate'
        }]
      })
     ],

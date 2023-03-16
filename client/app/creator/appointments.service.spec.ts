@@ -1,4 +1,5 @@
-import * as moment from 'moment-timezone';
+//he TODO remove
+//import * as moment from 'moment-timezone';
 import { TestBed, inject } from '@angular/core/testing';
 import * as ICalGenerator from 'ical-generator';
 import { Appointment } from './appointment';
@@ -20,23 +21,23 @@ describe('AppointmentsService', () => {
     const appointments = [
     {
       'summary': '1',
-      'location': 'TU Braunschweig',
-      'start': new Date('2017-07-13T06:00:00.000Z'),
-      'end': new Date('2017-07-13T16:00:58.220Z'),
+      'location': 'Braunschweig',
+      'start': new Date('2023-07-13T06:00:00.000Z'),
+      'end': new Date('2023-07-13T16:00:58.220Z'),
       'alarms': []
     },
     {
       'summary': '2',
-      'location': 'TU Braunschweig',
-      'start': new Date('2017-07-13T06:00:00.000Z'),
-      'end': new Date('2017-07-13T16:00:58.220Z'),
+      'location': 'Braunschweig',
+      'start': new Date('2023-07-13T06:00:00.000Z'),
+      'end': new Date('2023-07-13T16:00:58.220Z'),
       'alarms': []
     },
     {
       'summary': '3',
-      'location': 'TU Braunschweig',
-      'start': new Date('2017-07-13T06:00:00.000Z'),
-      'end': new Date('2017-07-13T16:00:58.220Z'),
+      'location': 'Braunschweig',
+      'start': new Date('2023-07-13T06:00:00.000Z'),
+      'end': new Date('2023-07-13T16:00:58.220Z'),
       'alarms': []
     }];
     service.addAppointment(appointments[0]);
@@ -49,23 +50,23 @@ describe('AppointmentsService', () => {
     const appointments = [
     {
       'summary': '1',
-      'location': 'TU Braunschweig',
-      'start': new Date('2017-07-13T06:00:00.000Z'),
-      'end': new Date('2017-07-13T16:00:58.220Z'),
+      'location': 'Braunschweig',
+      'start': new Date('2023-07-13T06:00:00.000Z'),
+      'end': new Date('2023-07-13T16:00:58.220Z'),
       'alarms': []
     },
     {
       'summary': '2',
-      'location': 'TU Braunschweig',
-      'start': new Date('2017-07-13T06:00:00.000Z'),
-      'end': new Date('2017-07-13T16:00:58.220Z'),
+      'location': 'Braunschweig',
+      'start': new Date('2023-07-13T06:00:00.000Z'),
+      'end': new Date('2023-07-13T16:00:58.220Z'),
       'alarms': []
     },
     {
       'summary': '3',
-      'location': 'TU Braunschweig',
-      'start': new Date('2017-07-13T06:00:00.000Z'),
-      'end': new Date('2017-07-13T16:00:58.220Z'),
+      'location': 'Braunschweig',
+      'start': new Date('2023-07-13T06:00:00.000Z'),
+      'end': new Date('2023-07-13T16:00:58.220Z'),
       'alarms': []
     }];
     for (let i = 0; i < appointments.length; i++) {
@@ -84,8 +85,8 @@ describe('AppointmentsService', () => {
     const appointment = {
       'summary': 'SEP - TDSE',
       'location': 'TU Braunschweig',
-      'start': new Date('2017-07-13T06:00:00.000Z'),
-      'end': new Date('2017-07-13T16:00:58.220Z'),
+      'start': new Date('2023-07-13T06:00:00.000Z'),
+      'end': new Date('2023-07-13T16:00:58.220Z'),
       'allDay': true,
       'recurringSettings': {
         'frequency': freq,
@@ -101,21 +102,21 @@ describe('AppointmentsService', () => {
         'repByMonthly': repByMonthly,
         'repByYearly': repByYearly,
         'count': 1,
-        'untilDate': new Date('2017-07-13T16:00:58.220Z'),
+        'untilDate': new Date('2023-07-13T16:00:58.220Z'),
         'exclusions': []
       },
       'alarms': []
     };
     const calendar = ICalGenerator({
-      domain: 'duely.tu-braunschweig.de',
+      domain: 'duely.tu-braunschweig.de', //TODO
       name: 'Duely',
-      prodId: '//TU Braunschweig//Duely//EN',
-      url: 'https://duely.tu-braunschweig.de',
+      prodId: '//TU Braunschweig//Duely//EN',//TODO
+      url: 'https://duely.tu-braunschweig.de',//TODO
       timezone: 'Europe/Berlin' // or what's configured in the settings
     });
     calendar.createEvent({
-      start: new Date('2017-07-13T06:00:00.000Z'),
-      end: new Date('2017-07-13T16:00:58.220Z'),
+      start: new Date('2023-07-13T06:00:00.000Z'),
+      end: new Date('2023-07-13T16:00:58.220Z'),
       stamp: new Date(),
       summary: 'SEP - TDSE',
       location: 'TU Braunschweig',
@@ -126,8 +127,8 @@ describe('AppointmentsService', () => {
     spyOn(service, 'addEventToCalendar');
     expect(service.getICalString()).toContain('BEGIN:VCALENDAR');
     expect(service.getICalString()).toContain('VERSION:2.0');
-    expect(service.getICalString()).toContain('PRODID:-//TU Braunschweig//Duely//EN');
-    expect(service.getICalString()).toContain('URL:https://duely.tu-braunschweig.de');
+    expect(service.getICalString()).toContain('PRODID:-//TU Braunschweig//Duely//EN');//TODO
+    expect(service.getICalString()).toContain('URL:https://duely.tu-braunschweig.de');//TODO
     expect(service.getICalString()).toContain('NAME:Duely');
     expect(service.getICalString()).toContain('X-WR-CALNAME:Duely');
     expect(service.getICalString()).toContain('TIMEZONE-ID:Europe/Berlin');
@@ -137,7 +138,7 @@ describe('AppointmentsService', () => {
     expect(service.getICalString()).toContain('DTSTART:20170713T060000Z');
     expect(service.getICalString()).toContain('DTEND:20170713T160058Z');
     expect(service.getICalString()).toContain('SUMMARY:SEP - TDSE');
-    expect(service.getICalString()).toContain('LOCATION:TU Braunschweig');
+    expect(service.getICalString()).toContain('LOCATION:Braunschweig');
     expect(service.getICalString()).toContain('END:VEVENT');
     expect(service.getICalString()).toContain('END:VCALENDAR');
   }));

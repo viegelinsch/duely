@@ -1,8 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { LegalComponent } from './legal.component';
-import { Http, BaseRequestOptions } from '@angular/http';
-import { MockBackend, MockConnection } from '@angular/http/testing';
+import { Http, BaseRequestOptions } from '@angular/common/http';
+import { MockBackend, MockConnection } from '@angular/common/http/testing';
 
 
 describe('LegalComponent', () => {

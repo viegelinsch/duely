@@ -62,10 +62,10 @@ export class AppointmentsService {
  */
   private initializeCalendar(): ICalGenerator.ICalCalendar {
     const calendar = ICalGenerator({
-      domain: 'duely.tu-braunschweig.de',
+      domain: 'duely.tu-braunschweig.de',//TODO
       name: 'Duely',
-      prodId: '//TU Braunschweig//Duely//EN',
-      url: 'https://duely.tu-braunschweig.de',
+      prodId: '//TU Braunschweig//Duely//EN',//TODO
+      url: 'https://duely.tu-braunschweig.de',//TODO
       timezone: this.StorageService.settings.timeZone === 'floating' ? undefined : this.StorageService.settings.timeZone
     });
     return calendar;
@@ -387,7 +387,7 @@ export class AppointmentsService {
 
     } else if (event.recurringSettings.frequency === 'YEARLY') {
 
-      // add multiple eventss to calendar which repeat every x-th weekday day of a year (Every second friday of the year)
+      // add multiple events to calendar which repeat every x-th weekday day of a year (eg. every second friday of the year)
       if (event.recurringSettings.repByYearly === 'WEEKYEAR') {
         const count = (start.getDate() - (start.getDate() % 7)) / 7 + 1;
         const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as day[];

@@ -1,15 +1,15 @@
 {
   "name": "duely",
   "productName": "Duely",
-  "version": "0.2.0",
+  "version": "1.0.1",
   "license": "MPL v2.0",
   "private": true,
   "bugs": {
-    "url": "https://sep.isf.cs.tu-bs.de/redmine/projects/17-cio_1/issues"
+    "url": "https://github.com/tubraunschweig/duely/issues"
   },
   "repository": {
-    "type": "svn",
-    "url": "https://sep.isf.cs.tu-bs.de/svn/17-cio_1/"
+    "type": "git",
+    "url": "https://github.com/tubraunschweig/duely/"
   },
   "author": "Duely Developer Team",
   "contributors": [
@@ -27,31 +27,29 @@
     "scheduler"
   ],
   "dependencies": {
-    "@angular/common": "^4.0.0",
-    "@angular/compiler": "^4.0.0",
-    "@angular/core": "^4.0.0",
-    "@angular/forms": "^4.0.0",
-    "@angular/http": "^4.0.0",
-    "@angular/platform-browser": "^4.0.0",
-    "@angular/platform-browser-dynamic": "^4.0.0",
-    "@angular/router": "^4.0.0",
-    "bootstrap": "^3.3.7",
-    "core-js": "^2.4.1",
-    "express": "^4.15.2",
-    "file-saver": "^1.3.3",
-    "ical-generator": "^0.2.9",
+    "@angular/common": "^15.2.1",
+    "@angular/compiler": "^15.2.1",
+    "@angular/core": "^15.2.1",
+    "@angular/forms": "^15.2.1",
+    "@angular/platform-browser": "^15.2.1",
+    "@angular/platform-browser-dynamic": "^15.2.1",
+    "@angular/router": "^15.2.1",
+    "bootstrap": "^5.2.3",
+    "core-js": "^3.29.0",
+    "express": "^4.18.2",
+    "file-saver": "^2.0.5",
+    "ical-generator": "^3.6.1",
     "intl": "^1.2.5",
-    "moment": "^2.18.1",
-    "moment-timezone": "^0.5.13",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.41",
     "ng-bootstrap": "^1.6.3",
-    "rxjs": "^5.1.0",
-    "zone.js": "^0.8.4"
-  },
+    "rxjs": "^7.8.0",
+    "zone.js": "^0.13.0"},
   "devDependencies": {
-    "electron": "^1.7.2"
+    "electron": "^23.1.3"
   },
   "engines": {
-    "node": ">= 7.4.0"
+    "node": ">= 19.7.0"
   },
   "build": {
     "appId": "de.tu-braunschweig.ical",
