@@ -1,4 +1,4 @@
-import * as ICalGenerator from 'ical-generator';
+import ical from 'ical-generator';
 import * as Holidays from 'date-holidays';
 import moment from 'moment';
 import { RecurrencePattern } from './RecurrencePattern';
@@ -16,7 +16,7 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
      * @param eventData     The data of the event.
      * @param date          The date to check.
      */
-    public isMatch(eventData: ICalGenerator.EventData, date: Date): {match: boolean, break: boolean} {
+    public isMatch(eventData: any, date: Date): {match: boolean, break: boolean} {
         if (eventData.repeating.byMonthDay !== undefined) {
             if (eventData.repeating.byMonthDay[0] === -1) {
 
@@ -38,7 +38,7 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
      * @param eventData     The data of the event.
      * @param date          The date to check.
      */
-    private lastDayOfMonth(eventData: ICalGenerator.EventData, date: Date): {match: boolean, break: boolean} {
+    private lastDayOfMonth(eventData: any, date: Date): {match: boolean, break: boolean} {
         if (+moment(date).endOf('month').toDate().setHours( 0, 0, 0, 0) === +moment(date).toDate().setHours( 0, 0, 0, 0)) {
             return this.isMatchOfInterval(eventData, date);
         }
@@ -49,7 +49,7 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
   /** Check which number the a given day has in a week  
     * @return true, true if the intervall is right
     */
-    private byDay(eventData: ICalGenerator.EventData, date: Date): {match: boolean, break: boolean} {
+    private byDay(eventData: any, date: Date): {match: boolean, break: boolean} {
         const byDayString: string = eventData.repeating.byDay[0].toString();
         const dayPart: string = byDayString.slice(-2);
         const index: number = byDayString.length - 2;
@@ -84,7 +84,7 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
 /** Check  a given last day of the Month of it number from the last day on
     * @return true, true if the intervall is right
     */
-    private bySetPos(eventData: ICalGenerator.EventData, date: Date): {match: boolean, break: boolean} {
+    private bySetPos(eventData: any, date: Date): {match: boolean, break: boolean} {
 
         if (this.isIn(eventData.repeating.byDay, date) === true) {
             let counter = 0;
@@ -123,7 +123,7 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
   /** Check if a given date intervall is the event date intervall
     * @return true, true if the intervall is right
     */
-    private monthly(eventData: ICalGenerator.EventData, date: Date): {match: boolean, break: boolean} {
+    private monthly(eventData: any, date: Date): {match: boolean, break: boolean} {
         if (moment(date).date() === moment(eventData.start).date()) {
 
             return this.isMatchOfInterval(eventData, date);
@@ -138,7 +138,7 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
     * @return false, false
     * @return false , true
     */
-    private isMatchOfInterval(eventData: ICalGenerator.EventData, date: Date): {match: boolean, break: boolean} {
+    private isMatchOfInterval(eventData: any, date: Date): {match: boolean, break: boolean} {
         const diff = this.monthsBetween(eventData.start, date);
 
         if (diff % eventData.repeating.interval === 0) {

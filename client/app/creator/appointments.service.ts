@@ -10,7 +10,7 @@ import { APPOINTMENTS } from './mock-appointments';
 import { StorageService } from '../storage/storage.service';
 import { CollisionDetector, Collision } from '../DatesAndCollisions/CollisionDetector';
 
-import * as ICalGenerator from 'ical-generator';
+import ical from 'ical-generator';
 import { day } from 'ical-generator';
 import { Appointment } from './appointment';
 import { AlarmData } from './alarmData';
@@ -60,8 +60,8 @@ export class AppointmentsService {
 /**
  * initializes the data for the output of the data
  */
-  private initializeCalendar(): ICalGenerator.ICalCalendar {
-    const calendar = ICalGenerator({
+  private initializeCalendar(): any {
+    const calendar = ical({
       domain: 'duely.tu-braunschweig.de',
       name: 'Duely',
       prodId: '//TU Braunschweig//Duely//EN',
@@ -134,11 +134,11 @@ export class AppointmentsService {
 /**
  * gets the data from the events , returns an ICal-String
  */
-  public addEventToCalendar(calendar: ICalGenerator.ICalCalendar, event: Appointment): void {
+  public addEventToCalendar(calendar: any, event: Appointment): void {
     const start = new Date(event.start);
     const end = new Date(event.end);
 
-    const events: ICalGenerator.ICalEvent[] = [];
+    const events: any[] = [];
 
     // add eventss to calendar
     if (event.recurringSettings.frequency === 'NEVER') {
@@ -561,8 +561,8 @@ export class AppointmentsService {
     this.collisions = [];
     // write collisions to excluded dates
     for (const ev of events) {
-      const repData: ICalGenerator.RepeatingData = ev.repeating();
-      const iCalEventData: ICalGenerator.EventData = ev.toJSON();
+      const repData: any = ev.repeating();
+      const iCalEventData: any = ev.toJSON();
 
       if (iCalEventData.repeating !== undefined) {
         const collisionDetector = new CollisionDetector(holidayCountries, exclusionDates, this.StorageService.settings.language);

@@ -1,4 +1,4 @@
-import * as ICalGenerator from 'ical-generator';
+import ical from 'ical-generator';
 import * as Holidays from 'date-holidays';
 import moment from 'moment';
 import { RecurrencePattern } from './RecurrencePattern';
@@ -9,7 +9,7 @@ import { RecurrencePattern } from './RecurrencePattern';
  */
 export class WeeklyRecurrencePattern extends RecurrencePattern {
 
-    public isMatch(eventData: ICalGenerator.EventData, date: Date): {match: boolean, break: boolean} {
+    public isMatch(eventData: any, date: Date): {match: boolean, break: boolean} {
         const weekdays: string[] = eventData.repeating.byDay;
 
         if (this.isIn(eventData.repeating.byDay, date) === true) {

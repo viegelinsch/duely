@@ -1,6 +1,6 @@
 import moment from 'moment-timezone';
 import { TestBed, inject } from '@angular/core/testing';
-import * as ICalGenerator from 'ical-generator';
+import ical from 'ical-generator';
 import { Appointment } from './appointment';
 import { AppointmentsService } from './appointments.service';
 import { StorageService } from '../storage/storage.service';

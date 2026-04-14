@@ -1,4 +1,4 @@
-import * as ICalGenerator from 'ical-generator';
+import ical from 'ical-generator';
 import * as Holidays from 'date-holidays';
 import { CollisionDetector, Collision} from '../DatesAndCollisions/CollisionDetector';
 import moment from 'moment';
@@ -6,7 +6,7 @@ import moment from 'moment';
 describe('CollisionDetector', () => {
 let cd: CollisionDetector;
 let collisions: Collision[];
-let eventData: ICalGenerator.EventData;
+let eventData: any;
 
 beforeEach(() => {
     eventData = {
@@ -18,7 +18,7 @@ beforeEach(() => {
         allDay: false
     };
 
-    let repeatingData: ICalGenerator.RepeatingData = {
+    let repeatingData: any = {
         freq: 'DAILY',
         interval: 1,
         until: new Date('2017-12-31')

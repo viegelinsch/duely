@@ -1,4 +1,4 @@
-import * as ICalGenerator from 'ical-generator';
+import ical from 'ical-generator';
 import * as Holidays from 'date-holidays';
 import moment from 'moment-timezone';
 import { Collision } from '../CollisionDetector';
@@ -23,8 +23,8 @@ export abstract class RecurrencePattern {
       * @param date, eventData A date , Event Data.
       * @return      collision dates.
       */
-    public abstract isMatch(eventData: ICalGenerator.EventData, date: Date): {match: boolean, break: boolean};
-    public getCollisions(eventData: ICalGenerator.EventData): Collision[] {
+    public abstract isMatch(eventData: any, date: Date): {match: boolean, break: boolean};
+    public getCollisions(eventData: any): Collision[] {
         const collisions: Collision[] = [];
 
         // check public holidays
