@@ -178,7 +178,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
 
   /** get the data, checks the validaton of the reccuringsettings */
   public endValidation(data: any) {
-    this.appointment.valid[1] = this.recurringForm.valid;
+    this.appointment!.valid![1] = this.recurringForm.valid;
   }
 
   /** gets event data, checks the end date. Checks if it is not
@@ -192,10 +192,10 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
         month: event.month - 1,
         date: event.day
       });
-      if (date.toDate().valueOf() >= this.appointment.end.valueOf()) {
+      if (date.toDate().valueOf() >= this.appointment.end!.valueOf()) {
         this.recurringSettings.untilDate = date.toDate();
       } else {
-        const end: moment = new moment(this.appointment.end);
+        const end: moment = new moment(this.appointment.end!);
         this.enddate = new DateModel({day: (end.date() + 1) + '', month: (end.month() + 1) + '', year: end.year() + '',
           formatted: end.format('YYYY-MM-DD'), momentObj: new moment(end)});
       }
@@ -205,11 +205,11 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** Checks if there is an object recurringSetttings in the array, if not, adds it. */
   ngOnChanges(): void {
     if (this.appointment.hasOwnProperty('recurringSettings')) {
-      if (!this.appointment.recurringSettings.hasOwnProperty('exclusions')) {
-        this.appointment.recurringSettings.exclusions = [];
+      if (!this.appointment.recurringSettings!.hasOwnProperty('exclusions')) {
+        this.appointment.recurringSettings!.exclusions = [];
       }
 
-      this.exclusions = this.appointment.recurringSettings.exclusions;
+      this.exclusions = this.appointment.recurringSettings!.exclusions;
       this.setExclusions(this.exclusions);
     }
   }
@@ -269,11 +269,11 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
     if (this.states[i] !== undefined) {
       this.statesVisible[i] = true;
       this.regionsVisible[i] = false;
-      this.appointment.recurringSettings.exclusions[i].holiday_states = this.states[i][0][0];
+      this.appointment.recurringSettings!.exclusions![i].holiday_states = this.states[i][0][0];
     } else {
       this.statesVisible[i] = false;
       this.regionsVisible[i] = false;
-      this.appointment.recurringSettings.exclusions[i].holiday_states = '';
+      this.appointment.recurringSettings!.exclusions![i].holiday_states = '';
     }
     this.showRegions(i);
   }
@@ -290,10 +290,10 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
     if (this.regions[i] !== undefined) {
       this.statesVisible[i] = true;
       this.regionsVisible[i] = true;
-      this.appointment.recurringSettings.exclusions[i].holiday_regions = this.regions[i][0][0];
+      this.appointment.recurringSettings!.exclusions![i].holiday_regions = this.regions[i][0][0];
     } else {
       this.regionsVisible[i] = false;
-      this.appointment.recurringSettings.exclusions[i].holiday_regions = '';
+      this.appointment.recurringSettings!.exclusions![i].holiday_regions = '';
     }
   }
 

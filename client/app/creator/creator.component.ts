@@ -55,7 +55,7 @@ export class CreatorComponent implements OnInit {
   generateAndSaveICAL() {
     // check for validity of inputs
     for (const appointment of this.appointmentsService.events) {
-      for (const valid of appointment.valid) {
+      for (const valid of appointment.valid!) {
         if (!valid) {
           alert(this.translate.instant('INVALID INPUTS'));
           return;
