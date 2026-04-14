@@ -11,7 +11,7 @@ import { Appointment } from '../../appointment';
 import { Exclusion } from '../../exclusion';
 import { RecurringSettings } from '../../recurring-settings';
 import { Subscription } from 'rxjs';
-import { BsDatepickerConfig, BsLocaleService } from 'ngx-bootstrap/datepicker';
+import { BsDatepickerConfig, BsLocaleService, DateModel } from 'ngx-bootstrap/datepicker';
 import { StorageService } from '../../../storage/storage.service';
 import Holidays from 'date-holidays';
 import { TranslateService } from '@ngx-translate/core';

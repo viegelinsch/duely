@@ -108,7 +108,7 @@ describe('AppointmentsService', () => {
             },
             'alarms': []
         };
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -145,7 +145,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a simple event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -209,7 +209,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (daily, never ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -276,7 +276,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (daily, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -345,7 +345,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (daily, until ) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -414,7 +414,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (weekly-thursday, interval: 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -483,7 +483,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (monthly, every 2. wednesday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -554,7 +554,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (monthly, every last, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -625,7 +625,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (monthly, every 3. last wednesday, interval 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -694,7 +694,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (monthly, every 3. last wednesday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -765,7 +765,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (yearly, every first friday of january, interval 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -836,7 +836,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (yearly, every first wednesday of january, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -909,7 +909,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (yearly, every second last friday, interval 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -980,7 +980,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (yearly, every last friday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -1053,7 +1053,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (yearly, last day of december, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -1128,7 +1128,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (yearly, 2. last workday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -1203,7 +1203,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (yearly, 2. workday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -1278,7 +1278,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (monthly, 2. workday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',
@@ -1351,7 +1351,7 @@ describe('AppointmentsService', () => {
     }));
 
     it('should add a recurring (monthly, 2. weekend day, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
-        const calendar = ICalGenerator({
+        const calendar = ical({
             domain: 'duely.tu-braunschweig.de',
             name: 'Duely',
             prodId: '//TU Braunschweig//Duely//EN',

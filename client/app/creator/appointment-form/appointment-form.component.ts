@@ -10,7 +10,7 @@ import { Component, Input, OnChanges, ViewChild, AfterViewInit, OnInit, OnDestro
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RecurringSettingsComponent } from './recurring-settings/recurring-settings.component';
 import { Subscription } from 'rxjs';
-import { BsDatepickerConfig, BsLocaleService } from 'ngx-bootstrap/datepicker';
+import { BsDatepickerConfig, BsLocaleService, DateModel, DatePickerTexts } from 'ngx-bootstrap/datepicker';
 import { StorageService } from '../../storage/storage.service';
 import { Appointment } from '../appointment';
 import { TranslateService } from '@ngx-translate/core';
