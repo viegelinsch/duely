@@ -6,7 +6,7 @@
     "target": "ES2022",
     "baseUrl": "",
     "types": [
-      "jasmine"
+      "vitest/globals"
     ]
   },
   "include": [

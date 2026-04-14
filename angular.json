@@ -85,15 +85,9 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
+            "buildTarget": "duely:build:development",
             "tsConfig": "client/tsconfig.spec.json",
-            "assets": [
-              "client/favicon.ico",
-              "client/assets"
-            ],
-            "styles": [
-              "client/styles.scss"
-            ],
-            "scripts": []
+            "runner": "vitest"
           }
         }
       }
@@ -124,5 +118,8 @@
     "@schematics/angular:resolver": {
       "typeSeparator": "."
     }
+  },
+  "cli": {
+    "analytics": "2048b9eb-51c7-454c-8771-b5ec3ba11db0"
   }
 }
