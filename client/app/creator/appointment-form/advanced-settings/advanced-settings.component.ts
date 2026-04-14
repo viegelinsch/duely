@@ -23,16 +23,16 @@ import { Appointment } from '../../appointment';
 })
 
 export class AdvancedSettingsComponent implements OnInit, OnChanges {
-  @Input() appointment: Appointment;
+  @Input() appointment!: Appointment;
 
   private hideSettings = true;
   private timeZoneNames: string[];
-  status: string;
-  timezone: string;
+  status!: string;
+  timezone!: string;
   private subscription: Subscription = new Subscription();
 
 
-  advancedForm: FormGroup;
+  advancedForm!: FormGroup;
   /** constructs a AdvancedSettingsComponent */
   constructor(private fb: FormBuilder, private storage: StorageService, private translate: TranslateService) {
     this.timeZoneNames = moment.tz.names();

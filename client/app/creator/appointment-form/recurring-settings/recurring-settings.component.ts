@@ -11,7 +11,7 @@ import { Appointment } from '../../appointment';
 import { Exclusion } from '../../exclusion';
 import { RecurringSettings } from '../../recurring-settings';
 import { Subscription } from 'rxjs';
-import { BsDatepickerConfig, BsLocaleService, DateModel } from 'ngx-bootstrap/datepicker';
+import { BsDatepickerConfig, BsLocaleService, DateModel, DatePickerTexts } from 'ngx-bootstrap/datepicker';
 import { StorageService } from '../../../storage/storage.service';
 import Holidays from 'date-holidays';
 import { TranslateService } from '@ngx-translate/core';
@@ -28,23 +28,23 @@ import { CollisionDetector } from '../../../DatesAndCollisions/CollisionDetector
   styleUrls: ['./recurring-settings.component.scss']
 })
 export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewChecked, OnChanges, OnDestroy {
-  @Input() appointment: Appointment;
-  public recurringSettings: RecurringSettings;
-  public exclusions: Exclusion[];
+  @Input() appointment!: Appointment;
+  public recurringSettings!: RecurringSettings;
+  public exclusions!: Exclusion[];
   public hideSettings = true;
-  public month: String;
+  public month!: String;
   /** the text displayed in repeats by section if monthly is selected a repeat interval (e.g. Every 23. last) */
-  public monthInv: String;
+  public monthInv!: String;
   /** the text displayed in repeats by section if monthly is selected a repeat interval (e.g. Every second tuesday) */
-  public week: String;
+  public week!: String;
   /** the text displayed in repeats by section if monthly is selected a repeat interval (e.g. Every second last tuesday) */
-  public weekInv: String;
+  public weekInv!: String;
   /** the text displayed in repeats by section if yearly is selected a repeat interval (e.g. Every 23.3.) */
-  public dayMonthYear: String;
+  public dayMonthYear!: String;
   /** the text displayed in repeats by section if yearly is selected a repeat interval (e.g. Every 25. tuesday) */
-  public weekYear: String;
+  public weekYear!: String;
   /** the text displayed in repeats by section if yearly is selected a repeat interval (e.g. Every 25. last tuesday) */
-  public weekInvYear: String;
+  public weekInvYear!: String;
   /** Contains the Holiday instance of 'date-holidays' framework */
   public hd: any;
   /** Contains strings of all countries provided by date-holidays */
@@ -58,19 +58,20 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** Determines wether the Selectbox 'Regions' of given appointment is visible or not */
   public regionsVisible: boolean[];
   /** Cities (for time zone settings) */
-  public cities: string[];
+  public cities!: string[];
   /** the date format used in the date forms */
   public datePattern = /\d{4}-\d{2}-\d{2}/;
-  public work: String;
-  public workInv: String;
-  public dayMonthYearInv: String;
-  public workInvYear: String;
-  public workYear: String;
+  public work!: String;
+  public workInv!: String;
+  public dayMonthYearInv!: String;
+  public workInvYear!: String;
+  public workYear!: String;
 
   bsConfig?: Partial<BsDatepickerConfig>;
-  enddate: Date | null;
+  datepickerTexts!: DatePickerTexts;
+  enddate!: Date | null;
 
-  recurringForm: FormGroup;
+  recurringForm!: FormGroup;
   private subscription: Subscription[] = [];
   /** constructs an appointment form filled with standart values  */
   constructor(

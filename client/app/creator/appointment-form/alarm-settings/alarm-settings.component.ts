@@ -23,10 +23,10 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./alarm-settings.component.scss']
 })
 export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
-  @Input() appointment: Appointment;
-  alarms: AlarmData[];
+  @Input() appointment!: Appointment;
+  alarms!: AlarmData[];
   /** used to get data from html formular */
-  alarmsForm: FormGroup;
+  alarmsForm!: FormGroup;
   private subscription: Subscription[] = [];
 
   /** constructs a AdvancedSettingsComponent */

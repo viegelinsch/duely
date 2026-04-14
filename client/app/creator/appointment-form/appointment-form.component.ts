@@ -24,14 +24,14 @@ import { AppointmentsService } from '../appointments.service';
   styleUrls: ['./appointment-form.component.scss']
 })
 export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
-  @Input() appointment: Appointment;
-  @ViewChild(RecurringSettingsComponent) recurring: RecurringSettingsComponent;
+  @Input() appointment!: Appointment;
+  @ViewChild(RecurringSettingsComponent) recurring!: RecurringSettingsComponent;
   /** says whether the infos in the recurring form are visible or not */
   // public recurringVisible = false;
   /** says whether the infos in the other infos form are visible or not */
   // public otherInfoVisible = false;
   /** used to get data from html formular */
-  appointmentForm: FormGroup;
+  appointmentForm!: FormGroup;
   /** the date format used in the date forms */
   public datePattern = /\d{4}-\d{2}-\d{2}/;
   /** the time format used in the time forms */
@@ -41,8 +41,8 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   private alarmValid = false;
   private recurringValid = false;
   bsConfig?: Partial<BsDatepickerConfig>;
-  startdate: Date | null;
-  enddate: Date | null;
+  startdate!: Date | null;
+  enddate!: Date | null;
   /** constructs an appointment form filled with standart values */
   constructor(
     private fb: FormBuilder, 
