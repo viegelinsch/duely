@@ -39,7 +39,7 @@ describe('AppointmentFormComponent', () => {
 
     it('should set the validation correct', inject([TranslateService], (translate: TranslateService) => {
         component.endValidation(null);
-        expect(component.appointment.valid[0]).toEqual(component.appointmentForm.valid);
+        expect(component.appointment!.valid![0]).toEqual(component.appointmentForm.valid);
     }));
 
     it('should rewrite the start.time form', inject([TranslateService], (translate: TranslateService) => {
@@ -90,7 +90,7 @@ describe('AppointmentFormComponent', () => {
         component.createForm();
         component.appointmentForm.get('start.date').setValue(testDate);
         component.onStartDateChange();
-        expect(moment.utc(component.appointment.start).add(duration).valueOf()).toEqual(component.appointment.end.valueOf());
+        expect(moment.utc(component.appointment.start).add(duration).valueOf()).toEqual(component.appointment.end!.valueOf());
     }));
 
     /*it('should keep the duration when changing the start time', inject([TranslateService],
@@ -105,14 +105,14 @@ describe('AppointmentFormComponent', () => {
     }));*/
 
     it('should adjust startdate when enddate is before startdate', inject([TranslateService], (translate: TranslateService) => {
-        component.appointment.start = moment.utc('2017-07-05', 'YYYY-MM-DD');
-        component.appointment.end = moment.utc('2017-07-04', 'YYYY-MM-DD');
+        component.appointment.start = moment.utc('2017-07-05', 'YYYY-MM-DD') as any;
+        component.appointment.end = moment.utc('2017-07-04', 'YYYY-MM-DD') as any;
         component.validateStartDate();
         component.validateEndDate();
 
         component.createForm();
         component.onEndDateChange();
-        expect(component.appointment.start.valueOf()).toEqual(component.appointment.end.valueOf());
+        expect(component.appointment.start.valueOf()).toEqual(component.appointment.end!.valueOf());
     }));
 
     /*it('should adjust starttime when endtime is before starttime', inject([TranslateService],

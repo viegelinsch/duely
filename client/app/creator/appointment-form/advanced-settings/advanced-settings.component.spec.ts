@@ -33,7 +33,7 @@ describe('AdvancedSettingsComponent', () => {
   it('should set the validation correctly', inject([TranslateService],
       (translate: TranslateService) => {
     component.endValidation(null);
-    expect(component.appointment.valid[3]).toEqual(component.advancedForm.valid);
+    expect(component.appointment!.valid![3]).toEqual(component.advancedForm.valid);
   }));
 
   it('should update the appointment', inject([TranslateService],

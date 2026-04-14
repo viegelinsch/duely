@@ -105,7 +105,7 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
             Validators.required
           ]
         ],
-        intervalMinutes: alarm.interval / 60,
+        intervalMinutes: alarm.interval ? alarm.interval / 60 : 1,
         description: alarm.description,
     }));
     const alarmFormArray = this.fb.array(alarmFGs);

@@ -238,7 +238,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     const endTime = moment.utc(this.appointment.end);
     const diffHour = endTime.hour() - startTime.hour();
     const diffMinute = endTime.minute() - startTime.minute();
-    let newDate = undefined;
+    let newDate: any;
     try {
       newDate = moment.utc(value, 'HH:mm');
     } catch (e) {
@@ -271,14 +271,14 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
     const endTime = moment.utc(this.appointment.end);
-    let newDate = undefined;
+    let newDate: any;
     try {
       newDate = moment.utc(value, 'HH:mm');
     } catch (e) {
-      newDate = this.appointment.end;
+      newDate = this.appointment.end ? moment.utc(this.appointment.end) : moment.utc(this.appointment.start);
     }
     if (!newDate.isValid()) {
-      newDate = this.appointment.end;
+      newDate = this.appointment.end ? moment.utc(this.appointment.end) : moment.utc(this.appointment.start);
     }
     endTime.set({
       hour: newDate.hour() >= 24 ? 23 : newDate.hour(),
