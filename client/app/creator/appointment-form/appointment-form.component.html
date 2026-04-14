@@ -51,13 +51,16 @@
   <div formGroupName="start" class="form-group row">
     <label class="col-sm-2 col-xs-12 control-label">{{'FROM' | translate}}</label>
     <div class="col-sm-5 col-xs-6">
-      <input type="text" 
-             class="form-control"
-             [bsDatepicker]="{containerClass: 'theme-dark-blue', showWeekNumbers: true, dateInputFormat: 'YYYY-MM-DD'}"
-             [locale]="'de'"
-             formControlName="date" 
-             [(ngModel)]="startdate" 
-             (ngModelChange)="startDateListener($event)">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>{{'SELECT_DATE' | translate}}</mat-label>
+        <input matInput 
+               [matDatepicker]="startPicker"
+               formControlName="date" 
+               [(ngModel)]="startdate" 
+               (ngModelChange)="startDateListener($event)">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker showWeekNumbers="true"></mat-datepicker>
+      </mat-form-field>
     </div>
     <div class="col-sm-5 col-xs-6">
       <input formControlName="time" type="time" class="form-control"
@@ -69,13 +72,16 @@
   <div formGroupName="end" class="form-group row">
     <label class="col-sm-2 col-xs-12 control-label">{{'TO' | translate}}</label>
     <div class="col-sm-5 col-xs-6">
-      <input type="text" 
-             class="form-control"
-             [bsDatepicker]="{containerClass: 'theme-dark-blue', showWeekNumbers: true, dateInputFormat: 'YYYY-MM-DD'}"
-             [locale]="'de'"
-             formControlName="date" 
-             [(ngModel)]="enddate" 
-             (ngModelChange)="endDateListener($event)">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>{{'SELECT_DATE' | translate}}</mat-label>
+        <input matInput 
+               [matDatepicker]="endPicker"
+               formControlName="date" 
+               [(ngModel)]="enddate" 
+               (ngModelChange)="endDateListener($event)">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker showWeekNumbers="true"></mat-datepicker>
+      </mat-form-field>
     </div>
     <div class="col-sm-5 col-xs-6">
       <input formControlName="time" type="time" class="form-control"

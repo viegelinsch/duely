@@ -14,7 +14,10 @@ import { HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { provideNativeDateAdapter } from '@angular/material/core';
 
 
 import { AppRoutingModule } from './app-routing.module';
@@ -79,9 +82,12 @@ export function createTranslateLoader(http: HttpClient) {
          deps: [HttpClient]
        }
     }),
-    BsDatepickerModule.forRoot()
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule
   ],
   providers: [
+    provideNativeDateAdapter(),
     {
       provide: StorageService,
       useFactory: selectStorageService

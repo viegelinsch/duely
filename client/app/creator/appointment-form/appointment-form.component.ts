@@ -10,7 +10,7 @@ import { Component, Input, OnChanges, ViewChild, AfterViewInit, OnInit, OnDestro
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RecurringSettingsComponent } from './recurring-settings/recurring-settings.component';
 import { Subscription } from 'rxjs';
-import { BsDatepickerConfig, BsLocaleService, DateModel, DatePickerTexts } from 'ngx-bootstrap/datepicker';
+import { DateModel } from '../../../types/datepicker-types';
 import { StorageService } from '../../storage/storage.service';
 import { Appointment } from '../appointment';
 import { TranslateService } from '@ngx-translate/core';
@@ -40,7 +40,6 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   private advancedValid = false;
   private alarmValid = false;
   private recurringValid = false;
-  bsConfig?: Partial<BsDatepickerConfig>;
   startdate!: Date | null;
   enddate!: Date | null;
   /** constructs an appointment form filled with standart values */
@@ -48,8 +47,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     private fb: FormBuilder, 
     private translate: TranslateService, 
     private appointments: AppointmentsService,
-    private storage: StorageService,
-    private bsLocaleService: BsLocaleService
+    private storage: StorageService
   ) {
     this.createForm();
   }
@@ -57,13 +55,6 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
  * when someone is typing it starts the validation
  */
   ngOnInit() {
-    // Configure bsConfig for datepicker
-    this.bsConfig = {
-      containerClass: 'theme-dark-blue',
-      showWeekNumbers: true,
-      dateInputFormat: 'YYYY-MM-DD'
-    };
-    
     // Set initial dates
     this.startdate = this.appointment.start ? new Date(this.appointment.start) : null;
     this.enddate = this.appointment.end ? new Date(this.appointment.end) : null;

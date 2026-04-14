@@ -11,7 +11,8 @@ import { Appointment } from '../../appointment';
 import { Exclusion } from '../../exclusion';
 import { RecurringSettings } from '../../recurring-settings';
 import { Subscription } from 'rxjs';
-import { BsDatepickerConfig, BsLocaleService, DateModel, DatePickerTexts } from 'ngx-bootstrap/datepicker';
+import { BsDatepickerConfig, BsLocaleService } from 'ngx-bootstrap/datepicker';
+import { DateModel, DatePickerTexts } from '../../../types/datepicker-types';
 import { StorageService } from '../../../storage/storage.service';
 import Holidays from 'date-holidays';
 import { TranslateService } from '@ngx-translate/core';
@@ -67,8 +68,6 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   public workInvYear!: String;
   public workYear!: String;
 
-  bsConfig?: Partial<BsDatepickerConfig>;
-  datepickerTexts!: DatePickerTexts;
   enddate!: Date | null;
 
   recurringForm!: FormGroup;
@@ -77,17 +76,9 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   constructor(
     private fb: FormBuilder, 
     private storage: StorageService, 
-    private translate: TranslateService,
-    private bsLocaleService: BsLocaleService
+    private translate: TranslateService
   ) {
     this.hd = new Holidays();
-    
-    // Configure bsConfig for datepicker
-    this.bsConfig = {
-      containerClass: 'theme-dark-blue',
-      showWeekNumbers: true,
-      dateInputFormat: 'YYYY-MM-DD'
-    };
     this.enddate = null;
     this.countries = this.getCountries();
     this.states = [];
@@ -99,43 +90,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
 
   /** checks selection and updates the form  */
   ngOnInit(): void {
-    this.translate.get('SELECT YEAR').subscribe((result: string) => {
-      this.datepickerTexts.selectYearText = result;
-    });
-    this.translate.get('CLEAR').subscribe((result: string) => {
-      this.datepickerTexts.clearText = result;
-    });
-    this.translate.get('TODAY').subscribe((result: string) => {
-      this.datepickerTexts.todayText = result;
-    });
-    this.translate.get('MO').subscribe((result: string) => {
-      this.datepickerTexts.mo = result;
-    });
-    this.translate.get('TU').subscribe((result: string) => {
-      this.datepickerTexts.tu = result;
-    });
-    this.translate.get('WE').subscribe((result: string) => {
-      this.datepickerTexts.we = result;
-    });
-    this.translate.get('TH').subscribe((result: string) => {
-      this.datepickerTexts.th = result;
-    });
-    this.translate.get('FR').subscribe((result: string) => {
-      this.datepickerTexts.fr = result;
-    });
-    this.translate.get('SA').subscribe((result: string) => {
-      this.datepickerTexts.sa = result;
-    });
-    this.translate.get('SU').subscribe((result: string) => {
-      this.datepickerTexts.su = result;
-    });
-    this.translate.get(['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY',
-      'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']).subscribe((result: string[]) => {
-
-
-      this.datepickerTexts.monthName = Object.keys(result).map(function (key) { return result[key]; });
-      this.datepickerTexts = new DatePickerTexts(this.datepickerTexts); // to fire ngOnChanges in DatePicker
-    });
+    // Angular Material datepicker handles i18n automatically via Angular's locale
     if (!this.appointment.hasOwnProperty('recurringSettings')) {
       this.appointment.recurringSettings = {
         // Default values for form data
