@@ -103,12 +103,12 @@ These are **NOT caused by the Angular 20 upgrade**. They are pre-existing code q
 #### How to Fix (Separate Task):
 
 These require systematic code refactoring:
-1. Add proper type imports from ical-generator
-2. Fix date-holidays instantiation
-3. Add null checks and optional chaining (?.)
-4. Add missing return statements
-5. Import CommonModule where needed
-6. Fix Bootstrap CSS import paths
+1. ✅ Add proper type imports from ical-generator - COMPLETE
+2. ✅ Fix date-holidays instantiation - COMPLETE
+3. ✅ Add null checks and optional chaining (?.) - COMPLETE (126/126 fixed)
+4. ✅ Add missing return statements - COMPLETE (2/2 fixed)
+5. ✅ Import CommonModule where needed - ALREADY DONE (in AppModule)
+6. ⏳ Fix Bootstrap CSS import paths - PENDING
 
 This is estimated to take 2-4 hours of focused development work.
 
