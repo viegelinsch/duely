@@ -110,7 +110,7 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
     }));
     const alarmFormArray = this.fb.array(alarmFGs);
     for (let i = 0; i < alarmFormArray.length; i++) {
-      const xy = alarmFormArray.at(i) as FormGroup;
+      const xy = alarmFormArray.controls[i] as FormGroup;
       this.subscription[i + 1] = (xy.controls['repeat'].valueChanges.subscribe(() => {
         if (xy.controls['repeat'].value > 1) {
           xy.controls['intervalMinutes'].setValidators([Validators.required, Validators.min(1)]);

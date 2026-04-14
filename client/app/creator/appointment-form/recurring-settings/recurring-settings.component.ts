@@ -264,7 +264,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    */
   public showStates(i: number): void {
     const exclusions = this.recurringForm.controls['exclusions'] as FormArray;
-    const country = (exclusions.at(i) as FormGroup).controls['holiday_countries'].value as string;
+    const country = (exclusions.controls[i] as FormGroup).controls['holiday_countries'].value as string;
     this.states[i] = this.getStates(country);
     if (this.states[i] !== undefined) {
       this.statesVisible[i] = true;
@@ -284,8 +284,8 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    */
   public showRegions(i: number): void {
     const exclusions = this.recurringForm.controls['exclusions'] as FormArray;
-    const country = (exclusions.at(i) as FormGroup).controls['holiday_countries'].value as string;
-    const state = (exclusions.at(i) as FormGroup).controls['holiday_states'].value as string;
+    const country = (exclusions.controls[i] as FormGroup).controls['holiday_countries'].value as string;
+    const state = (exclusions.controls[i] as FormGroup).controls['holiday_states'].value as string;
     this.regions[i] = this.getRegions(country, state);
     if (this.regions[i] !== undefined) {
       this.statesVisible[i] = true;
