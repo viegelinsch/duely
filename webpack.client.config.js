@@ -1,276 +1,261 @@
+// Modern Webpack 5 Configuration for Angular 19
 const path = require('path');
-const ProgressPlugin = require('webpack/lib/ProgressPlugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const autoprefixer = require('autoprefixer');
-const postcssUrl = require('postcss-url');
-
-const { NoEmitOnErrorsPlugin, LoaderOptionsPlugin } = require('webpack');
-const { BaseHrefWebpackPlugin } = require('@angular/cli/plugins/webpack');
-const { CommonsChunkPlugin } = require('webpack').optimize;
-const { AotPlugin } = require('@ngtools/webpack');
-
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin');
-
-const nodeModules = path.join(process.cwd(), 'node_modules');
-const entryPoints = ["inline","polyfills","sw-register","styles","vendor","main"];
-const baseHref = "";
-const deployUrl = "";
-
-const isProduction = process.argv.indexOf('-p') !== -1;
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { ProgressPlugin, DefinePlugin } = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = function(isElectron) {
-  let environmentPath = isElectron ? "environments/environment.electron" : "environments/environment.server";
-  environmentPath += isProduction ? "-prod.ts" : ".ts";
-
-  const target = isElectron ? "electron-renderer" : undefined;
-  const outputPath = isElectron ? "dist/electron/static" : "dist/server/static";
+  const isProduction = process.env.NODE_ENV === 'production';
+  const environmentPath = isElectron 
+    ? './environments/environment.electron' 
+    : './environments/environment.server';
+  
+  const outputPath = isElectron ? 'dist/electron/static' : 'dist/server/static';
+  const target = isElectron ? 'electron-renderer' : 'web';
 
   return {
-    "target": target,
-    "devtool": "source-map",
-    "resolve": {
-      "mainFields": ["browser", "main", "module"],
-      "extensions": [
-        ".ts",
-        ".js"
-      ],
-      "modules": [
-        "./node_modules"
-      ]
+    mode: isProduction ? 'production' : 'development',
+    target: target,
+    devtool: isProduction ? 'source-map' : 'eval-source-map',
+    
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js', '.json'],
+      modules: ['node_modules', './client']
     },
-    "resolveLoader": {
-      "modules": [
-        "./node_modules"
-      ]
+    
+    entry: {
+      main: './client/main.ts',
+      polyfills: './client/polyfills.ts',
+      styles: './client/styles.scss'
     },
-    "entry": {
-      "main": [
-        "./client/main.ts"
-      ],
-      "polyfills": [
-        "./client/polyfills.ts"
-      ],
-      "styles": [
-        "./client/styles.scss"
-      ]
+    
+    output: {
+      path: path.join(__dirname, outputPath),
+      filename: '[name].[contenthash].bundle.js',
+      chunkFilename: '[name].[contenthash].chunk.js',
+      clean: true,
+      publicPath: '/'
     },
-    "output": {
-      "path": path.join(__dirname, outputPath),
-      "filename": "[name].bundle.js",
-      "chunkFilename": "[id].chunk.js"
-    },
-    "module": {
-      "rules": [
+    
+    module: {
+      rules: [
+        // TypeScript
         {
-          "enforce": "pre",
-          "test": /\.js$/,
-          "loader": "source-map-loader",
-          "exclude": [
-            /\/node_modules\//
-          ]
-        },
-        {
-          "test": /\.json$/,
-          "loader": "json-loader"
-        },
-        {
-          "test": /\.html$/,
-          "loaders": [
-            "raw-loader",
+          test: /\.ts$/,
+          use: [
             {
-              "loader": "html-minify-loader",
-              "options": {
-                "quotes": true,
-                "dom": {
-                  "lowerCaseAttributeNames": false
+              loader: 'ts-loader',
+              options: {
+                transpileOnly: true,
+                configFile: 'client/tsconfig.app.json',
+                compilerOptions: {
+                  outDir: './dist/out-tsc',
+                  declaration: false,
+                  sourceMap: true
                 }
               }
             }
           ]
         },
+        // JSON
         {
-          "test": /\.(eot|svg)$/,
-          "loader": "file-loader?name=[name].[hash:20].[ext]"
+          test: /\.json$/,
+          type: 'asset/resource'
         },
+        // HTML
         {
-          "test": /\.(jpg|png|gif|otf|ttf|woff|woff2|cur|ani)$/,
-          "loader": "file-loader?name=[name].[hash:20].[ext]"
+          test: /\.html$/,
+          loader: 'html-loader',
+          options: {
+            sources: false,
+            minimize: isProduction
+          }
         },
+        // CSS
         {
-          "exclude": [
-            path.join(__dirname, "client/styles.scss")
-          ],
-          "test": /\.css$/,
-          "loaders": [
-            "exports-loader?module.exports.toString()",
-            "css-loader?{\"sourceMap\":false,\"importLoaders\":1}",
-            "postcss-loader"
+          test: /\.css$/,
+          exclude: [path.join(__dirname, 'client/styles.scss')],
+          use: [
+            'style-loader',
+            {
+              loader: 'css-loader',
+              options: {
+                importLoaders: 1,
+                sourceMap: !isProduction
+              }
+            },
+            'postcss-loader'
           ]
         },
+        // SCSS/SASS (global styles)
         {
-          "exclude": [
-            path.join(__dirname, "client/styles.scss")
-          ],
-          "test": /\.scss$|\.sass$/,
-          "loaders": [
-            "exports-loader?module.exports.toString()",
-            "css-loader?{\"sourceMap\":false,\"importLoaders\":1}",
-            "postcss-loader",
-            "sass-loader"
+          test: /\.(scss|sass)$/,
+          include: [path.join(__dirname, 'client/styles.scss')],
+          use: [
+            MiniCssExtractPlugin.loader,
+            {
+              loader: 'css-loader',
+              options: {
+                importLoaders: 2,
+                sourceMap: !isProduction
+              }
+            },
+            'postcss-loader',
+            {
+              loader: 'sass-loader',
+              options: {
+                implementation: require('sass'),
+                sourceMap: !isProduction
+              }
+            }
           ]
         },
+        // SCSS/SASS (component styles)
         {
-          "include": [
-            path.join(__dirname, "client/styles.scss")
-          ],
-          "test": /\.css$/,
-          "loaders": ExtractTextPlugin.extract({
-            "use": [
-              "css-loader?{\"sourceMap\":false,\"importLoaders\":1}",
-              "postcss-loader"
-            ],
-            "fallback": "style-loader",
-            "publicPath": ""
-          })
+          test: /\.(scss|sass)$/,
+          exclude: [path.join(__dirname, 'client/styles.scss')],
+          use: [
+            'style-loader',
+            {
+              loader: 'css-loader',
+              options: {
+                importLoaders: 2,
+                sourceMap: !isProduction
+              }
+            },
+            'postcss-loader',
+            {
+              loader: 'sass-loader',
+              options: {
+                implementation: require('sass'),
+                sourceMap: !isProduction
+              }
+            }
+          ]
+        },
+        // Assets
+        {
+          test: /\.(png|jpg|jpeg|gif|svg|webp)$/i,
+          type: 'asset/resource',
+          generator: {
+            filename: 'assets/images/[hash][ext][query]'
+          }
         },
         {
-          "include": [
-            path.join(__dirname, "client/styles.scss")
-          ],
-          "test": /\.scss$|\.sass$/,
-          "loaders": ExtractTextPlugin.extract({
-          "use": [
-            "css-loader?{\"sourceMap\":false,\"importLoaders\":1}",
-            "postcss-loader",
-            "sass-loader"
-          ],
-          "fallback": "style-loader",
-          "publicPath": ""
-        })
+          test: /\.(woff|woff2|eot|ttf|otf)$/i,
+          type: 'asset/resource',
+          generator: {
+            filename: 'assets/fonts/[hash][ext][query]'
+          }
         },
+        // Source maps for existing JS
         {
-          "test": /\.ts$/,
-          "loader": "@ngtools/webpack"
+          enforce: 'pre',
+          test: /\.js$/,
+          loader: 'source-map-loader',
+          exclude: [/node_modules/]
         }
       ]
     },
-    "plugins": [
-      new NoEmitOnErrorsPlugin(),
-      new CopyWebpackPlugin([
-        {
-          from: 'client/assets',
-          to: 'assets'
-        },
-        {
-          from: 'client/favicon.ico',
-          to: 'favicon.ico'
-        }
-      ]),
-      new ProgressPlugin(),
+    
+    plugins: [
       new HtmlWebpackPlugin({
-        "template": "./client/index.html",
-        "filename": "./index.html",
-        "hash": false,
-        "inject": true,
-        "compile": true,
-        "favicon": false,
-        "minify": false,
-        "cache": true,
-        "showErrors": true,
-        "chunks": "all",
-        "excludeChunks": [],
-        "title": "Duely",
-        "xhtml": true,
-        "chunksSortMode": function sort(left, right) {
-          const leftIndex = entryPoints.indexOf(left.names[0]);
-          const rightindex = entryPoints.indexOf(right.names[0]);
-          return leftIndex > rightindex ? 1 : leftIndex < rightindex ? -1 : 0;
-        }
+        template: './client/index.html',
+        filename: './index.html',
+        inject: 'body',
+        minify: isProduction ? {
+          collapseWhitespace: true,
+          removeComments: true,
+          minifyCSS: true,
+          minifyJS: true
+        } : false,
+        chunksSortMode: 'auto'
       }),
-      new BaseHrefWebpackPlugin({}),
-      new CommonsChunkPlugin({
-        "name": "inline",
-        "minChunks": null
+      
+      new MiniCssExtractPlugin({
+        filename: '[name].[contenthash].bundle.css',
+        chunkFilename: '[id].[contenthash].chunk.css'
       }),
-      new CommonsChunkPlugin({
-        "name": "vendor",
-        "minChunks": (module) => module.resource && module.resource.startsWith(nodeModules),
-        "chunks": [
-          "main"
+      
+      new CopyWebpackPlugin({
+        patterns: [
+          { 
+            from: 'client/assets', 
+            to: 'assets',
+            noErrorOnMissing: true 
+          },
+          { 
+            from: 'client/favicon.ico', 
+            to: 'favicon.ico',
+            noErrorOnMissing: true 
+          }
         ]
       }),
-      new ExtractTextPlugin({
-        "filename": "[name].bundle.css",
-        "disable": true
-      }),
-      new LoaderOptionsPlugin({
-        "sourceMap": false,
-        "options": {
-          "postcss": [
-            autoprefixer(),
-            postcssUrl({"url": (URL) => {
-              // Only convert root relative URLs, which CSS-Loader won't process into require().
-              if (!URL.startsWith('/') || URL.startsWith('//')) {
-                  return URL;
-              }
-              if (deployUrl.match(/:\/\//)) {
-                  // If deployUrl contains a scheme, ignore baseHref use deployUrl as is.
-                  return `${deployUrl.replace(/\/$/, '')}${URL}`;
-              }
-              else if (baseHref.match(/:\/\//)) {
-                  // If baseHref contains a scheme, include it as is.
-                  return baseHref.replace(/\/$/, '') +
-                      `/${deployUrl}/${URL}`.replace(/\/\/+/g, '/');
-              }
-              else {
-                  // Join together base-href, deploy-url and the original URL.
-                  // Also dedupe multiple slashes into single ones.
-                  return `/${baseHref}/${deployUrl}/${URL}`.replace(/\/\/+/g, '/');
-              }
-          }})
-          ],
-          "sassLoader": {
-            "sourceMap": false,
-            "includePaths": []
-          },
-          "lessLoader": {
-            "sourceMap": false
-          },
-          "context": ""
-        }
-      }),
-      new AotPlugin({
-        "mainPath": "main.ts",
-        "exclude": [],
-        "tsConfigPath": "client/tsconfig.app.json",
-        "skipCodeGeneration": true,
-        "hostReplacementPaths": {
-          "environments/environment.ts": environmentPath
-        },
-      }),
-      new SWPrecacheWebpackPlugin({
-       cacheId: 'duely',
-       filename: 'service-worker.js',
-       minify: isProduction,
-       navigateFallback: '/index.html',
-       runtimeCaching: [{
-         urlPattern: /\/vendor\.bundle\.js/,
-         handler: 'fastest'
-       }]
-     })
+      
+      new ProgressPlugin(),
+      
+      // Environment-specific defines
+      new DefinePlugin({
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+        'process.env.ELECTRON': JSON.stringify(isElectron ? 'true' : 'false')
+      })
     ],
-    "node": {
-      "fs": "empty",
-      "global": true,
-      "crypto": "empty",
-      "tls": "empty",
-      "net": "empty",
-      "process": true,
-      "module": false,
-      "clearImmediate": false,
-      "setImmediate": false
+    
+    optimization: {
+      minimize: isProduction,
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            format: {
+              comments: false,
+            },
+          },
+          extractComments: false,
+        })
+      ],
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          defaultVendors: {
+            test: /[\\/]node_modules[\\/]/,
+            priority: -10,
+            name: 'vendor',
+            chunks: 'all'
+          },
+          common: {
+            name: 'common',
+            minChunks: 2,
+            priority: -20,
+            chunks: 'all',
+            reuseExistingChunk: true
+          }
+        }
+      },
+      runtimeChunk: 'single'
+    },
+    
+    devServer: {
+      static: {
+        directory: path.join(__dirname, 'client'),
+        watch: true
+      },
+      port: 4200,
+      hot: true,
+      open: false,
+      historyApiFallback: true
+    },
+    
+    stats: {
+      children: true,
+      chunks: false,
+      modules: false,
+      colors: true
+    },
+    
+    node: {
+      global: true
     }
   };
 };

@@ -9,8 +9,8 @@ import * as moment from 'moment-timezone';
 import { Component, Input, OnChanges, ViewChild, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RecurringSettingsComponent } from './recurring-settings/recurring-settings.component';
-import { Subscription } from 'rxjs/Subscription';
-import { DatePickerOptions, DateModel, DatePickerTexts } from 'ng2-datepicker';
+import { Subscription } from 'rxjs';
+import { BsDatepickerConfig, BsLocaleService } from 'ngx-bootstrap/datepicker';
 import { StorageService } from '../../storage/storage.service';
 import { Appointment } from '../appointment';
 import { TranslateService } from '@ngx-translate/core';
@@ -40,64 +40,34 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   private advancedValid = false;
   private alarmValid = false;
   private recurringValid = false;
-  startoptions: DatePickerOptions;
-  endoptions: DatePickerOptions;
-  datepickerTexts: DatePickerTexts;
-  startdate: DateModel;
-  enddate: DateModel;
+  bsConfig?: Partial<BsDatepickerConfig>;
+  startdate: Date | null;
+  enddate: Date | null;
   /** constructs an appointment form filled with standart values */
-  constructor(private fb: FormBuilder, private translate: TranslateService, private appointments: AppointmentsService,
-    private storage: StorageService) {
-      this.datepickerTexts = new DatePickerTexts();
-      this.createForm();
+  constructor(
+    private fb: FormBuilder, 
+    private translate: TranslateService, 
+    private appointments: AppointmentsService,
+    private storage: StorageService,
+    private bsLocaleService: BsLocaleService
+  ) {
+    this.createForm();
   }
 /**
  * when someone is typing it starts the validation
  */
   ngOnInit() {
-    this.startoptions = new DatePickerOptions({
-      initialDate: this.appointment.start,
-      color: this.storage.getColor()
-    });
-    this.endoptions = new DatePickerOptions({
-      initialDate: this.appointment.end,
-      color: this.storage.getColor()
-    });
-    this.translate.get('SELECT YEAR').subscribe((result: string) => {
-      this.datepickerTexts.selectYearText = result;
-    });
-    this.translate.get('CLEAR').subscribe((result: string) => {
-      this.datepickerTexts.clearText = result;
-    });
-    this.translate.get('TODAY').subscribe((result: string) => {
-      this.datepickerTexts.todayText = result;
-    });
-    this.translate.get('MO').subscribe((result: string) => {
-      this.datepickerTexts.mo = result;
-    });
-    this.translate.get('TU').subscribe((result: string) => {
-      this.datepickerTexts.tu = result;
-    });
-    this.translate.get('WE').subscribe((result: string) => {
-      this.datepickerTexts.we = result;
-    });
-    this.translate.get('TH').subscribe((result: string) => {
-      this.datepickerTexts.th = result;
-    });
-    this.translate.get('FR').subscribe((result: string) => {
-      this.datepickerTexts.fr = result;
-    });
-    this.translate.get('SA').subscribe((result: string) => {
-      this.datepickerTexts.sa = result;
-    });
-    this.translate.get('SU').subscribe((result: string) => {
-      this.datepickerTexts.su = result;
-    });
-    this.translate.get(['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY',
-      'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']).subscribe((result: string[]) => {
-      this.datepickerTexts.monthName = Object.keys(result).map(function (key) { return result[key]; });
-      this.datepickerTexts = new DatePickerTexts(this.datepickerTexts); // to fire ngOnChanges in DatePicker
-    });
+    // Configure bsConfig for datepicker
+    this.bsConfig = {
+      containerClass: 'theme-dark-blue',
+      showWeekNumbers: true,
+      dateInputFormat: 'YYYY-MM-DD'
+    };
+    
+    // Set initial dates
+    this.startdate = this.appointment.start ? new Date(this.appointment.start) : null;
+    this.enddate = this.appointment.end ? new Date(this.appointment.end) : null;
+    
     this.subscription.add(this.appointmentForm.valueChanges.subscribe(data => this.endValidation(data)));
   }
 /**

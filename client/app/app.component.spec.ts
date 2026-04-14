@@ -17,51 +17,49 @@ import { StorageService } from './storage/storage.service';
 import { Router, RouterOutlet, ChildrenOutletContexts } from '@angular/router';
 
 class MockRouter {
-  navigateByUrl(url: string) { return url; }
-  navigate(url: any) { return url; }
+    navigateByUrl(url: string) { return url; }
+    navigate(url: any) { return url; }
 }
 
 describe('AppComponent', () => {
-  let component: AppComponent;
-  let settings: SettingsComponent;
-  let fixture: ComponentFixture<SettingsComponent>;
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        // RouterTestingModule,
-        TranslateModule.forRoot(),
-        FormsModule,
-        ReactiveFormsModule
-      ],
-      declarations: [
-        AppComponent,
-        RouterOutlet,
-        SettingsComponent
-      ],
-      providers: [
-        StorageService,
-        ChildrenOutletContexts,
-        { provide: Router, useClass: MockRouter }
-      ]
-    }).compileComponents();
-  });
-  beforeEach(() => {
-    fixture = TestBed.createComponent(SettingsComponent);
-    settings = fixture.debugElement.componentInstance;
-    component = TestBed.createComponent(AppComponent).debugElement.componentInstance;
-  });
+    let component: AppComponent;
+    let settings: SettingsComponent;
+    let fixture: ComponentFixture<SettingsComponent>;
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            imports: [
+                // RouterTestingModule,
+                TranslateModule.forRoot(),
+                FormsModule,
+                ReactiveFormsModule
+            ],
+            declarations: [
+                AppComponent,
+                RouterOutlet,
+                SettingsComponent
+            ],
+            providers: [
+                StorageService,
+                ChildrenOutletContexts,
+                { provide: Router, useClass: MockRouter }
+            ]
+        }).compileComponents();
+    });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(SettingsComponent);
+        settings = fixture.debugElement.componentInstance;
+        component = TestBed.createComponent(AppComponent).debugElement.componentInstance;
+    });
 
-  it('should create the app', inject([TranslateService, Router],
-      (translate: TranslateService, router: Router) => {
-    expect(component).toBeTruthy();
-  }));
+    it('should create the app', inject([TranslateService, Router], (translate: TranslateService, router: Router) => {
+        expect(component).toBeTruthy();
+    }));
 
-  /* TODO: Test routes */
-  it('should go home', inject([TranslateService, Router],
-      (translate: TranslateService, router: Router) => {
-    spyOn(router, 'navigate');
-    settings.goHome();
-    expect(router.navigate).toHaveBeenCalledWith(['/']);
-  }));
+    /* TODO: Test routes */
+    it('should go home', inject([TranslateService, Router], (translate: TranslateService, router: Router) => {
+        vi.spyOn(router, 'navigate');
+        settings.goHome();
+        expect(router.navigate).toHaveBeenCalledWith(['/']);
+    }));
 
 });

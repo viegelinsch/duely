@@ -10,13 +10,13 @@ import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Appointment } from '../../appointment';
 import { Exclusion } from '../../exclusion';
 import { RecurringSettings } from '../../recurring-settings';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
+import { BsDatepickerConfig, BsLocaleService } from 'ngx-bootstrap/datepicker';
 import { StorageService } from '../../../storage/storage.service';
 import * as Holidays from 'date-holidays';
 import { TranslateService } from '@ngx-translate/core';
 import * as moment from 'moment-timezone';
 import { CollisionDetector } from '../../../DatesAndCollisions/CollisionDetector';
-import { DatePickerOptions, DateModel, DatePickerTexts } from 'ng2-datepicker';
 
 
 /**
@@ -67,18 +67,27 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   public workInvYear: String;
   public workYear: String;
 
-  options: DatePickerOptions;
-  enddate: DateModel;
-  datepickerTexts: DatePickerTexts;
+  bsConfig?: Partial<BsDatepickerConfig>;
+  enddate: Date | null;
 
   recurringForm: FormGroup;
   private subscription: Subscription[] = [];
   /** constructs an appointment form filled with standart values  */
-  constructor(private fb: FormBuilder, private storage: StorageService, private translate: TranslateService) {
+  constructor(
+    private fb: FormBuilder, 
+    private storage: StorageService, 
+    private translate: TranslateService,
+    private bsLocaleService: BsLocaleService
+  ) {
     this.hd = new Holidays();
-
-    this.options = new DatePickerOptions({initialDate: new Date(), color: this.storage.getColor()});
-    this.datepickerTexts = new DatePickerTexts();
+    
+    // Configure bsConfig for datepicker
+    this.bsConfig = {
+      containerClass: 'theme-dark-blue',
+      showWeekNumbers: true,
+      dateInputFormat: 'YYYY-MM-DD'
+    };
+    this.enddate = null;
     this.countries = this.getCountries();
     this.states = [];
     this.regions = [];

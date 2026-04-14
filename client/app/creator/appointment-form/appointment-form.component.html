@@ -51,7 +51,13 @@
   <div formGroupName="start" class="form-group row">
     <label class="col-sm-2 col-xs-12 control-label">{{'FROM' | translate}}</label>
     <div class="col-sm-5 col-xs-6">
-      <ng2-datepicker [options]="startoptions" [texts]="datepickerTexts" formControlName="date" [ngModel]="startdate" (ngModelChange)="startdate=$event; startDateListener($event)"></ng2-datepicker>
+      <input type="text" 
+             class="form-control"
+             [bsDatepicker]="{containerClass: 'theme-dark-blue', showWeekNumbers: true, dateInputFormat: 'YYYY-MM-DD'}"
+             [locale]="'de'"
+             formControlName="date" 
+             [(ngModel)]="startdate" 
+             (ngModelChange)="startDateListener($event)">
     </div>
     <div class="col-sm-5 col-xs-6">
       <input formControlName="time" type="time" class="form-control"
@@ -63,7 +69,13 @@
   <div formGroupName="end" class="form-group row">
     <label class="col-sm-2 col-xs-12 control-label">{{'TO' | translate}}</label>
     <div class="col-sm-5 col-xs-6">
-      <ng2-datepicker [options]="endoptions" [texts]="datepickerTexts" formControlName="date" [ngModel]="enddate" (ngModelChange)="enddate=$event; endDateListener($event)"></ng2-datepicker>
+      <input type="text" 
+             class="form-control"
+             [bsDatepicker]="{containerClass: 'theme-dark-blue', showWeekNumbers: true, dateInputFormat: 'YYYY-MM-DD'}"
+             [locale]="'de'"
+             formControlName="date" 
+             [(ngModel)]="enddate" 
+             (ngModelChange)="endDateListener($event)">
     </div>
     <div class="col-sm-5 col-xs-6">
       <input formControlName="time" type="time" class="form-control"

@@ -1,13 +1,33 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../out-tsc/app",
-    "module": "es2015",
-    "baseUrl": "",
-    "types": []
+    "outDir": "../dist/out-tsc",
+    "declaration": false,
+    "sourceMap": true,
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "typeRoots": [
+      "../node_modules/@types"
+    ],
+    "lib": [
+      "ES2022",
+      "dom"
+    ]
   },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+    "fullTemplateTypeCheck": true
+  },
+  "include": [
+    "../client/**/*.ts",
+    "../client/**/*.d.ts"
+  ],
   "exclude": [
-    "test.ts",
-    "**/*.spec.ts"
+    "../client/**/*.spec.ts",
+    "../client/test.ts"
   ]
 }

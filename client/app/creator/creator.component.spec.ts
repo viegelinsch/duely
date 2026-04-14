@@ -14,66 +14,62 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 
 describe('CreatorComponent', () => {
-  let component: CreatorComponent;
-  let fixture: ComponentFixture<CreatorComponent>;
+    let component: CreatorComponent;
+    let fixture: ComponentFixture<CreatorComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ CreatorComponent, AppointmentFormComponent, RecurringSettingsComponent,
-        AlarmSettingsComponent, AdvancedSettingsComponent ],
-      imports: [ TranslateModule.forRoot(), ReactiveFormsModule],
-      providers: [ AppointmentsService, StorageService ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [CreatorComponent, AppointmentFormComponent, RecurringSettingsComponent,
+                AlarmSettingsComponent, AdvancedSettingsComponent],
+            imports: [TranslateModule.forRoot(), ReactiveFormsModule],
+            providers: [AppointmentsService, StorageService]
+        })
+            .compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(CreatorComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should be created', inject([AppointmentsService, StorageService, TranslateService],
-      (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
-    expect(component).toBeTruthy();
-  }));
-
-  it('should start with 1 appointment', inject([AppointmentsService, StorageService, TranslateService],
-      (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
-    component.getAppointments().then(() => {
-      expect(component.appointments).not.toBeUndefined();
-      expect(component.appointments.length).toEqual(1);
+    beforeEach(() => {
+        fixture = TestBed.createComponent(CreatorComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
     });
-  }));
 
-  it('should call saveText and getICalString if input is valid', inject([AppointmentsService, StorageService, TranslateService],
-      (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
-    const filename = 'duely.ics';
-    component.getAppointments().then(() => { // adds an appointment
-      expect(component.appointments).not.toBeNull();
-      expect(component.appointments.length).toEqual(1);
-      component.appointments[0].summary = 'test'; // now it's a valid input
-      spyOn(storage, 'saveText');
-      spyOn(service, 'getICalString');
-      component.generateAndSaveICAL();
-      expect(storage.saveText).toHaveBeenCalled();
-      expect(service.getICalString).toHaveBeenCalled();
-    });
-  }));
+    it('should be created', inject([AppointmentsService, StorageService, TranslateService], (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
+        expect(component).toBeTruthy();
+    }));
+
+    it('should start with 1 appointment', inject([AppointmentsService, StorageService, TranslateService], (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
+        component.getAppointments().then(() => {
+            expect(component.appointments).not.toBeUndefined();
+            expect(component.appointments.length).toEqual(1);
+        });
+    }));
+
+    it('should call saveText and getICalString if input is valid', inject([AppointmentsService, StorageService, TranslateService], (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
+        const filename = 'duely.ics';
+        component.getAppointments().then(() => {
+            expect(component.appointments).not.toBeNull();
+            expect(component.appointments.length).toEqual(1);
+            component.appointments[0].summary = 'test'; // now it's a valid input
+            vi.spyOn(storage, 'saveText');
+            vi.spyOn(service, 'getICalString');
+            component.generateAndSaveICAL();
+            expect(storage.saveText).toHaveBeenCalled();
+            expect(service.getICalString).toHaveBeenCalled();
+        });
+    }));
 
 
-  it('shouldn\'t call saveText and getICalString if input is invalid', inject([AppointmentsService, StorageService, TranslateService],
-      (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
-    const filename = 'duely.ics';
-    component.getAppointments().then(() => { // adds an appointment
-        expect(component.appointments).not.toBeNull();
-        expect(component.appointments.length).toEqual(1);
-        component.appointments[0].summary = ''; // now it's an invalid input
-        spyOn(storage, 'saveText');
-        spyOn(service, 'getICalString');
-        component.generateAndSaveICAL();
-        expect(storage.saveText).not.toHaveBeenCalled();
-        expect(service.getICalString).not.toHaveBeenCalled();
-      });
-  }));
+    it('shouldn\'t call saveText and getICalString if input is invalid', inject([AppointmentsService, StorageService, TranslateService], (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
+        const filename = 'duely.ics';
+        component.getAppointments().then(() => {
+            expect(component.appointments).not.toBeNull();
+            expect(component.appointments.length).toEqual(1);
+            component.appointments[0].summary = ''; // now it's an invalid input
+            vi.spyOn(storage, 'saveText');
+            vi.spyOn(service, 'getICalString');
+            component.generateAndSaveICAL();
+            expect(storage.saveText).not.toHaveBeenCalled();
+            expect(service.getICalString).not.toHaveBeenCalled();
+        });
+    }));
 });

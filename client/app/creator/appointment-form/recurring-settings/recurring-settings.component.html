@@ -216,8 +216,14 @@
                 <div class="col-xs-9">
                     <!-- <input formControlName="untilDate" class="form-control" [(ngModel)]="recurringSettings.untilDate"
                     type="date" maxlength="10" *ngIf="recurringForm.controls['ends'].value==='UNTIL'"/> -->
-                    <ng2-datepicker [options]="options" [texts]="datepickerTexts" formControlName="untilDate" [ngModel]="enddate"
-                    (ngModelChange)="enddate=$event; endDateListener($event)" *ngIf="recurringForm.controls['ends'].value==='UNTIL'"></ng2-datepicker>
+                    <input type="text" 
+                           class="form-control"
+                           [bsDatepicker]="{containerClass: 'theme-dark-blue', showWeekNumbers: true, dateInputFormat: 'YYYY-MM-DD'}"
+                           [locale]="'de'"
+                           formControlName="untilDate" 
+                           [(ngModel)]="enddate"
+                           (ngModelChange)="enddate=$event; endDateListener($event)" 
+                           *ngIf="recurringForm.controls['ends'].value==='UNTIL'">
                   </div>
               </div>
             </div>
@@ -263,7 +269,12 @@
               </div>
               <div class="col-xs-6" *ngIf="exclusion.type==='date'">
                   <!--<input formControlName="date" class="form-control" [(ngModel)]="exclusion.date" type="date" maxlength="10">-->
-                  <ng2-datepicker [options]="options" [texts]="datepickerTexts" formControlName="date" (ngModelChange)="setExclusionDate($event, i)" ></ng2-datepicker>
+                  <input type="text" 
+                         class="form-control"
+                         [bsDatepicker]="{containerClass: 'theme-dark-blue', showWeekNumbers: true, dateInputFormat: 'YYYY-MM-DD'}"
+                         [locale]="'de'"
+                         formControlName="date" 
+                         (ngModelChange)="setExclusionDate($event, i)">
               </div>
               <div class="col-xs-2">
                 <button (click)="removeExclusion(exclusion)" type="button" class="btn btn-link btn-sm pull-right" aria-label="Left Align" data-identifier="remove-exclusion-button">

@@ -8,7 +8,7 @@
 import { Component, Input, OnInit, OnChanges } from '@angular/core';
 import { StorageService } from '../../../storage/storage.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import * as moment from 'moment-timezone';
 import { Appointment } from '../../appointment';

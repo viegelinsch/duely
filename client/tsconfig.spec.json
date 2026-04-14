@@ -2,19 +2,16 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "../out-tsc/spec",
-    "module": "commonjs",
-    "target": "es5",
+    "module": "esnext",
+    "target": "ES2022",
     "baseUrl": "",
     "types": [
-      "jasmine",
-      "node"
+      "jasmine"
     ]
   },
-  "files": [
-    "test.ts"
-  ],
   "include": [
     "**/*.spec.ts",
-    "**/*.d.ts"
+    "**/*.d.ts",
+    "test.ts"
   ]
 }

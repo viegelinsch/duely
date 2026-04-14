@@ -1,0 +1,49 @@
+services:
+  # Development server with hot reload
+  duely-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: duely-development
+    ports:
+      - "8000:8000"
+      - "4200:4200"
+      - "49152:49152"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    command: npm run build:watch
+
+  # Production server
+  duely-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production-server
+    container_name: duely-production
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Build service (one-shot)
+  duely-build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: duely-builder
+    volumes:
+      - ./dist:/app/dist

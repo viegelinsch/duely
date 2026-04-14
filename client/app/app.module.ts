@@ -10,11 +10,11 @@
 import { NgModule } from '@angular/core';
 import { APP_BASE_HREF, CommonModule, HashLocationStrategy, LocationStrategy, PathLocationStrategy } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpModule, Http } from '@angular/http';
+import { HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { DatePickerModule } from 'ng2-datepicker';
+import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
 
 
 import { AppRoutingModule } from './app-routing.module';
@@ -44,8 +44,10 @@ import { AutoResizeDirective } from './auto-resize.directive';
  * generated and maintained using Angular CLI
  */
 
- // AoT requires an exported function for factories
-export function createTranslateLoader(http: Http) {
+ import { HttpClient } from '@angular/common/http';
+
+// AoT requires an exported function for factories
+export function createTranslateLoader(http: HttpClient) {
     return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }
 
@@ -68,16 +70,16 @@ export function createTranslateLoader(http: Http) {
     BrowserModule,
     CommonModule,
     FormsModule,
-    HttpModule,
+    HttpClientModule,
     ReactiveFormsModule,
     TranslateModule.forRoot({
        loader: {
          provide: TranslateLoader,
          useFactory: createTranslateLoader,
-         deps: [Http]
+         deps: [HttpClient]
        }
     }),
-    DatePickerModule
+    BsDatepickerModule.forRoot()
   ],
   providers: [
     {

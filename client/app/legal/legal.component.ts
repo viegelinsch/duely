@@ -8,7 +8,6 @@
  */
 
 import { Component, OnInit } from '@angular/core';
-import { Http, Response } from '@angular/http';
 import { StorageService } from '../storage/storage.service';
 
 /**
@@ -27,7 +26,7 @@ export class LegalComponent implements OnInit {
     This is the default legal notice message.
     To add your own, please edit the 'content' variable in static/main.bundle.js!`;
 
-  constructor(private http: Http) { }
+  constructor() { }
 
   ngOnInit() {
 
