@@ -8,4 +8,7 @@ export interface AlarmData {
   repeat?: any;
   attach?: any;
   x?: any[];
+  interval?: number;
+  description?: string;
+  summary?: string;
 }
