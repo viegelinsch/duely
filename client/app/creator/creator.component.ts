@@ -35,7 +35,7 @@ export class CreatorComponent implements OnInit {
 
   /** constructs a CreatorComponent */
   constructor(private fb: FormBuilder, private appointmentsService: AppointmentsService, private translate: TranslateService,
-    private storage: StorageService) {
+    public storage: StorageService) {
     this.timeZoneNames = moment.tz.names();
   }
   /** gets all saved appointments */

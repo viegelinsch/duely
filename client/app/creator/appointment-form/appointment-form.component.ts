@@ -45,7 +45,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   /** constructs an appointment form filled with standart values */
   constructor(
     private fb: FormBuilder, 
-    private translate: TranslateService, 
+    public translate: TranslateService, 
     private appointments: AppointmentsService,
     private storage: StorageService
   ) {

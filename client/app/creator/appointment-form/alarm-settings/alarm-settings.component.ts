@@ -30,7 +30,7 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
   private subscription: Subscription[] = [];
 
   /** constructs a AdvancedSettingsComponent */
-  constructor(private fb: FormBuilder, private storage: StorageService, private translate: TranslateService) {
+  constructor(private fb: FormBuilder, public storage: StorageService, public translate: TranslateService) {
     this.createForm();
   }
  /** when alram values changes it validates it */

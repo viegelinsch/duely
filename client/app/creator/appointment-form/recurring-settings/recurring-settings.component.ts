@@ -75,8 +75,8 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** constructs an appointment form filled with standart values  */
   constructor(
     private fb: FormBuilder, 
-    private storage: StorageService, 
-    private translate: TranslateService
+    public storage: StorageService, 
+    public translate: TranslateService
   ) {
     this.hd = new Holidays();
     this.enddate = null;

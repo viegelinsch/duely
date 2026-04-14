@@ -75,7 +75,7 @@ export class SettingsComponent implements OnInit {
   /** gets the language stringe
     * @return gives out the language
     */
-  private getFullLanguage(lang: string): string {
+  public getFullLanguage(lang: string): string {
     if (lang === 'de') {
       return 'Deutsch';
     }
