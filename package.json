@@ -62,7 +62,7 @@
     "@ngx-translate/core": "^16.0.3",
     "@ngx-translate/http-loader": "^16.0.0",
     "bootstrap": "^5.3.3",
-    "ngx-bootstrap": "^18.0.0",
+    "ngx-bootstrap": "^21.0.1",
     "compression": "^1.7.5",
     "date-fns": "^4.1.0",
     "date-holidays": "^3.24.0",
