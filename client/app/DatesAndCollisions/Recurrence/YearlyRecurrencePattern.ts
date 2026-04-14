@@ -22,6 +22,8 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
 
                 return this.lastDayOfMonth(eventData, date);
             }
+            // If byMonthDay is defined but not -1, fall through to yearly check
+            return this.yearly(eventData, date);
         } else if (eventData.repeating.bySetPos !== undefined) {
 
             return this.bySetPos(eventData, date);

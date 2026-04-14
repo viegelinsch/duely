@@ -22,6 +22,8 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
 
                 return this.lastDayOfMonth(eventData, date);
             }
+            // If byMonthDay is defined but not -1, fall through to monthly check
+            return this.monthly(eventData, date);
         } else if (eventData.repeating.bySetPos !== undefined) {
 
             return this.bySetPos(eventData, date);
