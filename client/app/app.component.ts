@@ -26,7 +26,7 @@ export class AppComponent {
    * Creates the component and imports required dependencies
    * @param storage The environment specific storage service
    */
-  constructor(private storage: StorageService, private translate: TranslateService) {
+  constructor(public storage: StorageService, private translate: TranslateService) {
     translate.addLangs(['de', 'en']);
 
     translate.setDefaultLang('en');

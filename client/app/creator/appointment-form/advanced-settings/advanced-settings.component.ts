@@ -25,7 +25,7 @@ import { Appointment } from '../../appointment';
 export class AdvancedSettingsComponent implements OnInit, OnChanges {
   @Input() appointment!: Appointment;
 
-  private hideSettings = true;
+  public hideSettings = true;
   private timeZoneNames: string[];
   status!: string;
   timezone!: string;
@@ -34,7 +34,7 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
 
   advancedForm!: FormGroup;
   /** constructs a AdvancedSettingsComponent */
-  constructor(private fb: FormBuilder, private storage: StorageService, private translate: TranslateService) {
+  constructor(public fb: FormBuilder, public storage: StorageService, private translate: TranslateService) {
     this.timeZoneNames = moment.tz.names();
   }
   /** creates settings form */
