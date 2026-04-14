@@ -136,8 +136,14 @@ export class AppointmentsService {
  * gets the data from the events , returns an ICal-String
  */
   public addEventToCalendar(calendar: any, event: Appointment): void {
+    // Guard clause: recurringSettings is required for this function
+    if (!event.recurringSettings) {
+      console.warn('addEventToCalendar called without recurringSettings');
+      return;
+    }
+
     const start = new Date(event.start);
-    const end = new Date(event.end);
+    const end = new Date(event.end!);
 
     const events: any[] = [];
 
@@ -588,13 +594,13 @@ export class AppointmentsService {
 
     // add alarm to all events
     for (let i = 0; i < events.length; i++) {
-      event.alarms.forEach((val: AlarmData) => {
+      event.alarms?.forEach((val: AlarmData) => {
           if (val.repeat > 1) {
             events[i].createAlarm({
               type: val.type,
               trigger: moment(start).clone().subtract(val.triggerDelay, val.triggerUnit).toDate(),
               repeat: val.repeat,
-              interval: val.interval > 0 ? (val.interval * 60) : 1,
+              interval: val.interval! > 0 ? (val.interval! * 60) : 1,
               description: val.description,
             });
           } else {
