@@ -11,12 +11,12 @@ import { StorageService } from '../storage/storage.service';
 import { CollisionDetector, Collision } from '../DatesAndCollisions/CollisionDetector';
 
 import ical from 'ical-generator';
-import { day } from 'ical-generator';
+import Holidays from 'date-holidays';
+type HolidaysCountry = { country: string; state?: string; region?: string };
+type ICalWeekday = string; // Weekday type for ical-generator
 import { Appointment } from './appointment';
 import { AlarmData } from './alarmData';
 import moment from 'moment-timezone';
-import Holidays from 'date-holidays';
-type HolidaysCountry = { country: string; state?: string; region?: string };
 /**
  * This Service holds and grants access onto multiple appointments.
  */
@@ -259,7 +259,7 @@ export class AppointmentsService {
         });
       } else if (event.recurringSettings.repByMonthly === 'WEEK') {
         const count = (start.getDate() - (start.getDate() % 7)) / 7 + 1;
-        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as day[];
+        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
         events[0] = calendar.createEvent({
           start: event.start,
           end: event.end,
@@ -282,7 +282,7 @@ export class AppointmentsService {
       } else if (event.recurringSettings.repByMonthly === 'WEEKINV') {
         const days = this.getDaysInMonth(event.start.getDate(), event.start.getFullYear()) - event.start.getDate();
         const count = -(((days - (days % 7)) / 7) + 1);
-        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as day[];
+        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
         events[0] = calendar.createEvent({
           start: event.start,
           end: event.end,
@@ -391,7 +391,7 @@ export class AppointmentsService {
       // add multiple eventss to calendar which repeat every x-th weekday day of a year (Every second friday of the year)
       if (event.recurringSettings.repByYearly === 'WEEKYEAR') {
         const count = (start.getDate() - (start.getDate() % 7)) / 7 + 1;
-        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as day[];
+        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
         events[0] = calendar.createEvent({
           start: event.start,
           end: event.end,
@@ -437,7 +437,7 @@ export class AppointmentsService {
       } else if (event.recurringSettings.repByYearly === 'WEEKINVYEAR') {
         const days = this.getDaysInMonth(event.start.getDate(), event.start.getFullYear()) - event.start.getDate();
         const count = -(((days - (days % 7)) / 7) + 1);
-        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as day[];
+        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
         events[0] = calendar.createEvent({
           start: event.start,
           end: event.end,
