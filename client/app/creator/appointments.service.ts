@@ -63,7 +63,6 @@ export class AppointmentsService {
  */
   private initializeCalendar(): any {
     const calendar = ical({
-      domain: 'duely.tu-braunschweig.de',
       name: 'Duely',
       prodId: '//TU Braunschweig//Duely//EN',
       url: 'https://duely.tu-braunschweig.de',
