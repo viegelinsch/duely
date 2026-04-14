@@ -5,8 +5,8 @@
   'has-danger': appointmentForm.controls.summary.invalid && appointmentForm.controls.summary.dirty || appointmentForm.controls.summary.pristine ,
   'has-success': appointmentForm.controls.summary.valid && appointmentForm.controls.summary.dirty
 }">
-    <label for="title" class="col-sm-2 col-xs-12 control-label">{{'TITLE' | translate}}</label>
-    <div class="col-sm-10 col-xs-12">
+    <label for="title" class="col-sm-2 col-12 control-label">{{'TITLE' | translate}}</label>
+    <div class="col-sm-10 col-12">
       <input formControlName="summary" [(ngModel)]="appointment.summary"
             type="text" class="form-control" [placeholder]="this.translate.instant('TITLE')">
           <div class="alert alert-warning"
