@@ -1,6 +1,6 @@
 import * as ICalGenerator from 'ical-generator';
 import * as Holidays from 'date-holidays';
-import * as moment from 'moment';
+import moment from 'moment';
 import { RecurrencePattern } from './RecurrencePattern';
 
 /**

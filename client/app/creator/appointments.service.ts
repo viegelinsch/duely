@@ -14,7 +14,7 @@ import * as ICalGenerator from 'ical-generator';
 import { day } from 'ical-generator';
 import { Appointment } from './appointment';
 import { AlarmData } from './alarmData';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import * as Holidays from 'date-holidays';
 /**
  * This Service holds and grants access onto multiple appointments.

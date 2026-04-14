@@ -1,7 +1,7 @@
 import * as ICalGenerator from 'ical-generator';
 import * as Holidays from 'date-holidays';
 import { CollisionDetector, Collision} from '../DatesAndCollisions/CollisionDetector';
-import * as moment from 'moment';
+import moment from 'moment';
 
 describe('CollisionDetector', () => {
 let cd: CollisionDetector;

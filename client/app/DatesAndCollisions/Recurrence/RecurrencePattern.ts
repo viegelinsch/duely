@@ -1,6 +1,6 @@
 import * as ICalGenerator from 'ical-generator';
 import * as Holidays from 'date-holidays';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { Collision } from '../CollisionDetector';
 
 

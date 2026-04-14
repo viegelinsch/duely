@@ -1,4 +1,4 @@
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { TestBed, inject } from '@angular/core/testing';
 import * as ICalGenerator from 'ical-generator';
 import { Appointment } from './appointment';
