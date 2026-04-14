@@ -1,5 +1,5 @@
 import ical from 'ical-generator';
-import * as Holidays from 'date-holidays';
+import Holidays from 'date-holidays';
 import moment from 'moment';
 import { RecurrencePattern } from './RecurrencePattern';
 

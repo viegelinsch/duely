@@ -13,7 +13,7 @@ import { RecurringSettings } from '../../recurring-settings';
 import { Subscription } from 'rxjs';
 import { BsDatepickerConfig, BsLocaleService } from 'ngx-bootstrap/datepicker';
 import { StorageService } from '../../../storage/storage.service';
-import * as Holidays from 'date-holidays';
+import Holidays from 'date-holidays';
 import { TranslateService } from '@ngx-translate/core';
 import * as moment from 'moment-timezone';
 import { CollisionDetector } from '../../../DatesAndCollisions/CollisionDetector';

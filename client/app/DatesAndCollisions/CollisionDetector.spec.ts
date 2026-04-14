@@ -1,5 +1,6 @@
 import ical from 'ical-generator';
-import * as Holidays from 'date-holidays';
+import Holidays from 'date-holidays';
+type HolidaysCountry = { country: string; state?: string; region?: string };
 import { CollisionDetector, Collision} from '../DatesAndCollisions/CollisionDetector';
 import moment from 'moment';
 
@@ -76,7 +77,7 @@ beforeEach(() => {
             { date: new Date('2017-12-26T00:00:00+01:00'), reason: '2. Weihnachtstag' }
         ];
 
-        const locations: Holidays.Country[] = [
+        const locations: HolidaysCountry[] = [
             {country: 'de', state: 'ni', region: undefined},
             {country: 'de', state: 'by', region: 'a'}
         ];

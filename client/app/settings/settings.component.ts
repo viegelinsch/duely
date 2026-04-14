@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { Component, OnInit } from '@angular/core';
-import * as Holidays from 'date-holidays';
+import Holidays from 'date-holidays';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import * as moment from 'moment-timezone';

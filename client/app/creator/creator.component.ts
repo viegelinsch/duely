@@ -13,7 +13,7 @@ import { FormArray, FormBuilder, FormGroup, Validators, FormControl } from '@ang
 import { Collision } from '../DatesAndCollisions/CollisionDetector';
 
 import * as moment from 'moment-timezone';
-import * as Holidays from 'date-holidays';
+import Holidays from 'date-holidays';
 
 import { CustomValidators } from '../validation/custom-validators';
 import { StorageService } from '../storage/storage.service';

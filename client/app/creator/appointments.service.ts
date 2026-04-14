@@ -15,7 +15,8 @@ import { day } from 'ical-generator';
 import { Appointment } from './appointment';
 import { AlarmData } from './alarmData';
 import moment from 'moment-timezone';
-import * as Holidays from 'date-holidays';
+import Holidays from 'date-holidays';
+type HolidaysCountry = { country: string; state?: string; region?: string };
 /**
  * This Service holds and grants access onto multiple appointments.
  */
@@ -546,7 +547,7 @@ export class AppointmentsService {
 
     // get exclusion data
     const exclusionDates: Date[] = [];
-    const holidayCountries: Holidays.Country[] = [];
+    const holidayCountries: HolidaysCountry[] = [];
     for (const exclusion of event.recurringSettings.exclusions) {
       if (exclusion.type === 'date') {
         exclusionDates.push(new Date(exclusion.date));

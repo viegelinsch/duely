@@ -1,19 +1,21 @@
 import ical from 'ical-generator';
-import * as Holidays from 'date-holidays';
+import Holidays from 'date-holidays';
+type HolidaysCountry = { country: string; state?: string; region?: string };
+type HolidaysHoliday = { date: string; start: Date; end: Date; name: string; type: string; rule: string };
 import moment from 'moment-timezone';
 import { Collision } from '../CollisionDetector';
 
 
 export abstract class RecurrencePattern {
    /** The locations to be considered when checking for collisions with public holidays. */
-    private locations: Holidays.Country[];
+    private locations: HolidaysCountry[];
     /** The dates that are excluded by the user. */
     private userExclusions: Date[];
     /** The language. */
     private language: string;
 
 
-    constructor(locations: Holidays.Country[], userExclusions: Date[], language: string) {
+    constructor(locations: HolidaysCountry[], userExclusions: Date[], language: string) {
         this.locations = locations;
         this.userExclusions = userExclusions;
         this.language = language;
@@ -37,12 +39,12 @@ export abstract class RecurrencePattern {
             const untilYear = moment(until).year();
 
             while (year <= untilYear) {
-                let holidays: Holidays.Holiday[] = new Array<Holidays.Holiday>();
+                let holidays: HolidaysHoliday[] = [];
 
                 for (const location of this.locations) {
                     hd.init(location.country, location.state, location.region);
                     hd.setLanguages([this.language]);
-                    const holidaysOfYear: Holidays.Holiday[] = hd.getHolidays(year);
+                    const holidaysOfYear: HolidaysHoliday[] = hd.getHolidays(year);
 
                     for (const hol of holidaysOfYear) {
                         if (hol.type === 'public') {

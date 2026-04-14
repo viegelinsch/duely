@@ -3,7 +3,8 @@ import { WeeklyRecurrencePattern } from './Recurrence/WeeklyRecurrencePattern';
 import { MonthlyRecurrencePattern } from './Recurrence/MonthlyRecurrencePattern';
 import { YearlyRecurrencePattern } from './Recurrence/YearlyRecurrencePattern';
 import ical from 'ical-generator';
-import * as Holidays from 'date-holidays';
+import Holidays from 'date-holidays';
+type HolidaysCountry = { country: string; state?: string; region?: string };
 
 /**
  * The type Collision.
@@ -20,7 +21,7 @@ export interface Collision {
  */
 export class CollisionDetector {
     /** The locations to be considered when checking for collisions with public holidays.  */
-    private locations: Holidays.Country[];
+    private locations: HolidaysCountry[];
     /** The dates that are excluded by the user. */
     private userExclusions: Date[];
     /** The language. */
@@ -31,7 +32,7 @@ export class CollisionDetector {
      * @param locations         The locations to be considered when checking for collisions with public holidays.
      * @param userExclusions    The dates that are excluded by the user.
      */
-    constructor(locations: Holidays.Country[], userExclusions: Date[], language: string) {
+    constructor(locations: HolidaysCountry[], userExclusions: Date[], language: string) {
         this.locations = locations;
         this.userExclusions = userExclusions;
         this.language = language;
