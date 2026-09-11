@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { AbstractControl, ValidatorFn } from '@angular/forms';
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 /**
  * A class containing curried Validator functions required for
@@ -19,7 +19,7 @@ export class CustomValidators {
    * @return Validator function
    */
   public static max(max: number): ValidatorFn {
-    return (control: AbstractControl): {[key: string]: any} => {
+    return (control: AbstractControl): ValidationErrors | null => {
       return control.value <= max ? null : {'max': control.value};
     };
   }
@@ -30,7 +30,7 @@ export class CustomValidators {
    * @return Validator function
    */
   public static min(min: number): ValidatorFn {
-    return (control: AbstractControl): {[key: string]: any} => {
+    return (control: AbstractControl): ValidationErrors | null => {
       return control.value >= min ? null : {'min': control.value};
     };
   }

@@ -88,7 +88,7 @@ describe('AppointmentFormComponent', () => {
         const oldEndTime = moment.utc(component.appointment.end);
         const duration = oldEndTime.diff(component.appointment.start);
         component.createForm();
-        component.appointmentForm.get('start.date').setValue(testDate);
+        component.appointmentForm.get('start.date')!.setValue(testDate);
         component.onStartDateChange();
         expect(moment.utc(component.appointment.start).add(duration).valueOf()).toEqual(component.appointment.end!.valueOf());
     }));

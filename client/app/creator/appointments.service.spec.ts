@@ -199,7 +199,7 @@ describe('AppointmentsService', () => {
         expect(json.timezone).toEqual(correctAppointment.timezone);
         expect(json.url).toEqual(correctAppointment.url);
         expect(new Date(json.events[0].start.valueOf())).toEqual(new Date(correctAppointment.events[0].start));
-        expect(new Date(json.events[0].end.valueOf())).toEqual(new Date(correctAppointment.events[0].end));
+        expect(new Date(json.events[0].end!.valueOf())).toEqual(new Date(correctAppointment.events[0].end));
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
@@ -268,8 +268,8 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
     }));
 
     it('should add a recurring (daily, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -335,9 +335,9 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (daily, until ) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -403,9 +403,9 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.until).toEqual(correctAppointment.events[0].repeating.until);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.until).toEqual(correctAppointment.events[0].repeating.until);
     }));
 
     it('should add a recurring (weekly-thursday, interval: 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -471,9 +471,9 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
     }));
 
     it('should add a recurring (monthly, every 2. wednesday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -540,10 +540,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (monthly, every last, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -610,10 +610,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byMonthDay).toEqual(correctAppointment.events[0].repeating.byMonthDay);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byMonthDay).toEqual(correctAppointment.events[0].repeating.byMonthDay);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (monthly, every 3. last wednesday, interval 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -679,9 +679,9 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
     }));
 
     it('should add a recurring (monthly, every 3. last wednesday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -748,10 +748,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, every first friday of january, interval 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -818,10 +818,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
     }));
 
     it('should add a recurring (yearly, every first wednesday of january, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -889,11 +889,11 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, every second last friday, interval 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -960,10 +960,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
     }));
 
     it('should add a recurring (yearly, every last friday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1031,11 +1031,11 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, last day of december, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1104,12 +1104,12 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, 2. last workday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1178,12 +1178,12 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, 2. workday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1252,12 +1252,12 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (monthly, 2. workday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1325,11 +1325,11 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (monthly, 2. weekend day, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1397,10 +1397,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 });

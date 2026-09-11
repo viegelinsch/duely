@@ -40,7 +40,7 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
 
  /** checks if alarm is in the object, and if not adds it */
   ngOnChanges(): void {
-    if (!this.appointment.hasOwnProperty('alarms')) {
+    if (!this.appointment.alarms) {
       this.appointment.alarms = [];
     }
 

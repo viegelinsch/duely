@@ -27,8 +27,8 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
 
   public hideSettings = true;
   private timeZoneNames: string[];
-  status!: string;
-  timezone!: string;
+  status!: string | undefined;
+  timezone!: string | undefined;
   private subscription: Subscription = new Subscription();
 
 

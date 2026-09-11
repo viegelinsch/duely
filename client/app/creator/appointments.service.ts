@@ -558,7 +558,7 @@ export class AppointmentsService {
         exclusionDates.push(new Date(exclusion.date));
       } else if (exclusion.type === 'holidays') {
         holidayCountries.push({
-          country: exclusion.holiday_countries,
+          country: exclusion.holiday_countries ?? '',
           state: exclusion.holiday_states,
           region: exclusion.holiday_regions
         });

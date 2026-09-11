@@ -106,7 +106,7 @@ export class SettingsComponent implements OnInit {
    * returns all states of the holiday database as an array
    * @return all states of the holiday database as an array
    */
-  public getStates(country: string): any[] {
+  public getStates(country: string): any[] | undefined {
     const states = this.hd.getStates(country);
     if (states == null || states === undefined) {
       return undefined;
@@ -118,7 +118,7 @@ export class SettingsComponent implements OnInit {
    * returns all regions of the holiday database as an array
    * @return all regions of the holiday database as an array
    */
-  public getRegions(country: string, state: string): any[] {
+  public getRegions(country: string, state: string): any[] | undefined {
     const regions = this.hd.getRegions(country, state);
     if (regions == null || regions === undefined) {
       return undefined;
@@ -136,8 +136,9 @@ export class SettingsComponent implements OnInit {
     if (country === undefined || country === '') {
       return;
     }
-    this.states = this.getStates(country);
-    if (this.states !== undefined) {
+    const states = this.getStates(country);
+    this.states = states ?? [];
+    if (states !== undefined) {
       this.statesVisible = true;
       this.regionsVisible = false;
     } else {
@@ -159,8 +160,9 @@ export class SettingsComponent implements OnInit {
       || country === '' || state === '') {
       return;
     }
-    this.regions = this.getRegions(country, state);
-    if (this.regions !== undefined) {
+    const regions = this.getRegions(country, state);
+    this.regions = regions ?? [];
+    if (regions !== undefined) {
       this.statesVisible = true;
       this.regionsVisible = true;
     } else {

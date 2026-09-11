@@ -203,7 +203,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
           minute: endTime.minute() >= 60 ? 59 : endTime.minute()
         });
         this.appointment.start = startTime.toDate();
-        this.appointmentForm.get('start.time').setValue(startTime.format('HH:mm'));
+        this.appointmentForm.get('start.time')!.setValue(startTime.format('HH:mm'));
       }
       if (this.appointment.hasOwnProperty('recurringSettings')) {
         if (this.appointment.end!.valueOf() > this.appointment.recurringSettings!.untilDate!.valueOf()) {
@@ -249,7 +249,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     });
     // Update endTime to keep duration
     this.appointment.end = endTime.toDate();
-    this.appointmentForm.get('end.time').setValue(endTime.format('HH:mm'));
+    this.appointmentForm.get('end.time')!.setValue(endTime.format('HH:mm'));
   }
   /** changes nothing  */
   onEndDateChange(): void {
@@ -284,7 +284,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
         minute: endTime.minute() >= 60 ? 59 : endTime.minute()
       });
       this.appointment.start = startTime.toDate();
-      this.appointmentForm.get('start.time').setValue(startTime.format('HH:mm'));
+      this.appointmentForm.get('start.time')!.setValue(startTime.format('HH:mm'));
     }
   }
   /** checks for validity of input of time and date form */

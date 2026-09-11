@@ -91,7 +91,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** checks selection and updates the form  */
   ngOnInit(): void {
     // Angular Material datepicker handles i18n automatically via Angular's locale
-    if (!this.appointment.hasOwnProperty('recurringSettings')) {
+    if (!this.appointment.recurringSettings) {
       this.appointment.recurringSettings = {
         // Default values for form data
         frequency: 'NEVER',
@@ -194,7 +194,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    * returns all states of the holiday database as an array
    * @return all states of the holiday database as an array
    */
-  public getStates(country: string): any[][] {
+  public getStates(country: string): any[][] | undefined {
     const states = this.hd.getStates(country);
     if (states == null || states === undefined) {
       return undefined;
@@ -206,7 +206,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    * returns all regions of the holiday database as an array
    * @return all regions of the holiday database as an array
    */
-  public getRegions(country: string, state: string): any[][] {
+  public getRegions(country: string, state: string): any[][] | undefined {
     const regions = this.hd.getRegions(country, state);
     if (regions == null || regions === undefined) {
       return undefined;
@@ -221,8 +221,9 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   public showStates(i: number): void {
     const exclusions = this.recurringForm.controls['exclusions'] as FormArray;
     const country = (exclusions.controls[i] as FormGroup).controls['holiday_countries'].value as string;
-    this.states[i] = this.getStates(country);
-    if (this.states[i] !== undefined) {
+    const states = this.getStates(country);
+    this.states[i] = states ?? [];
+    if (states !== undefined) {
       this.statesVisible[i] = true;
       this.regionsVisible[i] = false;
       this.appointment.recurringSettings!.exclusions![i].holiday_states = this.states[i][0][0];
@@ -242,8 +243,9 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
     const exclusions = this.recurringForm.controls['exclusions'] as FormArray;
     const country = (exclusions.controls[i] as FormGroup).controls['holiday_countries'].value as string;
     const state = (exclusions.controls[i] as FormGroup).controls['holiday_states'].value as string;
-    this.regions[i] = this.getRegions(country, state);
-    if (this.regions[i] !== undefined) {
+    const regions = this.getRegions(country, state);
+    this.regions[i] = regions ?? [];
+    if (regions !== undefined) {
       this.statesVisible[i] = true;
       this.regionsVisible[i] = true;
       this.appointment.recurringSettings!.exclusions![i].holiday_regions = this.regions[i][0][0];
