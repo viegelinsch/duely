@@ -8,9 +8,9 @@
 import { Component, Input, OnChanges, OnInit, OnDestroy } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators  } from '@angular/forms';
 import { AlarmData } from '../../alarmData';
-import * as moment from 'moment-timezone';
-import { Subscription } from 'rxjs/Subscription';
-import { Appointment } from '../../appointment';
+import moment from 'moment-timezone';
+import { Subscription } from 'rxjs';
+import type { Appointment } from '../../appointment';
 import { StorageService } from '../../../storage/storage.service';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -19,6 +19,7 @@ import { TranslateService } from '@ngx-translate/core';
  */
 @Component({
   selector: 'rac-alarm-settings',
+  standalone: false,
   templateUrl: './alarm-settings.component.html',
   styleUrls: ['./alarm-settings.component.scss']
 })
@@ -53,6 +54,11 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
     this.alarmsForm = this.fb.group({
       alarms: this.fb.array([])
     });
+  }
+
+  /** typed accessor for the alarms FormArray so the template can reach per-group controls */
+  get alarmsArray(): FormArray<FormGroup> {
+    return this.alarmsForm.controls['alarms'] as FormArray<FormGroup>;
   }
 
   /** destroys the subcribtion */
@@ -123,13 +129,14 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /** gets the alarm distanze and recalculates it as date */
-  public recalculateTrigger(alarm): void {
-    const start = new moment(this.appointment.start);
-    alarm.trigger = start.subtract(alarm.triggerDelay, alarm.triggerUnit).toDate();
+  public recalculateTrigger(alarm: AlarmData): void {
+    const start = moment(this.appointment.start);
+    alarm.trigger = start.subtract(alarm.triggerDelay,
+      alarm.triggerUnit as unknown as moment.unitOfTime.DurationConstructor).toDate();
   }
 
   /** get alarm intervall and caculates it to minutes */
-  public recalculateInterval(alarm): void {
+  public recalculateInterval(alarm: AlarmData): void {
     alarm.interval = alarm.intervalMinutes * 60;
   }
 

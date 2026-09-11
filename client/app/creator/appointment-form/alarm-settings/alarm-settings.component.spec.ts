@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, inject } from '@angular/core/testing';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { StorageService } from '../../../storage/storage.service';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { AlarmData } from '../../alarmData';
 
 import { AlarmSettingsComponent } from './alarm-settings.component';
@@ -51,7 +51,7 @@ describe('AlarmSettingsComponent', () => {
             triggerUnit: 'MINUTES',
             repeat: 1,
             intervalMinutes: 5,
-            trigger: (new moment(component.appointment.start)).subtract(10, 'MINUTES').toDate(),
+            trigger: moment(component.appointment.start).subtract(10, 'minutes').toDate(),
             interval: 5 * 60
         };
         vi.spyOn(component.alarms, 'push');
@@ -69,7 +69,7 @@ describe('AlarmSettingsComponent', () => {
             triggerUnit: 'MINUTES',
             repeat: 1,
             intervalMinutes: 5,
-            trigger: (new moment(component.appointment.start)).subtract(10, 'MINUTES').toDate(),
+            trigger: moment(component.appointment.start).subtract(10, 'minutes').toDate(),
             interval: 5 * 60
         };
 
@@ -87,7 +87,7 @@ describe('AlarmSettingsComponent', () => {
             triggerUnit: 'MINUTES',
             repeat: 1,
             intervalMinutes: 5,
-            trigger: (new moment(component.appointment.start)).subtract(10, 'MINUTES').toDate(),
+            trigger: moment(component.appointment.start).subtract(10, 'minutes').toDate(),
             interval: 5 * 60
         };
 
@@ -106,7 +106,7 @@ describe('AlarmSettingsComponent', () => {
             repeat: 1,
             intervalMinutes: 5
         };
-        const expectedTrigger = (new moment(component.appointment.start)).subtract(10, 'MINUTES').toDate();
+        const expectedTrigger = moment(component.appointment.start).subtract(10, 'minutes').toDate();
         component.recalculateTrigger(defaultAlarm);
         expect(defaultAlarm.trigger).toEqual(expectedTrigger);
 

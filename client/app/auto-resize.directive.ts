@@ -4,7 +4,8 @@
 import { Directive, ElementRef, HostListener } from '@angular/core';
 
 @Directive({
-  selector: '[racAutoResize]'
+  selector: '[racAutoResize]',
+  standalone: false
 })
 export class AutoResizeDirective {
 

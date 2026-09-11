@@ -7,16 +7,15 @@
  */
 import { Component, Input, OnInit, AfterViewChecked, OnChanges, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { Appointment } from '../../appointment';
+import type { Appointment } from '../../appointment';
 import { Exclusion } from '../../exclusion';
 import { RecurringSettings } from '../../recurring-settings';
 import { Subscription } from 'rxjs';
-import { BsDatepickerConfig, BsLocaleService } from 'ngx-bootstrap/datepicker';
-import { DateModel, DatePickerTexts } from '../../../types/datepicker-types';
+import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { StorageService } from '../../../storage/storage.service';
 import Holidays from 'date-holidays';
 import { TranslateService } from '@ngx-translate/core';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { CollisionDetector } from '../../../DatesAndCollisions/CollisionDetector';
 
 
@@ -25,6 +24,7 @@ import { CollisionDetector } from '../../../DatesAndCollisions/CollisionDetector
  */
 @Component({
   selector: 'rac-recurring-settings',
+  standalone: false,
   templateUrl: './recurring-settings.component.html',
   styleUrls: ['./recurring-settings.component.scss']
 })
@@ -140,20 +140,19 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** gets event data, checks the end date. Checks if it is not
    * before the start date and updates it
    */
-  endDateListener(event: any) {
-    if (event !== undefined) {
+  endDateListener(event: MatDatepickerInputEvent<Date>): void {
+    const value = event.value;
+    if (value != null) {
       const date = moment();
       date.set({
-        year: event.year,
-        month: event.month - 1,
-        date: event.day
+        year: value.getFullYear(),
+        month: value.getMonth(),
+        date: value.getDate()
       });
       if (date.toDate().valueOf() >= this.appointment.end!.valueOf()) {
         this.recurringSettings.untilDate = date.toDate();
       } else {
-        const end: moment = new moment(this.appointment.end!);
-        this.enddate = new DateModel({day: (end.date() + 1) + '', month: (end.month() + 1) + '', year: end.year() + '',
-          formatted: end.format('YYYY-MM-DD'), momentObj: new moment(end)});
+        this.enddate = this.appointment.end!;
       }
     }
   }
@@ -269,24 +268,24 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** creates the reccuring form */
   private createForm(): void {
     this.recurringForm = this.fb.group({
-      frequency: 'NEVER' || 'DAILY' || 'WEEKLY' || 'MONTHLY' || 'YEARLY',
+      frequency: 'NEVER',
       interval: [
         1, [
           Validators.required,
           Validators.min(1),
         ]
       ],
-      ends: 'NEVER' || 'COUNT' || 'UNTIL',
-      monday: Boolean,
-      tuesday: Boolean,
-      wednesday: Boolean,
-      thursday: Boolean,
-      friday: Boolean,
-      saturday: Boolean,
-      sunday: Boolean,
-      repByMonthly: 'MONTH' || 'MONTHINV' || 'WEEK' || 'WEEKINV' || 'WORK' || 'WORKINV',
-      repByYearly: 'DAYMONTHYEAR' || 'DAYMONTHYEARINV' || 'WEEKYEAR' || 'WEEKINVYEAR' || 'WORKYEAR' || 'WORKINVYEAR',
-      count: Number,
+      ends: 'NEVER',
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+      sunday: false,
+      repByMonthly: 'MONTH',
+      repByYearly: 'DAYMONTHYEAR',
+      count: null,
       untilDate: moment(new Date()).add(100, 'y'),
       exclusions: this.fb.array([]),
     });
@@ -336,9 +335,10 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** this method gets the event and an number.
    * sets the date
    */
-  setExclusionDate(event: any, i: number): void {
-    this.exclusions[i].date = new Date();
-    this.exclusions[i].date.setFullYear(event.year, event.month - 1, event.day);
+  setExclusionDate(event: MatDatepickerInputEvent<Date>, i: number): void {
+    if (event.value != null) {
+      this.exclusions[i].date = event.value;
+    }
   }
 
   /** gets all exclusion countries and the date and puts it

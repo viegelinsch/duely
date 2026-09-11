@@ -1,7 +1,8 @@
-import { async, ComponentFixture, TestBed, inject } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed, inject } from '@angular/core/testing';
 import * as fs from 'fs';
 import { CreatorComponent } from './creator.component';
 import { StorageService } from '../storage/storage.service';
+import { selectStorageService } from '../storage/storage.factory';
 import { AppointmentsService } from './appointments.service';
 import { Appointment } from './appointment';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
@@ -17,12 +18,12 @@ describe('CreatorComponent', () => {
     let component: CreatorComponent;
     let fixture: ComponentFixture<CreatorComponent>;
 
-    beforeEach(async(() => {
+    beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
             declarations: [CreatorComponent, AppointmentFormComponent, RecurringSettingsComponent,
                 AlarmSettingsComponent, AdvancedSettingsComponent],
             imports: [TranslateModule.forRoot(), ReactiveFormsModule],
-            providers: [AppointmentsService, StorageService]
+            providers: [AppointmentsService, { provide: StorageService, useFactory: selectStorageService }]
         })
             .compileComponents();
     }));

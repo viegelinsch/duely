@@ -1,4 +1,4 @@
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { Appointment } from './appointment';
 
 export const APPOINTMENTS: Appointment[] = [

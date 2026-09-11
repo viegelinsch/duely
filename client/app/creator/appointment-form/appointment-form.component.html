@@ -11,8 +11,8 @@
             type="text" class="form-control" [placeholder]="this.translate.instant('TITLE')">
           <div class="alert alert-warning"
        *ngIf="appointmentForm.controls.summary.invalid  && appointmentForm.controls.summary.dirty || appointmentForm.controls.summary.pristine">
-        <p *ngIf="appointmentForm.controls.summary.errors == null && !appointmentForm.controls.summary.errors.required && (appointmentForm.controls.summary.dirty || appointmentForm.controls.summary.pristine)">{{'REQUIRED' | translate}}</p>
-        <p *ngIf="appointmentForm.controls.summary.errors.maxlength">{{'REQUIRED25' | translate}}</p>
+        <p *ngIf="appointmentForm.controls.summary.hasError('required')">{{'REQUIRED' | translate}}</p>
+        <p *ngIf="appointmentForm.controls.summary.hasError('maxlength')">{{'REQUIRED25' | translate}}</p>
         <p *ngIf="appointmentForm.controls.summary.errors != null && appointmentForm.controls.summary.errors.required">{{'REQUIRED' | translate}}</p>
         <p *ngIf="appointmentForm.controls.summary.errors != null && appointmentForm.controls.summary.errors.maxlength">{{'REQUIRED25' | translate}}</p>
 
@@ -57,7 +57,7 @@
                [matDatepicker]="startPicker"
                formControlName="date" 
                [(ngModel)]="startdate" 
-               (ngModelChange)="startDateListener($event)">
+               (dateChange)="startDateListener($event)">
         <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
         <mat-datepicker #startPicker showWeekNumbers="true"></mat-datepicker>
       </mat-form-field>
@@ -78,7 +78,7 @@
                [matDatepicker]="endPicker"
                formControlName="date" 
                [(ngModel)]="enddate" 
-               (ngModelChange)="endDateListener($event)">
+               (dateChange)="endDateListener($event)">
         <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
         <mat-datepicker #endPicker showWeekNumbers="true"></mat-datepicker>
       </mat-form-field>

@@ -12,7 +12,7 @@ import { Appointment } from './appointment';
 import { FormArray, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { Collision } from '../DatesAndCollisions/CollisionDetector';
 
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import Holidays from 'date-holidays';
 
 import { CustomValidators } from '../validation/custom-validators';
@@ -22,6 +22,7 @@ import { TranslateService } from '@ngx-translate/core';
 /** A class used to manage multiple appointments */
 @Component({
   selector: 'rac-creator',
+  standalone: false,
   templateUrl: './creator.component.html',
   styleUrls: ['./creator.component.scss'],
   providers: [AppointmentsService]
@@ -30,7 +31,7 @@ export class CreatorComponent implements OnInit {
   appointments: Appointment[] = [];
   timeZoneNames: any;
   visible: boolean[] = [true];
-  public valid: boolean[][];
+  public valid: boolean[][] = [];
   public collisions: Collision[] = [];
 
   /** constructs a CreatorComponent */

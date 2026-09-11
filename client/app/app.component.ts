@@ -17,6 +17,7 @@ import { TranslateService } from '@ngx-translate/core';
  */
 @Component({
   selector: 'rac-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })

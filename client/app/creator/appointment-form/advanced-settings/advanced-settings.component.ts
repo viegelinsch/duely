@@ -10,14 +10,15 @@ import { StorageService } from '../../../storage/storage.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
-import * as moment from 'moment-timezone';
-import { Appointment } from '../../appointment';
+import moment from 'moment-timezone';
+import type { Appointment } from '../../appointment';
 
 /**
  * Component to handle all settings contained in 'other' section.
  */
 @Component({
   selector: 'rac-advanced-settings',
+  standalone: false,
   templateUrl: './advanced-settings.component.html',
   styleUrls: ['./advanced-settings.component.scss']
 })
@@ -26,7 +27,7 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
   @Input() appointment!: Appointment;
 
   public hideSettings = true;
-  private timeZoneNames: string[];
+  protected timeZoneNames: string[];
   status!: string | undefined;
   timezone!: string | undefined;
   private subscription: Subscription = new Subscription();

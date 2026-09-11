@@ -19,6 +19,9 @@ export interface RecurringSettings {
   repByMonthly?: repByMonthly;
   repByYearly?: repByYearly;
   count?: number;
-  untilDate?: Date;
+  // Producer assigns moment(...).format('YYYY-MM-DD') (a string); consumers pass it
+  // straight to ical-generator's `until` (ICalDateTimeValue accepts Date | string).
+  // Declared as Date | string so the type matches the value that actually flows.
+  untilDate?: Date | string;
   exclusions: Exclusion[];
 }

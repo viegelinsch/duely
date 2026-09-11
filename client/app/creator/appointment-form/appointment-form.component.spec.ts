@@ -43,28 +43,28 @@ describe('AppointmentFormComponent', () => {
     }));
 
     it('should rewrite the start.time form', inject([TranslateService], (translate: TranslateService) => {
-        const form = component.appointmentForm.get('start.time');
+        const form = component.appointmentForm.get('start.time')!;
         vi.spyOn(form, 'setValue');
         component.validateStartTime();
         expect(form.setValue).toHaveBeenCalledWith(moment.utc(component.appointment.start).format('HH:mm'));
     }));
 
     it('should rewrite the start.date form', inject([TranslateService], (translate: TranslateService) => {
-        const form = component.appointmentForm.get('start.date');
+        const form = component.appointmentForm.get('start.date')!;
         vi.spyOn(form, 'setValue');
         component.validateStartDate();
         expect(form.setValue).toHaveBeenCalledWith(moment.utc(component.appointment.start).format('YYYY-MM-DD'));
     }));
 
     it('should rewrite the end.time form', inject([TranslateService], (translate: TranslateService) => {
-        const form = component.appointmentForm.get('end.time');
+        const form = component.appointmentForm.get('end.time')!;
         vi.spyOn(form, 'setValue');
         component.validateEndTime();
         expect(form.setValue).toHaveBeenCalledWith(moment.utc(component.appointment.end).format('HH:mm'));
     }));
 
     it('should rewrite the end.date form', inject([TranslateService], (translate: TranslateService) => {
-        const form = component.appointmentForm.get('end.date');
+        const form = component.appointmentForm.get('end.date')!;
         vi.spyOn(form, 'setValue');
         component.validateEndDate();
         expect(form.setValue).toHaveBeenCalledWith(moment.utc(component.appointment.end).format('YYYY-MM-DD'));

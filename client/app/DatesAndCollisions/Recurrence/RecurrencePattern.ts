@@ -8,9 +8,9 @@ import { Collision } from '../CollisionDetector';
 
 export abstract class RecurrencePattern {
    /** The locations to be considered when checking for collisions with public holidays. */
-    private locations: HolidaysCountry[];
+    private locations: HolidaysCountry[] | undefined;
     /** The dates that are excluded by the user. */
-    private userExclusions: Date[];
+    private userExclusions: Date[] | undefined;
     /** The language. */
     private language: string;
     /**
@@ -24,7 +24,7 @@ export abstract class RecurrencePattern {
     private excludedByUserReason: string;
 
 
-    constructor(locations: HolidaysCountry[], userExclusions: Date[], language: string,
+    constructor(locations: HolidaysCountry[] | undefined, userExclusions: Date[] | undefined, language: string,
                 excludedByUserReason: string = 'excluded by user') {
         this.locations = locations;
         this.userExclusions = userExclusions;
@@ -203,7 +203,7 @@ export abstract class RecurrencePattern {
      * @return          The iso weekday.
      */
     protected getIsoWeekday(weekday: string): number {
-        let isoWeekday: number;
+        let isoWeekday = 0;
 
         switch (weekday) {
             case 'MO': {

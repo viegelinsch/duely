@@ -9,7 +9,7 @@ import { Component, OnInit } from '@angular/core';
 import Holidays from 'date-holidays';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { StorageService } from '../storage/storage.service';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -19,26 +19,27 @@ import { TranslateService } from '@ngx-translate/core';
  */
 @Component({
   selector: 'rac-settings',
+  standalone: false,
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent implements OnInit {
 
 
-  public settingsForm: FormGroup;
+  public settingsForm: FormGroup = new FormGroup({});
   // locations exclusions:
   public hd: any;
-  public countries: any[];
-  public states: any[];
-  public regions: any[];
-  public statesVisible: boolean;
-  public regionsVisible: boolean;
+  public countries: any[] = [];
+  public states: any[] = [];
+  public regions: any[] = [];
+  public statesVisible = false;
+  public regionsVisible = false;
   /** names of time zones */
   public timeZoneNames: string[];
 
   /** contructs the settings and sets defaults  */
   constructor(private fb: FormBuilder, private router: Router, private storage: StorageService,
-              private translate: TranslateService) {
+              protected translate: TranslateService) {
     this.hd = new Holidays();
     this.timeZoneNames = moment.tz.names();
   }

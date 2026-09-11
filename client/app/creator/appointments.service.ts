@@ -43,7 +43,7 @@ export class AppointmentsService {
 /**
  * gets appointment data and returns a default appointment
  */
-  public addAppointment(appointment: Appointment): void {
+  public addAppointment(appointment: Appointment | null): void {
     if (appointment != null) {
       this.events.push(appointment);
     } else {
@@ -62,7 +62,7 @@ export class AppointmentsService {
 /**
  * initializes the data for the output of the data
  */
-  private initializeCalendar(): any {
+  public initializeCalendar(): any {
     const calendar = ical({
       name: this.StorageService.settings.calendarName,
       prodId: this.StorageService.settings.calendarProdId,
@@ -556,7 +556,7 @@ export class AppointmentsService {
     const holidayCountries: HolidaysCountry[] = [];
     for (const exclusion of event.recurringSettings.exclusions) {
       if (exclusion.type === 'date') {
-        exclusionDates.push(new Date(exclusion.date));
+        exclusionDates.push(new Date(exclusion.date!));
       } else if (exclusion.type === 'holidays') {
         holidayCountries.push({
           country: exclusion.holiday_countries ?? '',
@@ -599,7 +599,7 @@ export class AppointmentsService {
           if (val.repeat > 1) {
             events[i].createAlarm({
               type: val.type,
-              trigger: moment(start).clone().subtract(val.triggerDelay, val.triggerUnit).toDate(),
+              trigger: moment(start).clone().subtract(val.triggerDelay, val.triggerUnit as unknown as moment.unitOfTime.DurationConstructor).toDate(),
               repeat: val.repeat,
               interval: val.interval! > 0 ? (val.interval! * 60) : 1,
               description: val.description,
@@ -607,7 +607,7 @@ export class AppointmentsService {
           } else {
             events[i].createAlarm({
               type: val.type,
-              trigger: moment(start).clone().subtract(val.triggerDelay, val.triggerUnit).toDate(),
+              trigger: moment(start).clone().subtract(val.triggerDelay, val.triggerUnit as unknown as moment.unitOfTime.DurationConstructor).toDate(),
               description: val.description,
             });
           }

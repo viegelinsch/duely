@@ -40,15 +40,15 @@
                   type="number" min="1" oninput="validity.valid||(value='1');" class="form-control">
           </div>
           <div class="col-2 text-div">
-            {{alarmsForm.controls.alarms.at(i).controls['repeat'].value === 0 ? translate.instant('TIMES') :
-              alarmsForm.controls.alarms.at(i).controls['repeat'].value === 1 ? translate.instant('TIME COUNT') : translate.instant('TIMES, EVERY')}}
+            {{alarmsArray.at(i).controls['repeat'].value === 0 ? translate.instant('TIMES') :
+              alarmsArray.at(i).controls['repeat'].value === 1 ? translate.instant('TIME COUNT') : translate.instant('TIMES, EVERY')}}
           </div>
-          <div class="col-xs-3" [class.hidden]="alarmsForm.controls.alarms.at(i).controls['repeat'].value === 1">
+          <div class="col-xs-3" [class.hidden]="alarmsArray.at(i).controls['repeat'].value === 1">
             <input formControlName="intervalMinutes" [(ngModel)]="alarm.intervalMinutes"
                   (change)="recalculateInterval(alarm)" type="number" min="1" class="form-control" oninput="validity.valid||(value='1');">
           </div>
-          <div class="col-xs-3 text-div" [class.hidden]="alarmsForm.controls.alarms.at(i).controls['repeat'].value === 1">
-            {{alarmsForm.controls.alarms.at(i).controls['intervalMinutes'].value > 1 ? translate.instant('MINUTES') : translate.instant('MINUTE')}}
+          <div class="col-xs-3 text-div" [class.hidden]="alarmsArray.at(i).controls['repeat'].value === 1">
+            {{alarmsArray.at(i).controls['intervalMinutes'].value > 1 ? translate.instant('MINUTES') : translate.instant('MINUTE')}}
           </div>
         </div>
 

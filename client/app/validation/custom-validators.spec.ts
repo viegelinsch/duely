@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { TestBed, async } from '@angular/core/testing';
+import { TestBed, waitForAsync } from '@angular/core/testing';
 import { FormControl, ValidatorFn } from '@angular/forms';
 
 import { CustomValidators } from './custom-validators';
@@ -14,7 +14,7 @@ import { CustomValidators } from './custom-validators';
 describe('CustomValidators', () => {
   const testValue = 10;
 
-  it('should return functions', async(() => {
+  it('should return functions', waitForAsync(() => {
     const max: ValidatorFn = CustomValidators.max(testValue);
     const min: ValidatorFn = CustomValidators.min(testValue);
     expect(CustomValidators.max).not.toThrow();
@@ -23,7 +23,7 @@ describe('CustomValidators', () => {
     expect(typeof min).toEqual('function');
   }));
 
-  it('should pass numbers less than or equal to maximum', async(() => {
+  it('should pass numbers less than or equal to maximum', waitForAsync(() => {
     const max: ValidatorFn = CustomValidators.max(testValue);
     const control: FormControl = new FormControl(testValue - 1);
     expect(max(control)).toBeNull();
@@ -31,13 +31,13 @@ describe('CustomValidators', () => {
     expect(max(control)).toBeNull();
   }));
 
-  it('should reject numbers greater than the maximum', async(() => {
+  it('should reject numbers greater than the maximum', waitForAsync(() => {
     const max: ValidatorFn = CustomValidators.max(testValue);
     const control: FormControl = new FormControl(testValue + 1);
     expect(max(control)).toEqual({max: testValue + 1});
   }));
 
-  it('should pass numbers greater than or equal to minimum', async(() => {
+  it('should pass numbers greater than or equal to minimum', waitForAsync(() => {
     const min: ValidatorFn = CustomValidators.min(testValue);
     const control: FormControl = new FormControl(testValue + 1);
     expect(min(control)).toBeNull();
@@ -45,7 +45,7 @@ describe('CustomValidators', () => {
     expect(min(control)).toBeNull();
   }));
 
-  it('should reject numbers less than the minimum', async(() => {
+  it('should reject numbers less than the minimum', waitForAsync(() => {
     const min: ValidatorFn = CustomValidators.min(testValue);
     const control: FormControl = new FormControl(testValue - 1);
     expect(min(control)).toEqual({min: testValue - 1});

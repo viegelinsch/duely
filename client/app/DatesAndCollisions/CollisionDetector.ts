@@ -21,9 +21,9 @@ export interface Collision {
  */
 export class CollisionDetector {
     /** The locations to be considered when checking for collisions with public holidays.  */
-    private locations: HolidaysCountry[];
+    private locations: HolidaysCountry[] | undefined;
     /** The dates that are excluded by the user. */
-    private userExclusions: Date[];
+    private userExclusions: Date[] | undefined;
     /** The language. */
     private language: string;
     /**
@@ -41,7 +41,7 @@ export class CollisionDetector {
      * @param language          The language used to localise public-holiday names.
      * @param excludedByUserReason  The pre-translated reason for user-excluded dates.
      */
-    constructor(locations: HolidaysCountry[], userExclusions: Date[], language: string,
+    constructor(locations: HolidaysCountry[] | undefined, userExclusions: Date[] | undefined, language: string,
                 excludedByUserReason?: string) {
         this.locations = locations;
         this.userExclusions = userExclusions;

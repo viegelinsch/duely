@@ -222,7 +222,7 @@
                              [matDatepicker]="untilPicker"
                              formControlName="untilDate" 
                              [(ngModel)]="enddate"
-                             (ngModelChange)="enddate=$event; endDateListener($event)">
+                             (dateChange)="enddate=$event.value; endDateListener($event)">
                       <mat-datepicker-toggle matSuffix [for]="untilPicker"></mat-datepicker-toggle>
                       <mat-datepicker #untilPicker showWeekNumbers="true"></mat-datepicker>
                     </mat-form-field>
@@ -274,11 +274,11 @@
                   <mat-form-field appearance="fill" class="full-width">
                     <mat-label>{{'SELECT DATE' | translate}}</mat-label>
                     <input matInput 
-                           [matDatepicker]="exclusionPicker{{i}}"
+                           [matDatepicker]="exclusionPicker"
                            formControlName="date" 
-                           (ngModelChange)="setExclusionDate($event, i)">
-                    <mat-datepicker-toggle matSuffix [for]="exclusionPicker{{i}}"></mat-datepicker-toggle>
-                    <mat-datepicker #exclusionPicker{{i}} showWeekNumbers="true"></mat-datepicker>
+                           (dateChange)="setExclusionDate($event, i)">
+                    <mat-datepicker-toggle matSuffix [for]="exclusionPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #exclusionPicker showWeekNumbers="true"></mat-datepicker>
                   </mat-form-field>
               </div>
               <div class="col-2">

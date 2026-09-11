@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { TestBed, inject, async, ComponentFixture } from '@angular/core/testing';
+import { TestBed, inject, ComponentFixture } from '@angular/core/testing';
 // import { RouterTestingModule } from '@angular/router/testing';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
@@ -14,6 +14,7 @@ import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { AppComponent } from './app.component';
 import { SettingsComponent } from './settings/settings.component';
 import { StorageService } from './storage/storage.service';
+import { selectStorageService } from './storage/storage.factory';
 import { Router, RouterOutlet, ChildrenOutletContexts } from '@angular/router';
 
 class MockRouter {
@@ -39,7 +40,7 @@ describe('AppComponent', () => {
                 SettingsComponent
             ],
             providers: [
-                StorageService,
+                { provide: StorageService, useFactory: selectStorageService },
                 ChildrenOutletContexts,
                 { provide: Router, useClass: MockRouter }
             ]

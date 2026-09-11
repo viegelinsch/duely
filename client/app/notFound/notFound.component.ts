@@ -16,6 +16,7 @@ import { TranslateService } from '@ngx-translate/core';
  */
 @Component({
   selector: 'rac-not-found',
+  standalone: false,
   templateUrl: './notFound.component.html',
   styleUrls: ['./notFound.component.scss']
 })
