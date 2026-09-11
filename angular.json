@@ -74,12 +74,15 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "buildTarget": "duely:build:development"
+          },
           "configurations": {
             "production": {
-              "browserTarget": "duely:build:production"
+              "buildTarget": "duely:build:production"
             },
             "development": {
-              "browserTarget": "duely:build:development"
+              "buildTarget": "duely:build:development"
             }
           },
           "defaultConfiguration": "development"
