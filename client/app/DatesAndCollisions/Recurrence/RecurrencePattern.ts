@@ -13,12 +13,23 @@ export abstract class RecurrencePattern {
     private userExclusions: Date[];
     /** The language. */
     private language: string;
+    /**
+     * The already-translated reason shown for dates excluded by the user.
+     * It is resolved from the i18n locale files by the DI-managed caller
+     * (AppointmentsService via TranslateService) and passed in, so the locale
+     * JSON is the single source of truth. The English default is only a fallback
+     * for direct, non-DI instantiation (e.g. unit tests) where no TranslateService
+     * is available.
+     */
+    private excludedByUserReason: string;
 
 
-    constructor(locations: HolidaysCountry[], userExclusions: Date[], language: string) {
+    constructor(locations: HolidaysCountry[], userExclusions: Date[], language: string,
+                excludedByUserReason: string = 'excluded by user') {
         this.locations = locations;
         this.userExclusions = userExclusions;
         this.language = language;
+        this.excludedByUserReason = excludedByUserReason;
     }
      /**
       * checks match of date and calculated event
@@ -115,7 +126,7 @@ export abstract class RecurrencePattern {
 
                     for (let i = 0; i < length; i++) {
                         const isMatchResult = this.isMatch(eventData, this.dateWithoutTime(d));
-                        const reason = this.language === 'de' ? 'vom Benutzer ausgeschlossen' : 'excluded by user';
+                        const reason = this.excludedByUserReason;
 
                         if (isMatchResult.match === true) {
                             if (collisions.length > 0) {

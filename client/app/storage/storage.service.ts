@@ -24,7 +24,13 @@ export abstract class StorageService {
     region: '',
     timeZone: 'floating',
     language: 'en',
-    debug: 'DEACTIVATED'
+    debug: 'DEACTIVATED',
+    // iCal product metadata. The defaults reproduce the previously hardcoded
+    // literals exactly, so settings persisted before these fields existed keep
+    // producing identical iCal output (backwards compatibility).
+    calendarName: 'Duely',
+    calendarProdId: '//TU Braunschweig//Duely//EN',
+    calendarUrl: 'https://duely.tu-braunschweig.de'
   };
 
   public settingsLoaded = false;
@@ -70,6 +76,15 @@ export abstract class StorageService {
       }
       if (settings.hasOwnProperty('debug')) {
         this.settings.debug = settings.debug;
+      }
+      if (settings.hasOwnProperty('calendarName')) {
+        this.settings.calendarName = settings.calendarName;
+      }
+      if (settings.hasOwnProperty('calendarProdId')) {
+        this.settings.calendarProdId = settings.calendarProdId;
+      }
+      if (settings.hasOwnProperty('calendarUrl')) {
+        this.settings.calendarUrl = settings.calendarUrl;
       }
     }
   }

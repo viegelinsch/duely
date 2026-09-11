@@ -217,7 +217,7 @@
                     <!-- <input formControlName="untilDate" class="form-control" [(ngModel)]="recurringSettings.untilDate"
                     type="date" maxlength="10" *ngIf="recurringForm.controls['ends'].value==='UNTIL'"/> -->
                     <mat-form-field appearance="fill" class="full-width" *ngIf="recurringForm.controls['ends'].value==='UNTIL'">
-                      <mat-label>{{'SELECT_DATE' | translate}}</mat-label>
+                      <mat-label>{{'SELECT DATE' | translate}}</mat-label>
                       <input matInput 
                              [matDatepicker]="untilPicker"
                              formControlName="untilDate" 
@@ -272,7 +272,7 @@
               <div class="col-6" *ngIf="exclusion.type==='date'">
                   <!--<input formControlName="date" class="form-control" [(ngModel)]="exclusion.date" type="date" maxlength="10">-->
                   <mat-form-field appearance="fill" class="full-width">
-                    <mat-label>{{'SELECT_DATE' | translate}}</mat-label>
+                    <mat-label>{{'SELECT DATE' | translate}}</mat-label>
                     <input matInput 
                            [matDatepicker]="exclusionPicker{{i}}"
                            formControlName="date" 

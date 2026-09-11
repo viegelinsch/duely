@@ -31,7 +31,7 @@
             type="text" class="form-control" [placeholder]="this.translate.instant('LOCATION')">
           <div class="alert alert-warning"
        *ngIf="appointmentForm.controls.location.invalid && appointmentForm.controls.location.dirty">
-             <p *ngIf="appointmentForm.controls.location.errors != null && appointmentForm.controls.location.errors.maxlength">max. 25 letters required</p>
+             <p *ngIf="appointmentForm.controls.location.errors != null && appointmentForm.controls.location.errors.maxlength">{{'REQUIRED25' | translate}}</p>
           </div>
     </div>
   </div>
@@ -52,7 +52,7 @@
     <label class="col-sm-2 col-xs-12 control-label">{{'FROM' | translate}}</label>
     <div class="col-sm-5 col-xs-6">
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>{{'SELECT_DATE' | translate}}</mat-label>
+        <mat-label>{{'SELECT DATE' | translate}}</mat-label>
         <input matInput 
                [matDatepicker]="startPicker"
                formControlName="date" 
@@ -73,7 +73,7 @@
     <label class="col-sm-2 col-xs-12 control-label">{{'TO' | translate}}</label>
     <div class="col-sm-5 col-xs-6">
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>{{'SELECT_DATE' | translate}}</mat-label>
+        <mat-label>{{'SELECT DATE' | translate}}</mat-label>
         <input matInput 
                [matDatepicker]="endPicker"
                formControlName="date" 

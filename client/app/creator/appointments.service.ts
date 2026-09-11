@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { Injectable } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { APPOINTMENTS } from './mock-appointments';
 import { StorageService } from '../storage/storage.service';
 import { CollisionDetector, Collision } from '../DatesAndCollisions/CollisionDetector';
@@ -28,7 +29,7 @@ export class AppointmentsService {
 /**
  * contructor initializes Storage
  */
-  constructor(private StorageService: StorageService) {
+  constructor(private StorageService: StorageService, private translate: TranslateService) {
     // this.events = APPOINTMENTS;
   }
 
@@ -63,9 +64,9 @@ export class AppointmentsService {
  */
   private initializeCalendar(): any {
     const calendar = ical({
-      name: 'Duely',
-      prodId: '//TU Braunschweig//Duely//EN',
-      url: 'https://duely.tu-braunschweig.de',
+      name: this.StorageService.settings.calendarName,
+      prodId: this.StorageService.settings.calendarProdId,
+      url: this.StorageService.settings.calendarUrl,
       timezone: this.StorageService.settings.timeZone === 'floating' ? undefined : this.StorageService.settings.timeZone
     });
     return calendar;
@@ -571,7 +572,8 @@ export class AppointmentsService {
       const iCalEventData: any = ev.toJSON();
 
       if (iCalEventData.repeating !== undefined) {
-        const collisionDetector = new CollisionDetector(holidayCountries, exclusionDates, this.StorageService.settings.language);
+        const collisionDetector = new CollisionDetector(holidayCountries, exclusionDates,
+          this.StorageService.settings.language, this.translate.instant('EXCLUDED BY USER'));
         const cols: Collision[] = collisionDetector.getCollisions(iCalEventData);
 
         if (this.collisions.length === 0) {

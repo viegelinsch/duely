@@ -8,6 +8,7 @@
  */
 
 import { Component, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { StorageService } from '../storage/storage.service';
 
 /**
@@ -22,11 +23,16 @@ import { StorageService } from '../storage/storage.service';
 export class LegalComponent implements OnInit {
 
 
-  public content = `<h1>Legal notice</h1>
-    This is the default legal notice message.
-    To add your own, please edit the 'content' variable in static/main.bundle.js!`;
+  public content: string;
 
-  constructor() { }
+  constructor(private translate: TranslateService) {
+    // The HTML string is assembled synchronously here, so instant() is required:
+    // it returns the already-loaded translation immediately, whereas get() would
+    // return an Observable and could not be interpolated into a plain string.
+    this.content = `<h1>${this.translate.instant('LEGAL NOTICE')}</h1>
+    ${this.translate.instant('LEGAL DEFAULT MESSAGE')}
+    ${this.translate.instant('LEGAL EDIT HINT')}`;
+  }
 
   ngOnInit() {
 

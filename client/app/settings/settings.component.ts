@@ -69,6 +69,9 @@ export class SettingsComponent implements OnInit {
         language: this.storage.settings.language,
         color: this.storage.settings.color,
         debug: this.storage.settings.debug,
+        calendarName: this.storage.settings.calendarName,
+        calendarProdId: this.storage.settings.calendarProdId,
+        calendarUrl: this.storage.settings.calendarUrl,
       });
   }
 
@@ -185,6 +188,9 @@ export class SettingsComponent implements OnInit {
       state: location.controls['location_states'].value as string,
       region: location.controls['location_regions'].value as string,
       debug: this.settingsForm.controls['debug'].value as string,
+      calendarName: this.settingsForm.controls['calendarName'].value as string,
+      calendarProdId: this.settingsForm.controls['calendarProdId'].value as string,
+      calendarUrl: this.settingsForm.controls['calendarUrl'].value as string,
     };
     this.storage.saveSettings(settings);
     this.translate.use(settings.language);

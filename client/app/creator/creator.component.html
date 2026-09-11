@@ -55,7 +55,7 @@
 
   
   <div *ngIf="storage.getDebug()" class="rectangle debug">
-    <h3>DEBUG-OUTPUT</h3>
+    <h3>{{'DEBUG OUTPUT' | translate}}</h3>
     <pre>
       {{ appointments | json }}
     </pre>

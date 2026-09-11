@@ -26,16 +26,27 @@ export class CollisionDetector {
     private userExclusions: Date[];
     /** The language. */
     private language: string;
+    /**
+     * The already-translated reason for user-excluded dates, resolved from the
+     * i18n locale files by the DI-managed caller and passed through to the
+     * recurrence patterns. Optional so that direct instantiation (e.g. unit tests)
+     * keeps working; the patterns fall back to their own default when omitted.
+     */
+    private excludedByUserReason?: string;
 
     /**
      * Constructor of class CollisionDetector
      * @param locations         The locations to be considered when checking for collisions with public holidays.
      * @param userExclusions    The dates that are excluded by the user.
+     * @param language          The language used to localise public-holiday names.
+     * @param excludedByUserReason  The pre-translated reason for user-excluded dates.
      */
-    constructor(locations: HolidaysCountry[], userExclusions: Date[], language: string) {
+    constructor(locations: HolidaysCountry[], userExclusions: Date[], language: string,
+                excludedByUserReason?: string) {
         this.locations = locations;
         this.userExclusions = userExclusions;
         this.language = language;
+        this.excludedByUserReason = excludedByUserReason;
     }
 
     /**
@@ -49,22 +60,22 @@ export class CollisionDetector {
         if (eventData.repeating !== undefined) {
           switch (eventData.repeating.freq) {
               case 'DAILY': {
-                  const drp = new DailyRecurrencePattern(this.locations, this.userExclusions, this.language);
+                  const drp = new DailyRecurrencePattern(this.locations, this.userExclusions, this.language, this.excludedByUserReason);
                   collisions = drp.getCollisions(eventData);
                   break;
               }
               case 'WEEKLY': {
-                  const wrp = new WeeklyRecurrencePattern(this.locations, this.userExclusions, this.language);
+                  const wrp = new WeeklyRecurrencePattern(this.locations, this.userExclusions, this.language, this.excludedByUserReason);
                   collisions = wrp.getCollisions(eventData);
                   break;
               }
               case 'MONTHLY': {
-                  const mrp = new MonthlyRecurrencePattern(this.locations, this.userExclusions, this.language);
+                  const mrp = new MonthlyRecurrencePattern(this.locations, this.userExclusions, this.language, this.excludedByUserReason);
                   collisions = mrp.getCollisions(eventData);
                   break;
               }
               case 'YEARLY': {
-                  const yrp = new YearlyRecurrencePattern(this.locations, this.userExclusions, this.language);
+                  const yrp = new YearlyRecurrencePattern(this.locations, this.userExclusions, this.language, this.excludedByUserReason);
                   collisions = yrp.getCollisions(eventData);
                   break;
               }
