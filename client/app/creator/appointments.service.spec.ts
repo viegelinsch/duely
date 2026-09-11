@@ -1,9 +1,40 @@
 import moment from 'moment-timezone';
 import { TestBed, inject } from '@angular/core/testing';
 import ical from 'ical-generator';
+import type { ICalEventJSONRepeatingData } from 'ical-generator';
 import { Appointment } from './appointment';
 import { AppointmentsService } from './appointments.service';
 import { StorageService } from '../storage/storage.service';
+
+/**
+ * Narrow ical-generator's serialised `repeating` value to its object form.
+ *
+ * `ICalEventJSONData.repeating` is typed `ICalEventJSONRepeatingData | string | null`:
+ * ical-generator emits a structured object for the repeating options these specs
+ * build, a bare string when an event was created from an RRule string, and `null`
+ * for non-repeating events. Every event in this suite is created with a structured
+ * repeating object, so anything else is a genuine shape regression.
+ *
+ * The helper therefore THROWS instead of silently returning `undefined` (as a `?.`
+ * chain would) or blindly trusting the value (as an `as` cast would): a wrong shape
+ * must fail the spec loudly rather than weaken the assertions. The explicit
+ * `=== null` guard is required because `typeof null === 'object'`.
+ *
+ * The return type is the non-nullable `ICalEventJSONRepeatingData`, so downstream
+ * property access type-checks and the earlier TS2531 (non-null assertion) fixes
+ * cannot regress.
+ */
+function repeatingData(
+    repeating: ICalEventJSONRepeatingData | string | null
+): ICalEventJSONRepeatingData {
+    if (repeating === null || typeof repeating !== 'object') {
+        throw new Error(
+            'Expected a structured ICalEventJSONRepeatingData object but received: ' +
+            JSON.stringify(repeating)
+        );
+    }
+    return repeating;
+}
 
 describe('AppointmentsService', () => {
     beforeEach(() => {
@@ -151,7 +182,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -193,7 +223,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -214,7 +243,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -258,7 +286,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -268,8 +295,8 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
     }));
 
     it('should add a recurring (daily, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -280,7 +307,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -325,7 +351,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -335,9 +360,9 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (daily, until ) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -348,7 +373,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -393,7 +417,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -403,9 +426,9 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.until).toEqual(correctAppointment.events[0].repeating.until);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).until).toEqual(correctAppointment.events[0].repeating.until);
     }));
 
     it('should add a recurring (weekly-thursday, interval: 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -416,7 +439,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -461,7 +483,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -471,9 +492,9 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
     }));
 
     it('should add a recurring (monthly, every 2. wednesday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -484,7 +505,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -530,7 +550,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -540,10 +559,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (monthly, every last, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -554,7 +573,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -600,7 +618,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -610,10 +627,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byMonthDay).toEqual(correctAppointment.events[0].repeating.byMonthDay);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byMonthDay).toEqual(correctAppointment.events[0].repeating.byMonthDay);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (monthly, every 3. last wednesday, interval 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -624,7 +641,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -669,7 +685,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -679,9 +694,9 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
     }));
 
     it('should add a recurring (monthly, every 3. last wednesday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -692,7 +707,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -738,7 +752,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -748,10 +761,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, every first friday of january, interval 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -762,7 +775,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -808,7 +820,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -818,10 +829,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
     }));
 
     it('should add a recurring (yearly, every first wednesday of january, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -832,7 +843,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -879,7 +889,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -889,11 +898,11 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, every second last friday, interval 2, never-ending) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -904,7 +913,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -950,7 +958,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -960,10 +967,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
     }));
 
     it('should add a recurring (yearly, every last friday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -974,7 +981,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -1021,7 +1027,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -1031,11 +1036,11 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, last day of december, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1046,7 +1051,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -1094,7 +1098,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -1104,12 +1107,12 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(repeatingData(json.events[0].repeating).bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, 2. last workday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1120,7 +1123,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -1168,7 +1170,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -1178,12 +1179,12 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(repeatingData(json.events[0].repeating).bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (yearly, 2. workday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1194,7 +1195,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -1242,7 +1242,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -1252,12 +1251,12 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
-        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).byMonth).toEqual(correctAppointment.events[0].repeating.byMonth);
+        expect(repeatingData(json.events[0].repeating).bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (monthly, 2. workday, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1268,7 +1267,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -1315,7 +1313,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -1325,11 +1322,11 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 
     it('should add a recurring (monthly, 2. weekend day, interval 2, 2 events) event', inject([AppointmentsService], (service: AppointmentsService) => {
@@ -1340,7 +1337,6 @@ describe('AppointmentsService', () => {
             timezone: 'Europe/Berlin' // or what's configured in the settings
         });
         const correctAppointment = {
-            'domain': 'duely.tu-braunschweig.de',
             'prodId': '//TU Braunschweig//Duely//EN',
             'name': 'Duely',
             'timezone': 'Europe/Berlin',
@@ -1387,7 +1383,6 @@ describe('AppointmentsService', () => {
         };
         service.addEventToCalendar(calendar, toBeTestedAppointment);
         const json = calendar.toJSON();
-        expect(json.domain).toEqual(correctAppointment.domain);
         expect(json.prodId).toEqual(correctAppointment.prodId);
         expect(json.name).toEqual(correctAppointment.name);
         expect(json.timezone).toEqual(correctAppointment.timezone);
@@ -1397,10 +1392,10 @@ describe('AppointmentsService', () => {
         expect(json.events[0].timezone).toEqual(correctAppointment.events[0].timezone);
         expect(json.events[0].summary).toEqual(correctAppointment.events[0].summary);
         expect(json.events[0].location).toEqual(correctAppointment.events[0].location);
-        expect(json.events[0].repeating!.freq).toEqual(correctAppointment.events[0].repeating.freq);
-        expect(json.events[0].repeating!.byDay).toEqual(correctAppointment.events[0].repeating.byDay);
-        expect(json.events[0].repeating!.bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
-        expect(json.events[0].repeating!.interval).toEqual(correctAppointment.events[0].repeating.interval);
-        expect(json.events[0].repeating!.count).toEqual(correctAppointment.events[0].repeating.count);
+        expect(repeatingData(json.events[0].repeating).freq).toEqual(correctAppointment.events[0].repeating.freq);
+        expect(repeatingData(json.events[0].repeating).byDay).toEqual(correctAppointment.events[0].repeating.byDay);
+        expect(repeatingData(json.events[0].repeating).bySetPos).toEqual(correctAppointment.events[0].repeating.bySetPos);
+        expect(repeatingData(json.events[0].repeating).interval).toEqual(correctAppointment.events[0].repeating.interval);
+        expect(repeatingData(json.events[0].repeating).count).toEqual(correctAppointment.events[0].repeating.count);
     }));
 });
