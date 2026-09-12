@@ -7,11 +7,18 @@
  */
 import { Component, OnInit } from '@angular/core';
 import Holidays from 'date-holidays';
-import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import moment from 'moment-timezone';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { StorageService } from '../storage/storage.service';
-import { TranslateService } from '@ngx-translate/core';
+import { ThemeService } from '../theme/theme.service';
 
 /**
  * Handles the loading and saving of the settings.
@@ -19,7 +26,18 @@ import { TranslateService } from '@ngx-translate/core';
  */
 @Component({
   selector: 'rac-settings',
-  standalone: false,
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSlideToggleModule,
+    TranslateModule
+  ],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
@@ -39,7 +57,7 @@ export class SettingsComponent implements OnInit {
 
   /** contructs the settings and sets defaults  */
   constructor(private fb: FormBuilder, private router: Router, private storage: StorageService,
-              protected translate: TranslateService) {
+              protected translate: TranslateService, private theme: ThemeService) {
     this.hd = new Holidays();
     this.timeZoneNames = moment.tz.names();
   }
@@ -73,6 +91,9 @@ export class SettingsComponent implements OnInit {
         calendarName: this.storage.settings.calendarName,
         calendarProdId: this.storage.settings.calendarProdId,
         calendarUrl: this.storage.settings.calendarUrl,
+        // mat-slide-toggle is boolean; the persisted setting is 'light' | 'dark'.
+        // Convert at the storage boundary so the reactive control stays boolean.
+        themeMode: this.storage.settings.themeMode === 'dark',
       });
   }
 
@@ -192,9 +213,11 @@ export class SettingsComponent implements OnInit {
       calendarName: this.settingsForm.controls['calendarName'].value as string,
       calendarProdId: this.settingsForm.controls['calendarProdId'].value as string,
       calendarUrl: this.settingsForm.controls['calendarUrl'].value as string,
+      themeMode: this.settingsForm.controls['themeMode'].value ? 'dark' : 'light',
     };
     this.storage.saveSettings(settings);
     this.translate.use(settings.language);
+    this.theme.apply();
     this.goHome();
   }
 
@@ -202,9 +225,9 @@ export class SettingsComponent implements OnInit {
    * this method is used and returning back to the basepage without saving
    */
   public cancel(): void {
-    if (this.storage.settings === null) {
-      this.storage.saveSettings({});
-    }
+    // Cancel discards unsaved edits; it must NOT persist anything. The previous
+    // `saveSettings({})` fallback wiped the whole blob (theme, iCal metadata,
+    // location) because saveSettings replaces it wholesale.
     this.goHome();
   }
 

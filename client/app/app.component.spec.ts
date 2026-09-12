@@ -33,11 +33,12 @@ describe('AppComponent', () => {
                 TranslateModule.forRoot(),
                 FormsModule,
                 ReactiveFormsModule,
-                RouterOutlet
+                RouterOutlet,
+                // SettingsComponent is standalone (Phase 2 pilot) → imported, not declared.
+                SettingsComponent
             ],
             declarations: [
-                AppComponent,
-                SettingsComponent
+                AppComponent
             ],
             providers: [
                 { provide: StorageService, useFactory: selectStorageService },

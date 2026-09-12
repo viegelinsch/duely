@@ -12,6 +12,7 @@ import { APP_BASE_HREF, CommonModule, HashLocationStrategy, LocationStrategy, Pa
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -37,7 +38,8 @@ import { StorageService } from './storage/storage.service';
 import { selectStorageService } from './storage/storage.factory';
 import { AboutComponent } from './about/about.component';
 import { LegalComponent } from './legal/legal.component';
-import { SettingsComponent } from './settings/settings.component';
+// SettingsComponent is now standalone (Phase 2 pilot) — referenced only by the
+// router, no longer declared here.
 import { CreatorComponent } from './creator/creator.component';
 import { NotFoundComponent } from './notFound/notFound.component';
 import { AppointmentFormComponent } from './creator/appointment-form/appointment-form.component';
@@ -67,7 +69,6 @@ export function createTranslateLoader(http: HttpClient) {
     AppComponent,
     AboutComponent,
     LegalComponent,
-    SettingsComponent,
     CreatorComponent,
     AppointmentFormComponent,
     AdvancedSettingsComponent,
@@ -103,6 +104,9 @@ export function createTranslateLoader(http: HttpClient) {
     MatSlideToggleModule
   ],
   providers: [
+    // Async so the ~30 KB animations chunk stays off the critical path; Material
+    // selects/toggles/snack-bars render immediately and animate once it resolves.
+    provideAnimationsAsync(),
     provideNativeDateAdapter(),
     {
       provide: StorageService,

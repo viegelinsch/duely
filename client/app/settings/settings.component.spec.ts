@@ -12,8 +12,7 @@ describe('SettingsComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ SettingsComponent ],
-      imports: [ TranslateModule.forRoot(), ReactiveFormsModule, RouterTestingModule ],
+      imports: [ SettingsComponent, TranslateModule.forRoot(), ReactiveFormsModule, RouterTestingModule ],
       providers: [ { provide: StorageService, useFactory: selectStorageService } ]
     })
     .compileComponents();

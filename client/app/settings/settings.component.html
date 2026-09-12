@@ -1,97 +1,121 @@
-<div class="container main">
-  <div id="main-rectangle" class="rectangle">
-    <form (submit)="save()" [formGroup]="settingsForm" class="form-horizontal">
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'TIMEZONE' | translate}}</label>
-        <div class="col-sm-10 col-12">
-          <select formControlName="timezone" class="form-control">
-            <option value="floating">{{'FLOATING' | translate }}</option>
-            <option *ngFor="let tz of timeZoneNames" value="{{ tz }}">{{ tz }}</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'LANGUAGE' | translate}}</label>
-        <div class="col-sm-10 col-12">
-          <select formControlName="language" class="form-control">
-            <option *ngFor="let lang of translate.getLangs()" [value]="lang">{{getFullLanguage(lang)}}</option>
-          </select>
-        </div>
-      </div>
+<!--
+  Settings screen — Phase 2 Material pilot.
+
+  Bootstrap grid/form classes are replaced by the shared layout vocabulary
+  (.page / .card / .stack / .field-cluster / .actions / .field-row). Long
+  enumerations (timezone ~420, country ~250, state, region) use a native
+  <select matNativeControl>; short fixed enumerations (language, colour, debug)
+  use <mat-select>. Angular 20 built-in control flow (@for / @if) replaces
+  *ngFor / *ngIf. All form control names and the country→state→region cascade
+  are preserved; only `themeMode` is added.
+-->
+<div class="page">
+  <div class="card">
+    <form (submit)="save()" [formGroup]="settingsForm" class="stack">
+
+      <!-- Timezone: long list → native select -->
+      <mat-form-field>
+        <mat-label>{{ 'TIMEZONE' | translate }}</mat-label>
+        <select matNativeControl formControlName="timezone">
+          <option value="floating">{{ 'FLOATING' | translate }}</option>
+          @for (tz of timeZoneNames; track tz) {
+            <option [value]="tz">{{ tz }}</option>
+          }
+        </select>
+      </mat-form-field>
+
+      <!-- Language: short enumeration → mat-select -->
+      <mat-form-field>
+        <mat-label>{{ 'LANGUAGE' | translate }}</mat-label>
+        <mat-select formControlName="language">
+          @for (lang of translate.getLangs(); track lang) {
+            <mat-option [value]="lang">{{ getFullLanguage(lang) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Location trio: .field-cluster flexes; @if drives state/region presence.
+           A single LOCATION label heads the group (as the Bootstrap original did). -->
       <div formGroupName="location">
-        <div class="form-group">
-          <label class="col-sm-2 col-12 control-label">{{'LOCATION' | translate}}</label>
-          <div class="col-sm-10 col-12 form-group nopadding">
-            <div [class.col-12]="statesVisible === false && regionsVisible === false"  [class.col-6]="statesVisible === true && regionsVisible === false" [class.col-4]="statesVisible === true && regionsVisible === true">
-              <select formControlName="location_countries" class="form-control" (change)="showStates()">
-                <option *ngFor="let country of countries" value="{{country[0]}}">{{country[1]}}</option>
+        <div class="field-cluster">
+          <mat-form-field>
+            <mat-label>{{ 'LOCATION' | translate }}</mat-label>
+            <select matNativeControl formControlName="location_countries" (change)="showStates()">
+              @for (country of countries; track country[0]) {
+                <option [value]="country[0]">{{ country[1] }}</option>
+              }
+            </select>
+          </mat-form-field>
+          @if (statesVisible) {
+            <mat-form-field>
+              <select matNativeControl formControlName="location_states" (change)="showRegions()">
+                @for (state of states; track state[0]) {
+                  <option [value]="state[0]">{{ state[1] }}</option>
+                }
               </select>
-            </div>
-            <div [class.col-6]="regionsVisible === false" [class.col-4]="regionsVisible === true"  *ngIf="statesVisible === true">
-              <select formControlName="location_states" class="form-control" (change)="showRegions()">
-                <option *ngFor="let state of states" value="{{state[0]}}">{{state[1]}}</option>
+            </mat-form-field>
+          }
+          @if (regionsVisible) {
+            <mat-form-field>
+              <select matNativeControl formControlName="location_regions">
+                @for (region of regions; track region[0]) {
+                  <option [value]="region[0]">{{ region[1] }}</option>
+                }
               </select>
-            </div>
-            <div class="col-4" *ngIf="regionsVisible === true">
-              <select formControlName="location_regions" class="form-control">
-                <option *ngFor="let region of regions" value="{{region[0]}}">{{region[1]}}</option>
-              </select>
-            </div>
-          </div>
+            </mat-form-field>
+          }
         </div>
       </div>
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'COLOR SCHEME' | translate}}</label>
-        <div class="col-sm-10 col-12">
-          <select formControlName="color" class="form-control">
-            <option value="red">{{'RED' | translate}}</option>
-            <option value="blue">{{'BLUE' | translate}}</option>
-            <option value="green">{{'GREEN' | translate}}</option>
-            <option value="orange">{{'ORANGE' | translate}}</option>
-            <option value="violet">{{'VIOLET' | translate}}</option>
-            <option value="pink">{{'PINK' | translate}}</option>
-            <option value="darkgreen">{{'DARK GREEN' | translate}}</option>
-            <option value="darkblue">{{'DARK BLUE' | translate}}</option>
-          </select>
-        </div>
+
+      <!-- Colour: 8 fixed accents → mat-select -->
+      <mat-form-field>
+        <mat-label>{{ 'COLOR SCHEME' | translate }}</mat-label>
+        <mat-select formControlName="color">
+          <mat-option value="red">{{ 'RED' | translate }}</mat-option>
+          <mat-option value="blue">{{ 'BLUE' | translate }}</mat-option>
+          <mat-option value="green">{{ 'GREEN' | translate }}</mat-option>
+          <mat-option value="orange">{{ 'ORANGE' | translate }}</mat-option>
+          <mat-option value="violet">{{ 'VIOLET' | translate }}</mat-option>
+          <mat-option value="pink">{{ 'PINK' | translate }}</mat-option>
+          <mat-option value="darkgreen">{{ 'DARK GREEN' | translate }}</mat-option>
+          <mat-option value="darkblue">{{ 'DARK BLUE' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Debug: on/off → mat-select -->
+      <mat-form-field>
+        <mat-label>{{ 'DEBUG MODE' | translate }}</mat-label>
+        <mat-select formControlName="debug">
+          <mat-option value="ACTIVATED">{{ 'ACTIVATED' | translate }}</mat-option>
+          <mat-option value="DEACTIVATED">{{ 'DEACTIVATED' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Theme mode: new dark-mode control → mat-slide-toggle (boolean control) -->
+      <div class="field-row">
+        <mat-slide-toggle formControlName="themeMode">{{ 'THEME MODE' | translate }}</mat-slide-toggle>
       </div>
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'DEBUG MODE' | translate}}</label>
-        <div class="col-sm-10 col-12">
-          <select formControlName="debug" class="form-control">
-            <option value="ACTIVATED">{{'ACTIVATED' | translate}}</option>
-            <option value="DEACTIVATED">{{'DEACTIVATED' | translate}}</option>
-          </select>
-        </div>
+
+      <!-- iCal metadata: text inputs → matInput -->
+      <mat-form-field>
+        <mat-label>{{ 'CALENDAR NAME' | translate }}</mat-label>
+        <input matInput formControlName="calendarName" type="text">
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'CALENDAR PRODUCT ID' | translate }}</mat-label>
+        <input matInput formControlName="calendarProdId" type="text">
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'CALENDAR URL' | translate }}</mat-label>
+        <input matInput formControlName="calendarUrl" type="text">
+      </mat-form-field>
+
+      <!-- Actions: stroked (cancel) + flat (submit) -->
+      <div class="actions">
+        <button mat-stroked-button type="button" (click)="cancel()">{{ 'BACK' | translate }}</button>
+        <button mat-flat-button type="submit">{{ 'SAVE AND EXIT' | translate }}</button>
       </div>
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'CALENDAR NAME' | translate}}</label>
-        <div class="col-sm-10 col-12">
-          <input formControlName="calendarName" type="text" class="form-control">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'CALENDAR PRODUCT ID' | translate}}</label>
-        <div class="col-sm-10 col-12">
-          <input formControlName="calendarProdId" type="text" class="form-control">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'CALENDAR URL' | translate}}</label>
-        <div class="col-sm-10 col-12">
-          <input formControlName="calendarUrl" type="text" class="form-control">
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="col-sm-2 col-12">
-        </div>
-        <div class="col-sm-5 col-6">
-          <button (click)="cancel()" type="button" class="btn btn-default">{{'BACK' | translate}}</button>
-        </div>
-        <div class="col-sm-5 col-6">
-          <button type="submit" class="btn btn-default">{{'SAVE AND EXIT' | translate}}</button>
-        </div>
-      </div>
+
     </form>
   </div>
 </div>
