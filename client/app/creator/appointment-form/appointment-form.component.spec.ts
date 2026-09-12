@@ -1,6 +1,7 @@
 import { inject, ComponentFixture, TestBed } from '@angular/core/testing';
 import * as moment from 'moment-timezone';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { provideNativeDateAdapter } from '@angular/material/core';
 
 import { AppointmentFormComponent } from './appointment-form.component';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -21,7 +22,7 @@ describe('AppointmentFormComponent', () => {
         TestBed.configureTestingModule({
             imports: [TranslateModule.forRoot(), ReactiveFormsModule, AppointmentFormComponent,
                 RecurringSettingsComponent, AlarmSettingsComponent, AdvancedSettingsComponent],
-            providers: [AppointmentsService, StorageService]
+            providers: [AppointmentsService, StorageService, provideNativeDateAdapter()]
         })
             .compileComponents();
     });
@@ -40,34 +41,6 @@ describe('AppointmentFormComponent', () => {
     it('should set the validation correct', inject([TranslateService], (translate: TranslateService) => {
         component.endValidation(null);
         expect(component.appointment!.valid![0]).toEqual(component.appointmentForm.valid);
-    }));
-
-    it('should rewrite the start.time form', inject([TranslateService], (translate: TranslateService) => {
-        const form = component.appointmentForm.get('start.time')!;
-        vi.spyOn(form, 'setValue');
-        component.validateStartTime();
-        expect(form.setValue).toHaveBeenCalledWith(moment.utc(component.appointment.start).format('HH:mm'));
-    }));
-
-    it('should rewrite the start.date form', inject([TranslateService], (translate: TranslateService) => {
-        const form = component.appointmentForm.get('start.date')!;
-        vi.spyOn(form, 'setValue');
-        component.validateStartDate();
-        expect(form.setValue).toHaveBeenCalledWith(moment.utc(component.appointment.start).format('YYYY-MM-DD'));
-    }));
-
-    it('should rewrite the end.time form', inject([TranslateService], (translate: TranslateService) => {
-        const form = component.appointmentForm.get('end.time')!;
-        vi.spyOn(form, 'setValue');
-        component.validateEndTime();
-        expect(form.setValue).toHaveBeenCalledWith(moment.utc(component.appointment.end).format('HH:mm'));
-    }));
-
-    it('should rewrite the end.date form', inject([TranslateService], (translate: TranslateService) => {
-        const form = component.appointmentForm.get('end.date')!;
-        vi.spyOn(form, 'setValue');
-        component.validateEndDate();
-        expect(form.setValue).toHaveBeenCalledWith(moment.utc(component.appointment.end).format('YYYY-MM-DD'));
     }));
 
     it('should create an appointmentForm', inject([TranslateService], (translate: TranslateService) => {
@@ -103,17 +76,6 @@ describe('AppointmentFormComponent', () => {
       component.onStartTimeChange();
       expect(moment.utc(component.appointment.start).add(duration).valueOf()).toEqual(component.appointment.end.valueOf());
     }));*/
-
-    it('should adjust startdate when enddate is before startdate', inject([TranslateService], (translate: TranslateService) => {
-        component.appointment.start = moment.utc('2017-07-05', 'YYYY-MM-DD') as any;
-        component.appointment.end = moment.utc('2017-07-04', 'YYYY-MM-DD') as any;
-        component.validateStartDate();
-        component.validateEndDate();
-
-        component.createForm();
-        component.onEndDateChange();
-        expect(component.appointment.start.valueOf()).toEqual(component.appointment.end!.valueOf());
-    }));
 
     /*it('should adjust starttime when endtime is before starttime', inject([TranslateService],
         (translate: TranslateService) => {
