@@ -71,7 +71,6 @@ export function createTranslateLoader(http: HttpClient) {
     LegalComponent,
     CreatorComponent,
     AppointmentFormComponent,
-    RecurringSettingsComponent,
     NotFoundComponent,
     AutoResizeDirective
   ],
@@ -103,7 +102,8 @@ export function createTranslateLoader(http: HttpClient) {
     // Standalone child components consumed by the still-declared
     // AppointmentFormComponent (bottom-up migration; each moves here as it flips).
     AdvancedSettingsComponent,
-    AlarmSettingsComponent
+    AlarmSettingsComponent,
+    RecurringSettingsComponent
   ],
   providers: [
     // Async so the ~30 KB animations chunk stays off the critical path; Material

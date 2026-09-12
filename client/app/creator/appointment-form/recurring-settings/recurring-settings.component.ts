@@ -6,16 +6,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { Component, Input, OnInit, AfterViewChecked, OnChanges, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { Appointment } from '../../appointment';
 import { Exclusion } from '../../exclusion';
 import { RecurringSettings } from '../../recurring-settings';
 import type { frequency } from '../../recurring-settings';
 import { Subscription } from 'rxjs';
-import { MatDatepickerInputEvent } from '@angular/material/datepicker';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
 import { StorageService } from '../../../storage/storage.service';
 import Holidays from 'date-holidays';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import moment from 'moment-timezone';
 import { CollisionDetector } from '../../../DatesAndCollisions/CollisionDetector';
 
@@ -25,7 +31,19 @@ import { CollisionDetector } from '../../../DatesAndCollisions/CollisionDetector
  */
 @Component({
   selector: 'rac-recurring-settings',
-  standalone: false,
+  standalone: true,
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatCheckboxModule,
+    MatRadioModule,
+    MatIconModule,
+    MatButtonModule,
+    TranslateModule
+  ],
   templateUrl: './recurring-settings.component.html',
   styleUrls: ['./recurring-settings.component.scss']
 })

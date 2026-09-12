@@ -1,15 +1,43 @@
-@import '../../../../palette';
+/**
+ * Recurring settings — Phase 3 Material conversion.
+ *
+ * The `@import '../../../../palette'` is gone: the .label-{accent} colour
+ * classes are supplied globally by styles.scss. The Bootstrap radio clones are
+ * gone too — the `.centered` rule and the typo'd `label.centerd` native-radio
+ * rule were only there to centre the six .col-4 pattern grids, which now use
+ * the shared .pattern-grid with Material radio buttons (and the weekdays use
+ * Material checkboxes). What remains is only what the layout vocabulary cannot
+ * express: connector-text alignment, the header/add button offset, and the
+ * Material form-field sizing.
+ */
 
+// Connector text ("day(s)", "week(s) on", the pattern blurb) aligned against
+// the Material fields it sits between.
 .text-div {
   padding-top: 7px;
   padding-bottom: 7px;
 }
 
-.centered {
-  text-align: center;
+// Push the collapse / add-exclusion icon buttons to the end of their .field-row.
+.section-toggle {
+  margin-left: auto;
 }
 
-label.centerd input[type=radio] {
+// Material form fields default to full width; inside a flex .field-cluster they
+// share the row instead, numeric fields stay compact and date fields get room.
+mat-form-field {
+  width: 100%;
+}
+
+.field-cluster > mat-form-field {
+  flex: 1 1 7rem;
   width: auto;
-  margin: 0 auto;
+}
+
+.field-cluster > mat-form-field.num {
+  flex: 0 1 5rem;
+}
+
+.field-cluster > mat-form-field.date-field {
+  flex: 1 1 12rem;
 }

@@ -14,8 +14,7 @@ describe('RecurringSettingsComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [RecurringSettingsComponent],
-            imports: [TranslateModule.forRoot(), ReactiveFormsModule],
+            imports: [TranslateModule.forRoot(), ReactiveFormsModule, RecurringSettingsComponent],
             providers: [AppointmentsService, StorageService]
         })
             .compileComponents();

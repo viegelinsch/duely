@@ -1,293 +1,233 @@
-<div class="sepa form-group" (click)="hideSettings=!hideSettings">
-  <label class="label-{{storage.getColor()}} control-label col-2">{{'RECURRENCE' | translate}}</label>
-  <div class="col-10">
-    <button type="button" class="btn btn-link btn-sm float-end" data-identifier="expand-recurring">
-      <span
-      class="glyphicon label-{{storage.getColor()}}"
-      [class.glyphicon-chevron-right]="hideSettings"
-      [class.glyphicon-chevron-down]="!hideSettings"
-      aria-hidden="true"
-      ></span>
-    </button>
-  </div>
+<!--
+  Recurring settings — Phase 3 Material conversion.
+  [ngSwitch] + the 4 *ngSwitchCase -> built-in @switch/@case (this drops the
+  nested case-wrapper divs, including the unbalanced one the old YEARLY block
+  carried). The six .col-4.centered radio grids -> .pattern-grid with
+  <mat-radio-group> + <mat-radio-button>; the weekday checkbox-inline ->
+  <mat-checkbox>. The hand-rolled .sepa collapse keeps its hideSettings boolean
+  + @if, and its two chevron glyphicons become one duely:chevron_right /
+  duely:expand_more <mat-icon>. The exclusions FormArray keeps its
+  <mat-form-field> + <mat-datepicker> (Material since Phase 0) and its add /
+  remove glyphicons become duely:add / duely:remove <mat-icon>. Bootstrap
+  .form-group/.row/.col-* clones -> the layout vocabulary (.field-row, .stack,
+  .field-cluster, .pattern-grid, .card). Every data-identifier, the
+  id="reminderAdd", and all formControlName + [(ngModel)] + (change)/(dateChange)
+  bindings are preserved verbatim.
+-->
+<div class="sepa field-row" (click)="hideSettings=!hideSettings">
+  <label class="label-{{storage.getColor()}}">{{'RECURRENCE' | translate}}</label>
+  <button mat-icon-button type="button" class="section-toggle" data-identifier="expand-recurring">
+    <mat-icon class="label-{{storage.getColor()}}"
+              [svgIcon]="hideSettings ? 'duely:chevron_right' : 'duely:expand_more'"
+              aria-hidden="true"></mat-icon>
+  </button>
 </div>
 
-<div *ngIf="!hideSettings" [formGroup]="recurringForm" data-identifier="recurring-settings">
-  <div>
-    <div class="form-group">
-      <label class="col-sm-2 col-12 control-label">{{'REPEATS' | translate}}</label>
-      <div class="col-sm-10 col-12">
-        <!-- TODO: onChange-Listener to modify repBy-Selection -->
-        <select formControlName="frequency" [(ngModel)]="recurringSettings.frequency"
-        class="form-control" data-identifier="recurrence-selectbox">
-        <option value="NEVER">{{'NEVER' | translate}}</option>
-        <option value="DAILY">{{'DAILY' | translate}}</option>
-        <option value="WEEKLY">{{'WEEKLY' | translate}}</option>
-        <option value="MONTHLY">{{'MONTHLY' | translate}}</option>
-        <option value="YEARLY">{{'YEARLY' | translate}}</option>
-      </select>
-    </div>
-  </div>
+@if (!hideSettings) {
+  <div [formGroup]="recurringForm" data-identifier="recurring-settings" class="stack">
 
-  <div [ngSwitch]="recurringSettings.frequency">
-    <div *ngSwitchCase="'DAILY'">
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'REPEATS EVERY' | translate}}</label>
-        <div class="col-4">
-          <input formControlName="interval" [(ngModel)]="recurringSettings.interval"
-          type="number" min="1" oninput="validity.valid||(value='1');" class="form-control">
-        </div>
-        <div class="col-6 text-div">
-          {{'DAY(S)' | translate}}
-        </div>
-      </div>
+    <!-- REPEATS: frequency -->
+    <div class="field-row">
+      <label>{{'REPEATS' | translate}}</label>
+      <mat-form-field>
+        <select matNativeControl formControlName="frequency" [(ngModel)]="recurringSettings.frequency"
+                data-identifier="recurrence-selectbox">
+          <option value="NEVER">{{'NEVER' | translate}}</option>
+          <option value="DAILY">{{'DAILY' | translate}}</option>
+          <option value="WEEKLY">{{'WEEKLY' | translate}}</option>
+          <option value="MONTHLY">{{'MONTHLY' | translate}}</option>
+          <option value="YEARLY">{{'YEARLY' | translate}}</option>
+        </select>
+      </mat-form-field>
     </div>
 
-
-    <div *ngSwitchCase="'WEEKLY'" data-identifier="recurring-weekly">
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'REPEATS EVERY' | translate}}</label>
-        <div class="col-4">
-          <input formControlName="interval" [(ngModel)]="recurringSettings.interval"
-          type="number" min="1" oninput="validity.valid||(value='1');" class="form-control">
+    @switch (recurringSettings.frequency) {
+      @case ('DAILY') {
+        <div class="field-cluster">
+          <label>{{'REPEATS EVERY' | translate}}</label>
+          <mat-form-field class="num">
+            <input matInput formControlName="interval" [(ngModel)]="recurringSettings.interval"
+                   type="number" min="1" oninput="validity.valid||(value='1');">
+          </mat-form-field>
+          <span class="text-div">{{'DAY(S)' | translate}}</span>
         </div>
-        <div class="col-6 text-div">
-          {{'WEEK(S) ON' | translate}}:
-        </div>
-      </div>
+      }
 
-      <div class="row">
-        <div class="col-sm-offset-2 col-sm-10">
-          <label class="checkbox-inline">
-            <input type="checkbox" [(ngModel)]="recurringSettings.monday" formControlName="monday"> {{'MONDAY' | translate}}
-          </label>
-          <label class="checkbox-inline">
-            <input type="checkbox" [(ngModel)]="recurringSettings.tuesday" formControlName="tuesday"> {{'TUESDAY' | translate}}
-          </label>
-          <label class="checkbox-inline">
-            <input type="checkbox" [(ngModel)]="recurringSettings.wednesday" formControlName="wednesday"> {{'WEDNESDAY' | translate}}
-          </label>
-          <label class="checkbox-inline">
-            <input type="checkbox" [(ngModel)]="recurringSettings.thursday" formControlName="thursday"> {{'THURSDAY' | translate}}
-          </label>
-          <label class="checkbox-inline">
-            <input type="checkbox" [(ngModel)]="recurringSettings.friday" formControlName="friday"> {{'FRIDAY' | translate}}
-          </label>
-          <label class="checkbox-inline">
-            <input type="checkbox" [(ngModel)]="recurringSettings.saturday" formControlName="saturday"> {{'SATURDAY' | translate}}
-          </label>
-          <label class="checkbox-inline">
-            <input type="checkbox" [(ngModel)]="recurringSettings.sunday" formControlName="sunday"> {{'SUNDAY' | translate}}
-          </label>
-        </div>
-      </div>
-    </div>
-
-
-    <div *ngSwitchCase="'MONTHLY'" data-identifier="recurring-monthly">
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'REPEATS EVERY' | translate}}</label>
-        <div class="col-4">
-          <input formControlName="interval" [(ngModel)]="recurringSettings.interval"
-          type="number" min="1" oninput="validity.valid||(value='1');" class="form-control">
-        </div>
-        <div class="col-6 text-div">
-          {{'MONTH(S)' | translate}}
-        </div>
-      </div>
-
-      <div class="row">
-        <label class="col-sm-2 col-12 control-label">{{'PATTERN' | translate}}</label>
-        <p class="col-sm-10 col-12 text-div">{{'PATTERNTEXT' | translate}}</p>
-        <div class="col-sm-offset-2 col-sm-10">
-          <div class="form-group">
-            <div class="col-4 centered">
-              <label class="centerd">
-                <input type="radio" name="repByMonthly" class="form-control centered" value="MONTH" formControlName="repByMonthly" [(ngModel)]="recurringSettings.repByMonthly">{{month}}
-              </label>
-            </div>
-            <div class="col-4 centered">
-              <label class="centerd">
-                <input type="radio" name="repByMonthly" class="form-control centered" value="MONTHINV" formControlName="repByMonthly" [(ngModel)]="recurringSettings.repByMonthly">{{monthInv}}
-              </label>
-            </div>
-            <div class="col-4 centered">
-              <label class="centerd">
-                <input type="radio" name="repByMonthly" class="form-control centered" value="WEEK" formControlName="repByMonthly" [(ngModel)]="recurringSettings.repByMonthly">{{week}}
-              </label>
-            </div>
-            <div class="col-4 centered">
-              <label class="centerd">
-                <input type="radio" name="repByMonthly" class="form-control centered" value="WEEKINV" formControlName="repByMonthly" [(ngModel)]="recurringSettings.repByMonthly">{{weekInv}}
-              </label>
-            </div>
-            <div class="col-4 centered">
-              <label class="centerd">
-                <input type="radio" name="repByMonthly" class="form-control centered" value="WORK" formControlName="repByMonthly" [(ngModel)]="recurringSettings.repByMonthly">{{work}}
-              </label>
-            </div>
-            <div class="col-4 centered">
-              <label class="centerd">
-                <input type="radio" name="repByMonthly" class="form-control centered" value="WORKINV" formControlName="repByMonthly" [(ngModel)]="recurringSettings.repByMonthly">{{workInv}}
-              </label>
-            </div>
+      @case ('WEEKLY') {
+        <div class="stack" data-identifier="recurring-weekly">
+          <div class="field-cluster">
+            <label>{{'REPEATS EVERY' | translate}}</label>
+            <mat-form-field class="num">
+              <input matInput formControlName="interval" [(ngModel)]="recurringSettings.interval"
+                     type="number" min="1" oninput="validity.valid||(value='1');">
+            </mat-form-field>
+            <span class="text-div">{{'WEEK(S) ON' | translate}}:</span>
+          </div>
+          <div class="pattern-grid">
+            <mat-checkbox formControlName="monday" [(ngModel)]="recurringSettings.monday">{{'MONDAY' | translate}}</mat-checkbox>
+            <mat-checkbox formControlName="tuesday" [(ngModel)]="recurringSettings.tuesday">{{'TUESDAY' | translate}}</mat-checkbox>
+            <mat-checkbox formControlName="wednesday" [(ngModel)]="recurringSettings.wednesday">{{'WEDNESDAY' | translate}}</mat-checkbox>
+            <mat-checkbox formControlName="thursday" [(ngModel)]="recurringSettings.thursday">{{'THURSDAY' | translate}}</mat-checkbox>
+            <mat-checkbox formControlName="friday" [(ngModel)]="recurringSettings.friday">{{'FRIDAY' | translate}}</mat-checkbox>
+            <mat-checkbox formControlName="saturday" [(ngModel)]="recurringSettings.saturday">{{'SATURDAY' | translate}}</mat-checkbox>
+            <mat-checkbox formControlName="sunday" [(ngModel)]="recurringSettings.sunday">{{'SUNDAY' | translate}}</mat-checkbox>
           </div>
         </div>
-      </div>
-    </div>
+      }
 
+      @case ('MONTHLY') {
+        <div class="stack" data-identifier="recurring-monthly">
+          <div class="field-cluster">
+            <label>{{'REPEATS EVERY' | translate}}</label>
+            <mat-form-field class="num">
+              <input matInput formControlName="interval" [(ngModel)]="recurringSettings.interval"
+                     type="number" min="1" oninput="validity.valid||(value='1');">
+            </mat-form-field>
+            <span class="text-div">{{'MONTH(S)' | translate}}</span>
+          </div>
+          <label>{{'PATTERN' | translate}}</label>
+          <p class="text-div">{{'PATTERNTEXT' | translate}}</p>
+          <mat-radio-group class="pattern-grid" formControlName="repByMonthly" [(ngModel)]="recurringSettings.repByMonthly">
+            <mat-radio-button value="MONTH">{{month}}</mat-radio-button>
+            <mat-radio-button value="MONTHINV">{{monthInv}}</mat-radio-button>
+            <mat-radio-button value="WEEK">{{week}}</mat-radio-button>
+            <mat-radio-button value="WEEKINV">{{weekInv}}</mat-radio-button>
+            <mat-radio-button value="WORK">{{work}}</mat-radio-button>
+            <mat-radio-button value="WORKINV">{{workInv}}</mat-radio-button>
+          </mat-radio-group>
+        </div>
+      }
 
-    <div *ngSwitchCase="'YEARLY'" data-identifier="recurring-yearly">
-      <div class="form-group">
-        <label class="col-sm-2 col-12 control-label">{{'REPEATS EVERY' | translate}}</label>
-        <div class="col-4">
-          <input formControlName="interval" [(ngModel)]="recurringSettings.interval"
-          type="number" min="1" oninput="validity.valid||(value='1');" class="form-control">
+      @case ('YEARLY') {
+        <div class="stack" data-identifier="recurring-yearly">
+          <div class="field-cluster">
+            <label>{{'REPEATS EVERY' | translate}}</label>
+            <mat-form-field class="num">
+              <input matInput formControlName="interval" [(ngModel)]="recurringSettings.interval"
+                     type="number" min="1" oninput="validity.valid||(value='1');">
+            </mat-form-field>
+            <span class="text-div">{{'YEAR(S)' | translate}}</span>
+          </div>
+          <label>{{'PATTERN' | translate}}</label>
+          <p class="text-div">{{'PATTERNTEXT' | translate}}</p>
+          <mat-radio-group class="pattern-grid" formControlName="repByYearly" [(ngModel)]="recurringSettings.repByYearly">
+            <mat-radio-button value="DAYMONTHYEAR">{{dayMonthYear}}</mat-radio-button>
+            <mat-radio-button value="DAYMONTHYEARINV">{{dayMonthYearInv}}</mat-radio-button>
+            <mat-radio-button value="WEEKYEAR">{{weekYear}}</mat-radio-button>
+            <mat-radio-button value="WEEKINVYEAR">{{weekInvYear}}</mat-radio-button>
+            <mat-radio-button value="WORKYEAR">{{workYear}}</mat-radio-button>
+            <mat-radio-button value="WORKINVYEAR">{{workInvYear}}</mat-radio-button>
+          </mat-radio-group>
         </div>
-        <div class="col-6 text-div">
-          {{'YEAR(S)' | translate}}
-        </div>
+      }
+    }
+
+    @if (recurringSettings.frequency !== 'NEVER') {
+      <!-- ENDS -->
+      <div class="field-row">
+        <label>{{'ENDS' | translate}}</label>
+        <mat-radio-group class="stack" formControlName="ends" [(ngModel)]="recurringSettings.ends">
+          <mat-radio-button value="NEVER">{{'NEVER' | translate}}</mat-radio-button>
+          <div class="field-cluster">
+            <mat-radio-button value="COUNT">{{'NUMBER OF EVENTS' | translate}}</mat-radio-button>
+            @if (recurringForm.controls['ends'].value === 'COUNT') {
+              <mat-form-field class="num">
+                <input matInput formControlName="count" [(ngModel)]="recurringSettings.count"
+                       type="number" min="1" oninput="validity.valid||(value='1');">
+              </mat-form-field>
+            }
+          </div>
+          <div class="field-cluster">
+            <mat-radio-button value="UNTIL">{{'UNTIL' | translate}}</mat-radio-button>
+            @if (recurringForm.controls['ends'].value === 'UNTIL') {
+              <mat-form-field class="date-field">
+                <mat-label>{{'SELECT DATE' | translate}}</mat-label>
+                <input matInput
+                       [matDatepicker]="untilPicker"
+                       formControlName="untilDate"
+                       [(ngModel)]="enddate"
+                       (dateChange)="enddate=$event.value; endDateListener($event)">
+                <mat-datepicker-toggle matSuffix [for]="untilPicker"></mat-datepicker-toggle>
+                <mat-datepicker #untilPicker showWeekNumbers="true"></mat-datepicker>
+              </mat-form-field>
+            }
+          </div>
+        </mat-radio-group>
       </div>
 
-      <div class="row">
-        <label class="col-sm-2 col-12 control-label">{{'PATTERN' | translate}}</label>
-        <p class="col-sm-10 col-12 text-div">{{'PATTERNTEXT' | translate}}</p>
-        <div class="col-sm-offset-2 col-sm-10">
-            <div class="col-4 centered">
-              <label class="centered"><input type="radio" name="repByYearly"
-                class="form-control centered" value="DAYMONTHYEAR" formControlName="repByYearly" [(ngModel)]="recurringSettings.repByYearly">{{dayMonthYear}}</label>
-            </div>
-            <div class="col-4 centered">
-              <label class="centered"><input type="radio" name="repByYearly"
-                class="form-control centered" value="DAYMONTHYEARINV" formControlName="repByYearly" [(ngModel)]="recurringSettings.repByYearly">{{dayMonthYearInv}}</label>
-            </div>
-            <div class="col-4 centered">
-                <label class="centered"><input type="radio" name="repByYearly"
-                  class="form-control centered" value="WEEKYEAR" formControlName="repByYearly" [(ngModel)]="recurringSettings.repByYearly">{{weekYear}}</label>
-            </div>
-            <div class="col-4 centered">
-                  <label class="centered"><input type="radio" name="repByYearly"
-                    class="form-control centered" value="WEEKINVYEAR" formControlName="repByYearly" [(ngModel)]="recurringSettings.repByYearly">{{weekInvYear}}</label>
-            </div>
-            <div class="col-4 centered">
-                <label class="centered"><input type="radio" name="repByYearly"
-                  class="form-control centered" value="WORKYEAR" formControlName="repByYearly" [(ngModel)]="recurringSettings.repByYearly">{{workYear}}</label>
-            </div>
-            <div class="col-4 centered">
-                  <label class="centered"><input type="radio" name="repByYearly"
-                    class="form-control centered" value="WORKINVYEAR" formControlName="repByYearly" [(ngModel)]="recurringSettings.repByYearly">{{workInvYear}}</label>
-            </div>
-          </div>
-      </div>
-          </div>
-        </div>
-      </div>
-      <div *ngIf="recurringSettings.frequency!=='NEVER'">
-        <div class="form-group">
-          <label class="col-sm-2 col-12 control-label">{{'ENDS' | translate}}</label>
-          <div class="col-sm-10 col-12">
-            <div class="radio text-div">
-              <label><input formControlName="ends" type="radio" value="NEVER" name="ends" [(ngModel)]="recurringSettings.ends">
-                {{'NEVER' | translate}}
-              </label>
-            </div>
-            <div class="radio">
-              <div class="form-group">
-                <div class="col-xs-3 text-div">
-                  <label><input formControlName="ends" [(ngModel)]="recurringSettings.ends" type="radio" value="COUNT" name="ends">
-                    <p class="checkbox-text">
-                      {{'NUMBER OF EVENTS' | translate}}
-                    </p>
-                  </label>
-                </div>
-                <div class="col-9">
-                  <input formControlName="count" type="number" min="1" oninput="validity.valid||(value='1');" [(ngModel)]="recurringSettings.count" class="form-control checkbox-text" *ngIf="recurringForm.controls['ends'].value==='COUNT'">
-                </div>
-              </div>
-            </div>
-            <div class="radio">
-              <div class="form-group">
-                <div class="col-xs-3 text-div">
-                  <label><input formControlName="ends" [(ngModel)]="recurringSettings.ends" type="radio" value="UNTIL" name="ends">
-                    <p class="checkbox-text">{{'UNTIL' | translate}}
-                    </p>
-                  </label>
-                </div>
-                <div class="col-9">
-                    <!-- <input formControlName="untilDate" class="form-control" [(ngModel)]="recurringSettings.untilDate"
-                    type="date" maxlength="10" *ngIf="recurringForm.controls['ends'].value==='UNTIL'"/> -->
-                    <mat-form-field appearance="fill" class="full-width" *ngIf="recurringForm.controls['ends'].value==='UNTIL'">
-                      <mat-label>{{'SELECT DATE' | translate}}</mat-label>
-                      <input matInput 
-                             [matDatepicker]="untilPicker"
-                             formControlName="untilDate" 
-                             [(ngModel)]="enddate"
-                             (dateChange)="enddate=$event.value; endDateListener($event)">
-                      <mat-datepicker-toggle matSuffix [for]="untilPicker"></mat-datepicker-toggle>
-                      <mat-datepicker #untilPicker showWeekNumbers="true"></mat-datepicker>
-                    </mat-form-field>
-                  </div>
-              </div>
-            </div>
-          </div>
+      <!-- EXCLUSIONS -->
+      <div class="stack">
+        <div class="field-row">
+          <label>{{'EXCLUSIONS' | translate}}</label>
+          <button mat-icon-button (click)="addExclusion()" type="button" class="section-toggle"
+                  aria-label="Left Align" id="reminderAdd" data-identifier="add-exclusion-button">
+            <mat-icon class="label-{{storage.getColor()}}" svgIcon="duely:add" aria-hidden="true"></mat-icon>
+          </button>
         </div>
 
-        <div class="form-group">
-          <label class="col-sm-2 col-xs-11 control-label">{{'EXCLUSIONS' | translate}}</label>
-          <div class="col-xs-1 col-sm-10">
-            <button (click)="addExclusion()" type="button"
-                    class="btn btn-link btn-sm float-end" aria-label="Left Align"
-                    id="reminderAdd" data-identifier="add-exclusion-button">
-              <span class="glyphicon glyphicon-plus label-{{storage.getColor()}}" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div formArrayName="exclusions" class="col-12 col-sm-10 col-sm-offset-2">
-            <div *ngFor="let exclusion of exclusions; let i = index"
-              [formGroupName]="i" class="form-group">
-              <div class="col-4">
-                <select formControlName="type" class="form-control" [(ngModel)]="exclusion.type">
+        <div formArrayName="exclusions" class="stack">
+          @for (exclusion of exclusions; track $index) {
+            <div [formGroupName]="$index" class="card field-cluster">
+              <mat-form-field>
+                <select matNativeControl formControlName="type" [(ngModel)]="exclusion.type">
                   <option value="holidays">{{'HOLIDAYS' | translate}}</option>
                   <option value="date">{{'OWN DATE' | translate}}</option>
                 </select>
-              </div>
-              <div class="col-6" *ngIf="exclusion.type==='holidays'" data-identifier="holiday-settings">
-                  <div class="form-group">
-                    <select formControlName="holiday_countries" class="form-control" (change)="showStates(i)" [(ngModel)]="exclusion.holiday_countries" data-identifier="countries">
-                      <option *ngFor="let country of countries" value="{{country[0]}}">{{country[1]}}</option>
+              </mat-form-field>
+
+              @if (exclusion.type === 'holidays') {
+                <div class="stack holiday-settings" data-identifier="holiday-settings">
+                  <mat-form-field>
+                    <select matNativeControl formControlName="holiday_countries" (change)="showStates($index)"
+                            [(ngModel)]="exclusion.holiday_countries" data-identifier="countries">
+                      @for (country of countries; track country[0]) {
+                        <option value="{{country[0]}}">{{country[1]}}</option>
+                      }
                     </select>
-                  </div>
-                  <div class="form-group">
-                    <select formControlName="holiday_states" class="form-control" (change)="showRegions(i)" [(ngModel)]="exclusion.holiday_states" data-identifier="states"
-                      *ngIf="statesVisible[i] === true">
-                      <option *ngFor="let state of states[i]" value="{{state[0]}}">{{state[1]}}</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <select formControlName="holiday_regions" class="form-control" *ngIf="regionsVisible[i] === true" [(ngModel)]="exclusion.holiday_regions"
-                    data-identifier="regions">
-                      <option *ngFor="let region of regions[i]" value="{{region[0]}}">{{region[1]}}</option>
-                    </select>
-                  </div>
-              </div>
-              <div class="col-6" *ngIf="exclusion.type==='date'">
-                  <!--<input formControlName="date" class="form-control" [(ngModel)]="exclusion.date" type="date" maxlength="10">-->
-                  <mat-form-field appearance="fill" class="full-width">
-                    <mat-label>{{'SELECT DATE' | translate}}</mat-label>
-                    <input matInput 
-                           [matDatepicker]="exclusionPicker"
-                           formControlName="date" 
-                           (dateChange)="setExclusionDate($event, i)">
-                    <mat-datepicker-toggle matSuffix [for]="exclusionPicker"></mat-datepicker-toggle>
-                    <mat-datepicker #exclusionPicker showWeekNumbers="true"></mat-datepicker>
                   </mat-form-field>
-              </div>
-              <div class="col-2">
-                <button (click)="removeExclusion(exclusion)" type="button" class="btn btn-link btn-sm float-end" aria-label="Left Align" data-identifier="remove-exclusion-button">
-                  <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
-                </button>
-              </div>
+                  @if (statesVisible[$index] === true) {
+                    <mat-form-field>
+                      <select matNativeControl formControlName="holiday_states" (change)="showRegions($index)"
+                              [(ngModel)]="exclusion.holiday_states" data-identifier="states">
+                        @for (state of states[$index]; track state[0]) {
+                          <option value="{{state[0]}}">{{state[1]}}</option>
+                        }
+                      </select>
+                    </mat-form-field>
+                  }
+                  @if (regionsVisible[$index] === true) {
+                    <mat-form-field>
+                      <select matNativeControl formControlName="holiday_regions" [(ngModel)]="exclusion.holiday_regions"
+                              data-identifier="regions">
+                        @for (region of regions[$index]; track region[0]) {
+                          <option value="{{region[0]}}">{{region[1]}}</option>
+                        }
+                      </select>
+                    </mat-form-field>
+                  }
+                </div>
+              }
+
+              @if (exclusion.type === 'date') {
+                <mat-form-field class="date-field">
+                  <mat-label>{{'SELECT DATE' | translate}}</mat-label>
+                  <input matInput
+                         [matDatepicker]="exclusionPicker"
+                         formControlName="date"
+                         (dateChange)="setExclusionDate($event, $index)">
+                  <mat-datepicker-toggle matSuffix [for]="exclusionPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #exclusionPicker showWeekNumbers="true"></mat-datepicker>
+                </mat-form-field>
+              }
+
+              <button mat-icon-button (click)="removeExclusion(exclusion)" type="button"
+                      aria-label="Left Align" data-identifier="remove-exclusion-button">
+                <mat-icon svgIcon="duely:remove" aria-hidden="true"></mat-icon>
+              </button>
             </div>
-          </div>
+          }
         </div>
       </div>
-</div>
+    }
+  </div>
+}
