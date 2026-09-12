@@ -2,8 +2,6 @@
 
 .navbar {
   color: white;
-  position: fixed;
-  z-index: 1030;
 
   a {
     color: white;
@@ -16,10 +14,8 @@
 
   img {
     display: inline;
-    height: 100%;
-    padding-top: 6px;
-    padding-bottom: 6px;
-    width: auto;
+    width: 118px;
+    height: auto;
  }
 
 }
