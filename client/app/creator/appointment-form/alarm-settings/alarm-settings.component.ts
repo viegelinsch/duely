@@ -6,20 +6,33 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import { Component, Input, OnChanges, OnInit, OnDestroy } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, Validators  } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators  } from '@angular/forms';
 import { AlarmData } from '../../alarmData';
 import moment from 'moment-timezone';
 import { Subscription } from 'rxjs';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import type { Appointment } from '../../appointment';
 import { StorageService } from '../../../storage/storage.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 /**
  * A service handling multiple alarms.
  */
 @Component({
   selector: 'rac-alarm-settings',
-  standalone: false,
+  standalone: true,
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    TranslateModule
+  ],
   templateUrl: './alarm-settings.component.html',
   styleUrls: ['./alarm-settings.component.scss']
 })

@@ -1,5 +1,31 @@
-@import '../../../../palette';
+/**
+ * Alarm settings — Phase 3 Material conversion.
+ *
+ * The `@import '../../../../palette'` is gone: the .label-{accent} colour
+ * classes are supplied globally by styles.scss, so this component no longer
+ * needs its own Sass @import (one fewer deprecation site). The Bootstrap grid
+ * clones are gone too — the shared layout vocabulary (.field-row, .stack,
+ * .card, .field-cluster, .actions) plus Material form fields express the
+ * structure. What remains is only what those classes cannot express.
+ */
 
+// Connector text between Material fields, nudged onto the input baseline.
 .text-div {
   padding-top: 6px;
+}
+
+// Push the add-alarm button to the end of the .field-row header.
+.row-action {
+  margin-left: auto;
+}
+
+// Material form fields default to full width; inside the flex .field-cluster
+// they should share the row, with the numeric fields kept compact.
+.field-cluster > mat-form-field {
+  flex: 1 1 7rem;
+  width: auto;
+}
+
+.field-cluster > mat-form-field.num {
+  flex: 0 1 5rem;
 }

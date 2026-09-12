@@ -14,8 +14,7 @@ describe('AlarmSettingsComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [AlarmSettingsComponent],
-            imports: [TranslateModule.forRoot(), ReactiveFormsModule],
+            imports: [TranslateModule.forRoot(), ReactiveFormsModule, AlarmSettingsComponent],
             providers: [StorageService, AppointmentsService]
         })
             .compileComponents();

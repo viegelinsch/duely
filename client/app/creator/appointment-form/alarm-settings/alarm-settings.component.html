@@ -1,79 +1,88 @@
-<div class="row form-group">
-  <label class="label-{{storage.getColor()}} control-label col-2">{{'REMINDERS' | translate}}</label>
-  <div class="col-10">
-    <button data-identifier="add-alarm-button" type="button" class="btn btn-link btn-sm float-end"
-        (click)="addAlarm()">
-      <span class="glyphicon glyphicon-plus label-{{storage.getColor()}}"></span>
-    </button>
-  </div>
+<!--
+  Alarm settings — Phase 3 Material conversion.
+  Bootstrap .row/.form-group/.col-*/.col-xs-*/.float-end/.control-label/.nomargin
+  are replaced by the layout vocabulary (.field-row header, .stack list,
+  .field-cluster rows, .actions) and Material form fields. *ngFor -> @for with
+  `track $index` (rows are index-addressed via [formGroupName]); the functional
+  [class.hidden] bindings -> @if. The add/remove glyphicons -> duely-namespaced
+  <mat-icon>. Every formControlName + [(ngModel)] + (change) + oninput binding and
+  both data-identifier attributes are preserved verbatim; the .label-{accent}
+  colour classes are kept (supplied globally by the palette).
+-->
+<div class="field-row">
+  <label class="label-{{storage.getColor()}}">{{'REMINDERS' | translate}}</label>
+  <button mat-icon-button type="button" class="row-action"
+          data-identifier="add-alarm-button" (click)="addAlarm()">
+    <mat-icon class="label-{{storage.getColor()}}" svgIcon="duely:add" aria-hidden="true"></mat-icon>
+  </button>
 </div>
 
 <div [formGroup]="alarmsForm">
-  <div formArrayName="alarms">
-    <div class="form-group row" *ngFor="let alarm of alarms, let i = index" [formGroupName]="i">
-      <label class="col-12 col-sm-2 control-label">{{ i + 1 }}. {{'REMINDER' | translate}}</label>
-      <div class="col-12 col-sm-9">
+  <div formArrayName="alarms" class="stack">
+    @for (alarm of alarms; track $index) {
+      <div class="card alarm" [formGroupName]="$index">
+        <label class="alarm-title">{{ $index + 1 }}. {{'REMINDER' | translate}}</label>
 
-        <div class="form-group nomargin">
-          <div class="col-xs-4">
-            <input formControlName="triggerDelay" [(ngModel)]="alarm.triggerDelay"
-                  (change)="recalculateTrigger(alarm)" type="number" min="1" oninput="validity.valid||(value='0');"
-                  class="form-control">
-          </div>
-          <div class="col-xs-5">
-            <select formControlName="triggerUnit" [(ngModel)]="alarm.triggerUnit"
-                  (change)="recalculateTrigger(alarm)" class="form-control">
+        <!-- trigger: delay + unit + "earlier," -->
+        <div class="field-cluster">
+          <mat-form-field class="num">
+            <input matInput formControlName="triggerDelay" [(ngModel)]="alarm.triggerDelay"
+                   (change)="recalculateTrigger(alarm)" type="number" min="1" oninput="validity.valid||(value='0');">
+          </mat-form-field>
+          <mat-form-field>
+            <select matNativeControl formControlName="triggerUnit" [(ngModel)]="alarm.triggerUnit"
+                    (change)="recalculateTrigger(alarm)">
               <option value="MINUTES">{{'MINUTES' | translate}}</option>
               <option value="HOURS">{{'HOURS' | translate}}</option>
               <option value="DAYS">{{'DAYS' | translate}}</option>
               <option value="WEEKS">{{'WEEKS' | translate}}</option>
             </select>
-          </div>
-          <div class="col-xs-3 text-div">
-            {{'EARLIER' | translate}},
-          </div>
+          </mat-form-field>
+          <span class="text-div">{{'EARLIER' | translate}},</span>
         </div>
 
-        <div class="form-group">
-          <div class="col-xs-4">
-            <input formControlName="repeat" [(ngModel)]="alarm.repeat"
-                  type="number" min="1" oninput="validity.valid||(value='1');" class="form-control">
-          </div>
-          <div class="col-2 text-div">
-            {{alarmsArray.at(i).controls['repeat'].value === 0 ? translate.instant('TIMES') :
-              alarmsArray.at(i).controls['repeat'].value === 1 ? translate.instant('TIME COUNT') : translate.instant('TIMES, EVERY')}}
-          </div>
-          <div class="col-xs-3" [class.hidden]="alarmsArray.at(i).controls['repeat'].value === 1">
-            <input formControlName="intervalMinutes" [(ngModel)]="alarm.intervalMinutes"
-                  (change)="recalculateInterval(alarm)" type="number" min="1" class="form-control" oninput="validity.valid||(value='1');">
-          </div>
-          <div class="col-xs-3 text-div" [class.hidden]="alarmsArray.at(i).controls['repeat'].value === 1">
-            {{alarmsArray.at(i).controls['intervalMinutes'].value > 1 ? translate.instant('MINUTES') : translate.instant('MINUTE')}}
-          </div>
+        <!-- repeat: count + connector + (interval + unit, only when repeat !== 1) -->
+        <div class="field-cluster">
+          <mat-form-field class="num">
+            <input matInput formControlName="repeat" [(ngModel)]="alarm.repeat"
+                   type="number" min="1" oninput="validity.valid||(value='1');">
+          </mat-form-field>
+          <span class="text-div">
+            {{alarmsArray.at($index).controls['repeat'].value === 0 ? translate.instant('TIMES') :
+              alarmsArray.at($index).controls['repeat'].value === 1 ? translate.instant('TIME COUNT') : translate.instant('TIMES, EVERY')}}
+          </span>
+          @if (alarmsArray.at($index).controls['repeat'].value !== 1) {
+            <mat-form-field class="num">
+              <input matInput formControlName="intervalMinutes" [(ngModel)]="alarm.intervalMinutes"
+                     (change)="recalculateInterval(alarm)" type="number" min="1" oninput="validity.valid||(value='1');">
+            </mat-form-field>
+            <span class="text-div">
+              {{alarmsArray.at($index).controls['intervalMinutes'].value > 1 ? translate.instant('MINUTES') : translate.instant('MINUTE')}}
+            </span>
+          }
         </div>
 
-        <div class="form-group">
-          <div class="col-2 text-div">
-            {{'NOTE' | translate}}:
-          </div>
-          <div class="col-xs-7">
-            <input formControlName="description" [(ngModel)]="alarm.description"
-                  class="form-control" type="text">
-          </div>
-          <div class="col-xs-3">
-            <select formControlName="type" [(ngModel)]="alarm.type" class="form-control">
+        <!-- note: connector + description + type -->
+        <div class="field-cluster">
+          <span class="text-div">{{'NOTE' | translate}}:</span>
+          <mat-form-field>
+            <input matInput formControlName="description" [(ngModel)]="alarm.description" type="text">
+          </mat-form-field>
+          <mat-form-field>
+            <select matNativeControl formControlName="type" [(ngModel)]="alarm.type">
               <option value="audio">{{'PLAY TONE' | translate}}</option>
               <option value="display">{{'DISPLAY' | translate}}</option>
             </select>
-          </div>
+          </mat-form-field>
+        </div>
+
+        <div class="actions">
+          <button mat-icon-button type="button"
+                  data-identifier="remove-alarm-button" (click)="removeAlarm(alarm)">
+            <mat-icon svgIcon="duely:remove" aria-hidden="true"></mat-icon>
+          </button>
         </div>
       </div>
-      <div class="col-1 float-end">
-        <button data-identifier="remove-alarm-button" type="button" class="btn btn-link btn-sm float-end"
-            (click)="removeAlarm(alarm)">
-          <span class="glyphicon glyphicon-minus"></span>
-        </button>
-      </div>
-    </div>
+    }
   </div>
 </div>

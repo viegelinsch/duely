@@ -72,7 +72,6 @@ export function createTranslateLoader(http: HttpClient) {
     CreatorComponent,
     AppointmentFormComponent,
     RecurringSettingsComponent,
-    AlarmSettingsComponent,
     NotFoundComponent,
     AutoResizeDirective
   ],
@@ -103,7 +102,8 @@ export function createTranslateLoader(http: HttpClient) {
     MatSlideToggleModule,
     // Standalone child components consumed by the still-declared
     // AppointmentFormComponent (bottom-up migration; each moves here as it flips).
-    AdvancedSettingsComponent
+    AdvancedSettingsComponent,
+    AlarmSettingsComponent
   ],
   providers: [
     // Async so the ~30 KB animations chunk stays off the critical path; Material
