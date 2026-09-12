@@ -7,9 +7,13 @@
  */
 import { Component, Input, OnInit, OnChanges } from '@angular/core';
 import { StorageService } from '../../../storage/storage.service';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { TranslateService } from '@ngx-translate/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import moment from 'moment-timezone';
 import type { Appointment } from '../../appointment';
 
@@ -18,7 +22,16 @@ import type { Appointment } from '../../appointment';
  */
 @Component({
   selector: 'rac-advanced-settings',
-  standalone: false,
+  standalone: true,
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatButtonModule,
+    TranslateModule
+  ],
   templateUrl: './advanced-settings.component.html',
   styleUrls: ['./advanced-settings.component.scss']
 })

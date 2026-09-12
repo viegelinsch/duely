@@ -1,5 +1,14 @@
-@import '../../../../palette';
-
-.text-div {
-  padding-top: 6px;
+/**
+ * Advanced settings — Phase 3.
+ *
+ * The Bootstrap clones (.form-group, .col-N, .control-label) and the unused
+ * .text-div rule are gone: the shared layout vocabulary (.field-row / .stack)
+ * plus Material form fields express the structure. The .label-{accent} colour
+ * classes are supplied globally by the palette (imported in styles.scss), so
+ * this component no longer needs its own `@import '../../../../palette'` — one
+ * fewer Sass @import deprecation site. Only what the vocabulary cannot express
+ * remains: pushing the section toggle to the far right of the header row.
+ */
+.section-toggle {
+  margin-left: auto;
 }

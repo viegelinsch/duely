@@ -11,8 +11,7 @@ describe('AdvancedSettingsComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ AdvancedSettingsComponent ],
-      imports: [ TranslateModule.forRoot(), ReactiveFormsModule ],
+      imports: [ AdvancedSettingsComponent, TranslateModule.forRoot(), ReactiveFormsModule ],
       providers: [ StorageService, AppointmentsService ]
     })
     .compileComponents();

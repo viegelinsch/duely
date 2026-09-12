@@ -1,35 +1,38 @@
-<div class="sepa form-group" (click)="hideSettings=!hideSettings">
-  <label class="col-2 control-label label-{{storage.getColor()}}">{{"OTHER" | translate}}</label>
-  <div class="col-10">
-    <button type="button"
-            class="btn btn-link btn-sm float-end" aria-label="Left Align">
-      <span
-        class="glyphicon label-{{storage.getColor()}}"
-        [class.glyphicon-chevron-right]="hideSettings"
-        [class.glyphicon-chevron-down]="!hideSettings"
-        aria-hidden="true"
-      ></span>
-    </button>
-  </div>
+<!--
+  Advanced settings — Phase 3 Material conversion.
+  Bootstrap .form-group/.col-*/.control-label/.btn-link/.glyphicon are replaced by
+  the layout vocabulary (.field-row header, .stack body), Material form fields and a
+  duely-namespaced <mat-icon> chevron. *ngIf/*ngFor -> @if/@for. The status/timezone
+  controls keep their exact formControlName + ngModel + (change) bindings; only the
+  native <select> is restyled via matNativeControl. The .label-{accent} colour
+  classes are preserved (supplied globally by the palette).
+-->
+<div class="field-row" (click)="hideSettings=!hideSettings">
+  <label class="label-{{storage.getColor()}}">{{"OTHER" | translate}}</label>
+  <button mat-icon-button type="button" class="section-toggle" aria-label="Left Align">
+    <mat-icon class="label-{{storage.getColor()}}"
+              [svgIcon]="hideSettings ? 'duely:chevron_right' : 'duely:expand_more'"
+              aria-hidden="true"></mat-icon>
+  </button>
 </div>
-<div *ngIf="!hideSettings" [formGroup]="advancedForm">
-  <div class="form-group">
-    <label class="col-sm-2 col-12 control-label">{{"STATUS" | translate}}</label>
-    <div class="col-sm-10 col-12">
-      <select class="form-control" formControlName="status" [(ngModel)]="status" (change)="updateAppointment()">
+@if (!hideSettings) {
+  <div class="stack" [formGroup]="advancedForm">
+    <mat-form-field>
+      <mat-label>{{"STATUS" | translate}}</mat-label>
+      <select matNativeControl formControlName="status" [(ngModel)]="status" (change)="updateAppointment()">
         <option value="tentative">{{"TENTATIVE" | translate}}</option>
         <option value="confirmed">{{"CONFIRMED" | translate}}</option>
         <option value="cancelled">{{"CANCELLED" | translate}}</option>
       </select>
-    </div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 col-12 control-label">{{"TIMEZONE" | translate}}</label>
-    <div class="col-sm-10 col-12">
-      <select class="form-control" formControlName="timezone" [(ngModel)]="timezone" (change)="updateAppointment()">
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{"TIMEZONE" | translate}}</mat-label>
+      <select matNativeControl formControlName="timezone" [(ngModel)]="timezone" (change)="updateAppointment()">
         <option value="floating">{{"FLOATING" | translate}}</option>
-        <option *ngFor="let tz of timeZoneNames" value="{{ tz }}">{{ tz }}</option>
+        @for (tz of timeZoneNames; track tz) {
+          <option [value]="tz">{{ tz }}</option>
+        }
       </select>
-    </div>
+    </mat-form-field>
   </div>
-</div>
+}
