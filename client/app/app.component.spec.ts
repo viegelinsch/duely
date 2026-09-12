@@ -32,11 +32,11 @@ describe('AppComponent', () => {
                 // RouterTestingModule,
                 TranslateModule.forRoot(),
                 FormsModule,
-                ReactiveFormsModule
+                ReactiveFormsModule,
+                RouterOutlet
             ],
             declarations: [
                 AppComponent,
-                RouterOutlet,
                 SettingsComponent
             ],
             providers: [

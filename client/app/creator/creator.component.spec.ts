@@ -1,4 +1,4 @@
-import { waitForAsync, ComponentFixture, TestBed, inject } from '@angular/core/testing';
+import { ComponentFixture, TestBed, inject } from '@angular/core/testing';
 import * as fs from 'fs';
 import { CreatorComponent } from './creator.component';
 import { StorageService } from '../storage/storage.service';
@@ -18,7 +18,7 @@ describe('CreatorComponent', () => {
     let component: CreatorComponent;
     let fixture: ComponentFixture<CreatorComponent>;
 
-    beforeEach(waitForAsync(() => {
+    beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [CreatorComponent, AppointmentFormComponent, RecurringSettingsComponent,
                 AlarmSettingsComponent, AdvancedSettingsComponent],
@@ -26,7 +26,7 @@ describe('CreatorComponent', () => {
             providers: [AppointmentsService, { provide: StorageService, useFactory: selectStorageService }]
         })
             .compileComponents();
-    }));
+    });
 
     beforeEach(() => {
         fixture = TestBed.createComponent(CreatorComponent);
@@ -38,39 +38,36 @@ describe('CreatorComponent', () => {
         expect(component).toBeTruthy();
     }));
 
-    it('should start with 1 appointment', inject([AppointmentsService, StorageService, TranslateService], (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
-        component.getAppointments().then(() => {
-            expect(component.appointments).not.toBeUndefined();
-            expect(component.appointments.length).toEqual(1);
-        });
+    it('should start with 1 appointment', inject([AppointmentsService, StorageService, TranslateService], async (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
+        await component.getAppointments();
+        expect(component.appointments).not.toBeUndefined();
+        expect(component.appointments.length).toEqual(1);
     }));
 
-    it('should call saveText and getICalString if input is valid', inject([AppointmentsService, StorageService, TranslateService], (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
+    it('should call saveText and getICalString if input is valid', inject([AppointmentsService, StorageService, TranslateService], async (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
         const filename = 'duely.ics';
-        component.getAppointments().then(() => {
-            expect(component.appointments).not.toBeNull();
-            expect(component.appointments.length).toEqual(1);
-            component.appointments[0].summary = 'test'; // now it's a valid input
-            vi.spyOn(storage, 'saveText');
-            vi.spyOn(service, 'getICalString');
-            component.generateAndSaveICAL();
-            expect(storage.saveText).toHaveBeenCalled();
-            expect(service.getICalString).toHaveBeenCalled();
-        });
+        await component.getAppointments();
+        expect(component.appointments).not.toBeNull();
+        expect(component.appointments.length).toEqual(1);
+        component.appointments[0].summary = 'test'; // now it's a valid input
+        vi.spyOn(storage, 'saveText');
+        vi.spyOn(service, 'getICalString');
+        component.generateAndSaveICAL();
+        expect(storage.saveText).toHaveBeenCalled();
+        expect(service.getICalString).toHaveBeenCalled();
     }));
 
 
-    it('shouldn\'t call saveText and getICalString if input is invalid', inject([AppointmentsService, StorageService, TranslateService], (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
+    it('shouldn\'t call saveText and getICalString if input is invalid', inject([AppointmentsService, StorageService, TranslateService], async (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
         const filename = 'duely.ics';
-        component.getAppointments().then(() => {
-            expect(component.appointments).not.toBeNull();
-            expect(component.appointments.length).toEqual(1);
-            component.appointments[0].summary = ''; // now it's an invalid input
-            vi.spyOn(storage, 'saveText');
-            vi.spyOn(service, 'getICalString');
-            component.generateAndSaveICAL();
-            expect(storage.saveText).not.toHaveBeenCalled();
-            expect(service.getICalString).not.toHaveBeenCalled();
-        });
+        await component.getAppointments();
+        expect(component.appointments).not.toBeNull();
+        expect(component.appointments.length).toEqual(1);
+        component.appointments[0].summary = ''; // now it's an invalid input
+        vi.spyOn(storage, 'saveText');
+        vi.spyOn(service, 'getICalString');
+        component.generateAndSaveICAL();
+        expect(storage.saveText).not.toHaveBeenCalled();
+        expect(service.getICalString).not.toHaveBeenCalled();
     }));
 });
