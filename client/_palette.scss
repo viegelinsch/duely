@@ -1,13 +1,27 @@
-$clr-primary-red: #be1e3c !important;
-$clr-primary-green: #89a400 !important;
-$clr-primary-blue: #0080b4 !important;
-$clr-primary-orange: #fa6e00 !important;
-$clr-primary-violet: #760076 !important;
-$clr-primary-pink: #cc0099 !important;
-$clr-primary-darkgreen: #007156 !important;
-$clr-primary-darkblue: #005374 !important;
+$clr-primary-red: #be1e3c;
+$clr-primary-green: #89a400;
+$clr-primary-blue: #0080b4;
+$clr-primary-orange: #fa6e00;
+$clr-primary-violet: #760076;
+$clr-primary-pink: #cc0099;
+$clr-primary-darkgreen: #007156;
+$clr-primary-darkblue: #005374;
 $clr-background: #ddd;
 $clr-background-main: #ffffff;
+
+// The 8 Duely accents, keyed by the exact `data-color` values the app stores in
+// settings.color (see settings.component.html <option value="...">). Consumed by
+// styles/_theme.scss to emit the per-accent Material token overrides.
+$colors: (
+  'red': $clr-primary-red,
+  'green': $clr-primary-green,
+  'blue': $clr-primary-blue,
+  'orange': $clr-primary-orange,
+  'violet': $clr-primary-violet,
+  'pink': $clr-primary-pink,
+  'darkgreen': $clr-primary-darkgreen,
+  'darkblue': $clr-primary-darkblue,
+);
 
 .red {
   background-color: $clr-primary-red;
@@ -142,125 +156,4 @@ $clr-background-main: #ffffff;
 .button-darkblue {
   background-color: $clr-primary-darkblue;
   color: white;
-}
-
-
-.fill-red {
-  fill: $clr-primary-red !important;
-  svg {
-    g {
-      fill: $clr-primary-red !important;
-      g {
-        fill: $clr-primary-red !important;
-      }
-      path {
-        fill: $clr-primary-red !important;
-      }
-    }
-  }
-}
-
-.fill-green {
-  fill: $clr-primary-green !important;
-  svg {
-    g {
-      fill: $clr-primary-green !important;
-      g {
-        fill: $clr-primary-green !important;
-      }
-      path {
-        fill: $clr-primary-green !important;
-      }
-    }
-  }
-}
-
-.fill-blue {
-  fill: $clr-primary-blue !important;
-  svg {
-    g {
-      fill: $clr-primary-blue !important;
-      g {
-        fill: $clr-primary-blue !important;
-      }
-      path {
-        fill: $clr-primary-blue !important;
-      }
-    }
-  }
-}
-
-.fill-orange {
-  fill: $clr-primary-orange !important;
-  svg {
-    g {
-      fill: $clr-primary-orange !important;
-      g {
-        fill: $clr-primary-orange !important;
-      }
-      path {
-        fill: $clr-primary-orange !important;
-      }
-    }
-  }
-}
-
-.fill-violet {
-  fill: $clr-primary-violet !important;
-  svg {
-    g {
-      fill: $clr-primary-violet !important;
-      g {
-        fill: $clr-primary-violet !important;
-      }
-      path {
-        fill: $clr-primary-violet !important;
-      }
-    }
-  }
-}
-
-.fill-pink {
-  fill: $clr-primary-pink !important;
-  svg {
-    g {
-      fill: $clr-primary-pink !important;
-      g {
-        fill: $clr-primary-pink !important;
-      }
-      path {
-        fill: $clr-primary-pink !important;
-      }
-    }
-  }
-}
-
-.fill-darkgreen {
-  fill: $clr-primary-darkgreen !important;
-  svg {
-    g {
-      fill: $clr-primary-darkgreen !important;
-      g {
-        fill: $clr-primary-darkgreen !important;
-      }
-      path {
-        fill: $clr-primary-darkgreen !important;
-      }
-    }
-  }
-}
-
-.fill-darkblue {
-  fill: $clr-primary-darkblue !important;
-  svg {
-    g {
-      fill: $clr-primary-darkblue !important;
-      g {
-        fill: $clr-primary-darkblue !important;
-      }
-      path {
-        fill: $clr-primary-darkblue !important;
-      }
-    }
-  }
 }

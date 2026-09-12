@@ -1,0 +1,82 @@
+/**
+ * Material 20 design tokens for Duely.
+ *
+ * This partial emits ONLY the `--mat-sys-*` system-level CSS custom properties
+ * (color, typography, shape, state, elevation). It deliberately does NOT call
+ * `all-component-themes()`: Material components ship their own structural CSS,
+ * and Duely pulls in the pieces it needs per component. It also avoids the
+ * `mat.define-typography()` / `mat.define-density()` helpers, which are
+ * deprecated in v20 — the inline-map form of `mat.theme()` is used instead.
+ *
+ * Runtime theming is driven by two attributes on <html>:
+ *   data-theme="light|dark"   — set by ThemeService / the inline head script
+ *   data-color="<accent>"     — one of the 8 Duely accents from _palette.scss
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+@use '@angular/material' as mat;
+@use '../palette' as palette;
+
+// Duely's system font stack. Kept as a single Sass list so it can be dropped
+// into the typography map without the commas breaking map parsing.
+$duely-font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+  "Helvetica Neue", Arial, sans-serif;
+
+// Light theme (default). `mat.theme()` establishes the full token baseline from
+// a valid M3 palette; `mat.theme-overrides()` then stamps Duely's exact brand
+// identity on top. (mat.theme() requires a *palette* for `primary` — a raw hex
+// there is invalid — so the brand red is applied via theme-overrides, which does
+// accept raw colors. This is the same mechanism the accent blocks use below.)
+:root {
+  @include mat.theme((
+    color: (
+      primary: mat.$red-palette,
+      theme-type: light,
+    ),
+    typography: (
+      plain-family: $duely-font-stack,
+      brand-family: $duely-font-stack,
+    ),
+  ));
+
+  @include mat.theme-overrides((
+    primary: palette.$clr-primary-red,
+    background: palette.$clr-background,
+    surface: palette.$clr-background-main,
+  ));
+}
+
+// Dark theme. The dark `theme-type` computes dark surface/background tokens from
+// the palette automatically, so only the brand primary is re-stamped here.
+[data-theme='dark'] {
+  @include mat.theme((
+    color: (
+      primary: mat.$red-palette,
+      theme-type: dark,
+    ),
+    typography: (
+      plain-family: $duely-font-stack,
+      brand-family: $duely-font-stack,
+    ),
+  ));
+
+  @include mat.theme-overrides((
+    primary: palette.$clr-primary-red,
+  ));
+}
+
+// Accent overrides. For each of the 8 Duely accents, emit a light and a dark
+// selector that re-point the primary token at that accent's hex. The accent name
+// matches the `data-color` attribute set at runtime (e.g. data-color="blue").
+@each $name, $hex in palette.$colors {
+  [data-color='#{$name}'] {
+    @include mat.theme-overrides((primary: $hex));
+  }
+
+  [data-theme='dark'][data-color='#{$name}'] {
+    @include mat.theme-overrides((primary: $hex));
+  }
+}

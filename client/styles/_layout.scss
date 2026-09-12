@@ -1,0 +1,75 @@
+/**
+ * Duely layout vocabulary.
+ *
+ * These seven classes are the forward-looking replacement for Bootstrap's
+ * grid/container utilities. They are defined here in Phase 1 and adopted screen
+ * by screen in later phases; nothing binds to them yet, so they are inert until
+ * then. The vocabulary deliberately avoids Bootstrap's 12-column mental model in
+ * favour of intrinsic flex/grid plus a single responsive breakpoint.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+// Material's xs/sm boundary — the ONE breakpoint used across this vocabulary.
+$bp-xs: 599.98px;
+
+// Max-width page container with a single, consistent top clearance. Absorbs the
+// per-screen `margin-top: 58/65/66/71px` hacks. The navbar renders in flow now,
+// so one comfortable gap replaces all four magic numbers.
+.page {
+  width: min(100% - 2rem, 960px);
+  margin-inline: auto;
+  padding-block: 1rem 2rem;
+}
+
+// The white `.rectangle` equivalent: a padded, rounded surface for content.
+.card {
+  background-color: #ffffff;
+  border-radius: 4px;
+  padding: 15px;
+}
+
+// Label/control pair on one line, collapsing to a stacked column on xs screens.
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  @media (max-width: $bp-xs) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+// Country/state/region trio. Flex-wrap + gap removes the dynamic
+// [class.col-12]/[class.col-6]/[class.col-4] bindings.
+.field-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+// The 6 monthly/yearly radio grids: intrinsic, self-filling columns.
+.pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: 0.5rem;
+}
+
+// Button group: right-aligned, wrapping action bar.
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+// Vertical spacing utility: a simple gap-separated column.
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

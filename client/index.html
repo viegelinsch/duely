@@ -5,6 +5,18 @@
     <title>Duely - iCal generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script>
+      // Set the theme attributes before the bundle parses to kill the dark-mode
+      // flash. Mirrors ThemeService.apply(); guarded for the Electron file:// path.
+      try {
+        if (typeof localStorage !== 'undefined') {
+          var s = JSON.parse(localStorage.getItem('settings') || '{}');
+          var r = document.documentElement;
+          r.setAttribute('data-color', s.color || 'red');
+          r.setAttribute('data-theme', s.themeMode || 'light');
+        }
+      } catch (e) { }
+    </script>
   </head>
   <body>
     <rac-root>

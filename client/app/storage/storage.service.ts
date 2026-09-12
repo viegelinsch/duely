@@ -19,6 +19,9 @@ export abstract class StorageService {
   // actual settings:
   public settings = {
     color: 'red',
+    // 'light' | 'dark' — stored as a string (like `debug`/`color`) so a future
+    // 'auto' value is non-breaking. Mirrored onto <html> by ThemeService.
+    themeMode: 'light',
     country: '',
     state: '',
     region: '',
@@ -58,6 +61,9 @@ export abstract class StorageService {
       const settings = JSON.parse(settingsstr);
       if (settings.hasOwnProperty('color')) {
         this.settings.color = settings.color;
+      }
+      if (settings.hasOwnProperty('themeMode')) {
+        this.settings.themeMode = settings.themeMode;
       }
       if (settings.hasOwnProperty('language')) {
         this.settings.language = settings.language;

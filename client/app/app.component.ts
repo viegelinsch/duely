@@ -9,6 +9,7 @@
 import { Component, OnInit } from '@angular/core';
 import { StorageService } from './storage/storage.service';
 import { TranslateService } from '@ngx-translate/core';
+import { ThemeService } from './theme/theme.service';
 
 /**
  * @version 0.4.0
@@ -27,11 +28,12 @@ export class AppComponent {
    * Creates the component and imports required dependencies
    * @param storage The environment specific storage service
    */
-  constructor(public storage: StorageService, private translate: TranslateService) {
+  constructor(public storage: StorageService, private translate: TranslateService, private theme: ThemeService) {
     translate.addLangs(['de', 'en']);
 
     translate.setDefaultLang('en');
     translate.use(storage.settings.language);
+    theme.apply();
   }
 
   /**

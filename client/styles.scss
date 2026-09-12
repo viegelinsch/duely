@@ -1,6 +1,10 @@
 /* You can add global styles to this file, and also import other style files */
+/* Material 20 design tokens + Duely layout vocabulary. `@use` must precede the
+   legacy `@import`s below (Sass module rule). The indigo-pink prebuilt theme was
+   removed here — _theme.scss replaces it with Duely-branded --mat-sys-* tokens. */
+@use './styles/theme';
+@use './styles/layout';
 @import 'bootstrap/dist/css/bootstrap.css';
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
 @import 'palette';
 
 html, body {
