@@ -157,7 +157,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
 /** changes EndDate if StartDate is changed */
   startDateListener(event: MatDatepickerInputEvent<Date>): void {
     const value = event.value;
-    if (value != null && this.appointment.start !== undefined && this.appointment.end !== undefined) {
+    if (value != null && this.appointment.start != null && this.appointment.end != null) {
       const startDate = moment.utc(this.appointment.start);
       const endDate = moment.utc(this.appointment.end);
       const duration = endDate.diff(startDate);
@@ -168,7 +168,8 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
       });
       this.appointment.start = startDate.toDate();
       this.appointment.end = startDate.clone().add(duration).toDate();
-      this.appointmentForm.get('end.date')!.setValue(this.appointment.end);
+      const d = moment.utc(this.appointment.end);
+      this.appointmentForm.get('end.date')!.setValue(new Date(d.year(), d.month(), d.date()));
       this.appointmentForm.get('end.time')!.setValue(moment.utc(this.appointment.end).format('HH:mm'));
       this.recurring.updateRepeatsBy();
     }
@@ -176,7 +177,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   /** gets enddate of of day, month , year and updates it, if it is befoe the start date */
   endDateListener(event: MatDatepickerInputEvent<Date>): void {
     const value = event.value;
-    if (value != null && this.appointment.end !== undefined) {
+    if (value != null && this.appointment.end != null) {
       this.appointment.end.setUTCFullYear(value.getFullYear(), value.getMonth(), value.getDate());
       const appEnd = moment.utc(this.appointment.end);
       const appStart = moment.utc(this.appointment.start);
@@ -191,7 +192,8 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
           date: endDate.date()
         });
         this.appointment.start = startDate.toDate();
-        this.appointmentForm.get('start.date')!.setValue(this.appointment.start);
+        const d = moment.utc(this.appointment.start);
+        this.appointmentForm.get('start.date')!.setValue(new Date(d.year(), d.month(), d.date()));
       }
       if (appEnd.toDate().valueOf() < appStart.toDate().valueOf()) { // time's not correct yet
         const startTime = moment.utc(this.appointment.start);
@@ -206,7 +208,8 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
       if (this.appointment.hasOwnProperty('recurringSettings')) {
         if (moment.utc(this.appointment.end).isAfter(moment.utc(this.appointment.recurringSettings!.untilDate!), 'day')) {
           this.appointment.recurringSettings!.untilDate = moment.utc(this.appointment.end).format('YYYY-MM-DD'); // make a copy; producer stays a 'YYYY-MM-DD' string
-          this.recurring.recurringForm.controls['untilDate'].setValue(this.appointment.end);
+          const d = moment.utc(this.appointment.end);
+          this.recurring.recurringForm.controls['untilDate'].setValue(new Date(d.year(), d.month(), d.date()));
         }
       }
     }

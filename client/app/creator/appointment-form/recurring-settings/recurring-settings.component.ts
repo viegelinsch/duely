@@ -152,7 +152,8 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
       if (date.isSameOrAfter(moment.utc(this.appointment.end!), 'day')) {
         this.recurringSettings.untilDate = date.format('YYYY-MM-DD');
       } else {
-        this.recurringForm.controls['untilDate'].setValue(this.appointment.end!);
+        const d = moment.utc(this.appointment.end!);
+        this.recurringForm.controls['untilDate'].setValue(new Date(d.year(), d.month(), d.date()));
       }
     }
   }
