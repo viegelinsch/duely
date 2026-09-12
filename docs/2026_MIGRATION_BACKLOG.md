@@ -83,10 +83,11 @@ live `(dateChange)` handlers, and `c5d3488` fixed the timezone defects that acti
 exposed — `UNTIL=`/`DTEND` values that were previously silently wrong in some timezones
 are now correct. That is a change from broken to correct, not byte-identity.)
 
-**7. Phase 1.4 — the line numbers are stale; delete by content match, never by line
-number.** `client/styles.scss` line 3 is `@import 'palette';`, not the M2
-`indigo-pink.css` the plan says to delete at line 3. Re-verify the file before executing
-step 1.4.
+**7. Phase 1.4 — delete by content match, never by line number.** `client/styles.scss`
+line 3 IS the M2 `@import '@angular/material/prebuilt-themes/indigo-pink.css';` the plan
+says to delete — the plan's line number happens to be right. `palette` sits at line 4
+(line 2 is the Bootstrap CSS). The delete-by-content-match rule stands regardless: it is
+what makes the instruction robust against anything inserted above it.
 
 **8. Phase 1 — there are eleven Sass `@import` deprecation sites, not seven, and the
 warning positions are misleading.** The relative import depth differs per file
@@ -173,7 +174,7 @@ provider — without the provider, a DateAdapter NG0201 surfaces immediately aft
 `CommonModule` is not needed: it is implicit in the TestBed scope, proven by
 `recurring-settings.component.spec` passing with 13 `*ngIf`/`*ngFor` usages and the same
 two imports. Masked cascade: rendering aborts at the first unknown element
-(`appointment-form.component.html:53`), so fixing `mat-form-field` alone surfaces the
+(`appointment-form.component.html:54`), so fixing `mat-form-field` alone surfaces the
 next NG0304 for `mat-label`, `mat-datepicker` and `mat-datepicker-toggle` — expect more
 NG0304s to surface in sequence rather than all at once. Owner: Phase 6.
 
