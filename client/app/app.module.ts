@@ -36,13 +36,12 @@ import { environment } from '../environments/environment';
 
 import { StorageService } from './storage/storage.service';
 import { selectStorageService } from './storage/storage.factory';
-import { AboutComponent } from './about/about.component';
-import { LegalComponent } from './legal/legal.component';
 // SettingsComponent is now standalone (Phase 2 pilot) — referenced only by the
 // router, no longer declared here.
 // CreatorComponent is now standalone (Phase 3.5) — referenced only by the
 // router, no longer declared here.
-import { NotFoundComponent } from './notFound/notFound.component';
+// AboutComponent, LegalComponent and NotFoundComponent are now standalone
+// (Phase 4) — referenced only by the router, no longer declared here.
 import { AppointmentFormComponent } from './creator/appointment-form/appointment-form.component';
 import { AdvancedSettingsComponent } from './creator/appointment-form/advanced-settings/advanced-settings.component';
 import { RecurringSettingsComponent } from './creator/appointment-form/recurring-settings/recurring-settings.component';
@@ -66,10 +65,7 @@ export function createTranslateLoader(http: HttpClient) {
 
 @NgModule({
   declarations: [
-    AppComponent,
-    AboutComponent,
-    LegalComponent,
-    NotFoundComponent
+    AppComponent
   ],
   imports: [
     AppRoutingModule,

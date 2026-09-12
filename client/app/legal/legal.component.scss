@@ -1,97 +1,58 @@
-@import '../../palette';
+/**
+ * Duely legal styles.
+ *
+ * Phase 4: the 97-line Bootstrap clone (byte-identical with about and
+ * notFound) is deleted in favour of the .page / .card layout vocabulary.
+ *
+ * The legal notice is injected via [innerHTML], so its nodes never receive
+ * this component's _ngcontent scope attribute and a plain ".card p" selector
+ * would not match them. It previously inherited its typography from Bootstrap,
+ * which is removed in Phase 7. The ::ng-deep block below therefore gives the
+ * injected markup explicit, readable defaults. The leading ".card" still
+ * carries the scope attribute, so these rules apply only to legal's own card
+ * and do not leak to other components' .card surfaces.
+ */
 
-.rectangle {
-  border: 4px;
-  background-color: white;
-  border-color: transparent;
-  border-radius: 4px;
-  padding: 15px;
-}
+.card ::ng-deep {
+  h1,
+  h2,
+  h3,
+  h4 {
+    margin: 0 0 0.5rem;
+    line-height: 1.3;
+    font-weight: 500;
+  }
 
-.main {
-  margin-top: 65px;
-  background-color: $clr-background-main;
-  border: 2px #404040;
-  border-radius: 10px;
-}
+  h1 {
+    font-size: 1.75rem;
+  }
 
-.pull-right {
-  margin-right: 15px;
-}
+  h2 {
+    font-size: 1.4rem;
+  }
 
-hr  {
-  border-top: 1px solid $clr-background;
-}
+  h3 {
+    font-size: 1.2rem;
+  }
 
-.navbar-form {
-  width: auto;
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-right: 0;
-  margin-left: 0;
-  border: none;
-}
+  h4 {
+    font-size: 1rem;
+  }
 
-.hidden {
-  display: none;
-}
+  p {
+    margin: 0 0 0.75rem;
+    line-height: 1.5;
+  }
 
-div {
-  vertical-align: middle;
-}
+  ul,
+  ol {
+    margin: 0 0 0.75rem;
+    padding-left: 1.5rem;
+    line-height: 1.5;
+  }
 
-span {
-  vertical-align: middle;
-  height: 100%;
-  line-height: height;
-}
-
-.col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12 {
-  height: 100%;
-  line-height: 100%;
-}
-
-.checkbox {
-  font-weight: normal;
-}
-
-.col-xs-1, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9, .col-xs-10, .col-xs-11, .col-xs-12 {
-  padding-left: 15px;
-  padding-right: 0;
-    height: 100%;
-    line-height: 100%;
-}
-
-.logo {
-  vertical-align: top;
-  display: block;
-  margin: 0 auto;
-  width: 70%;
-}
-
-.logo img {
-  width: 100%;
-}
-
-.icon {
-  width: 100%;
-  height: 100%;
-  vertical-align: top;
-  display: block;
-  margin: 0 auto;
-}
-
-p {
-  padding-bottom: 0;
-  padding-top: 7px;
-}
-
-a {
-  button {
-    width: 100%;
-    span {
-      text-decoration: none;
-      color: black;
-    }
+  a {
+    color: #1976d2;
+    text-decoration: underline;
   }
 }

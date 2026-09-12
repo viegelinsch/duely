@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed, inject } from '@angular/core/testing';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { AboutComponent } from './about.component';
 
@@ -9,8 +10,7 @@ describe('AboutComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ AboutComponent ],
-      imports: [ TranslateModule.forRoot() ]
+      imports: [ AboutComponent, TranslateModule.forRoot(), RouterTestingModule ]
     })
     .compileComponents();
   });

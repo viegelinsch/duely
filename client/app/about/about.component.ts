@@ -8,7 +8,9 @@
  */
 
 import { Component, OnInit } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { MatButtonModule } from '@angular/material/button';
+import { RouterLink } from '@angular/router';
 
 /**
  * Component used by Angular to find the corresponding HTML page
@@ -16,7 +18,8 @@ import { TranslateService } from '@ngx-translate/core';
  */
 @Component({
   selector: 'rac-about',
-  standalone: false,
+  standalone: true,
+  imports: [TranslateModule, MatButtonModule, RouterLink],
   templateUrl: './about.component.html',
   styleUrls: ['./about.component.scss']
 })

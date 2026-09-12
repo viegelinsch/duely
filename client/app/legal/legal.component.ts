@@ -17,7 +17,8 @@ import { StorageService } from '../storage/storage.service';
  */
 @Component({
   selector: 'rac-impress',
-  standalone: false,
+  standalone: true,
+  imports: [],
   templateUrl: './legal.component.html',
   styleUrls: ['./legal.component.scss']
 })

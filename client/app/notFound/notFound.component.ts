@@ -8,7 +8,8 @@
  */
 
 import { Component, OnInit } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { RouterLink } from '@angular/router';
 
 /**
  * Component used by Angular to find the corresponding HTML page
@@ -16,7 +17,8 @@ import { TranslateService } from '@ngx-translate/core';
  */
 @Component({
   selector: 'rac-not-found',
-  standalone: false,
+  standalone: true,
+  imports: [TranslateModule, RouterLink],
   templateUrl: './notFound.component.html',
   styleUrls: ['./notFound.component.scss']
 })

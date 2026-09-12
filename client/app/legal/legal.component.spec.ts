@@ -9,7 +9,7 @@ describe('LegalComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ LegalComponent ]
+      imports: [ LegalComponent ]
     })
     .compileComponents();
   });
