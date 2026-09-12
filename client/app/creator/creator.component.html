@@ -1,65 +1,68 @@
-<div class="container main">
-  <div>
-    <ul class="list-unstyled">
-      <li *ngFor="let appointment of appointments, let last=last, let index=index" class="rectangle">
-        <div class="form-group container appointment-header">
-          <div class="col-7" (click)="this.visible[index] = !this.visible[index]">
-            <h2>{{"APPOINTMENT" | translate}} {{ index + 1 }}</h2>
-          </div>
-          <div class="col-5 appointment-header" (click)="this.visible[index] = !this.visible[index]" >
-            <button data-identifier="remove-appointment-btn" class="btn btn-default float-end" (click)="removeAppointment(appointment, index)" *ngIf="appointments.length > 1">
-              <span class="glyphicon glyphicon-minus label-red"></span>
-            </button>
-              <button class="btn btn-link float-end" data-identifier="hide-full-appointment-form"><span
-                class="glyphicon label-{{storage.getColor()}}"
-                [class.glyphicon-chevron-down]="this.visible[index]"
-                [class.glyphicon-chevron-right]="!this.visible[index]"
-                aria-hidden="true"
-                ></span>
-              </button>
-          </div>
-        </div>
-        <rac-appointment-form [appointment]="appointment" *ngIf="this.visible[index]"></rac-appointment-form>
-      </li>
-      <li class="bottom-buttons">
-        <button type="button" id="add-appointment-btn" class="btn btn-primary col-6 btn-lg"
-              (click)="addAppointment()">
-          <span class="glyphicon glyphicon-plus button-icon"></span>{{"ADD APPOINTMENT" | translate}}
-        </button>
-        <button type="button" id="generate-ical-btn" class="btn btn-success col-6 btn-lg" (click)="generateAndSaveICAL()">
-          <span class="glyphicon glyphicon-floppy-save button-icon"></span>{{"SAVE CALENDAR DATA" | translate}}
-        </button>
-      </li>
-    </ul>
+<div class="page stack">
 
-    <!-- Collision Info -->
-    <div *ngIf="collisions.length > 0" class="collisions">
+  @for (appointment of appointments; track $index; let index = $index) {
+    <div class="card">
+      <div class="field-row" (click)="visible[index] = !visible[index]">
+        <h2>{{"APPOINTMENT" | translate}} {{ index + 1 }}</h2>
+        <div class="actions">
+          @if (appointments.length > 1) {
+            <button mat-stroked-button data-identifier="remove-appointment-btn"
+                    (click)="removeAppointment(appointment, index)">
+              <mat-icon class="label-red" svgIcon="duely:remove"></mat-icon>
+            </button>
+          }
+          <button mat-icon-button data-identifier="hide-full-appointment-form">
+            <mat-icon class="label-{{storage.getColor()}}"
+                      [svgIcon]="visible[index] ? 'duely:expand_more' : 'duely:chevron_right'"></mat-icon>
+          </button>
+        </div>
+      </div>
+      @if (visible[index]) {
+        <rac-appointment-form [appointment]="appointment"></rac-appointment-form>
+      }
+    </div>
+  }
+
+  <div class="actions">
+    <button mat-flat-button color="primary" type="button" id="add-appointment-btn"
+            (click)="addAppointment()">
+      <mat-icon svgIcon="duely:add"></mat-icon>{{"ADD APPOINTMENT" | translate}}
+    </button>
+    <button mat-flat-button color="primary" type="button" id="generate-ical-btn"
+            (click)="generateAndSaveICAL()">
+      <mat-icon svgIcon="duely:save"></mat-icon>{{"SAVE CALENDAR DATA" | translate}}
+    </button>
+  </div>
+
+  <!-- Collision Info -->
+  @if (collisions.length > 0) {
+    <div class="card">
       <h2>{{"COLLISIONS" | translate}}</h2>
-        <table class="table table-fixed">
-          <thead>
-            <tr>
-              <th class="col-6">{{"DATE" | translate}}</th>
-              <th class="col-6">{{"REASON" | translate}}</th>
-            </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let collision of collisions">
-            <td class="col-6">{{ collision.date.toString().slice(4, 15) }}</td>
-            <td class="col-6">{{ collision.reason }}</td>
+      <table class="duely-table">
+        <thead>
+          <tr>
+            <th>{{"DATE" | translate}}</th>
+            <th>{{"REASON" | translate}}</th>
           </tr>
+        </thead>
+        <tbody>
+          @for (collision of collisions; track $index) {
+            <tr>
+              <td>{{ collision.date.toString().slice(4, 15) }}</td>
+              <td>{{ collision.reason }}</td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
-    <!-- /Collision Info -->
-  </div>
+  }
+  <!-- /Collision Info -->
 
-  
-  <div *ngIf="storage.getDebug()" class="rectangle debug">
-    <h3>{{'DEBUG OUTPUT' | translate}}</h3>
-    <pre>
-      {{ appointments | json }}
-    </pre>
-  </div>
+  @if (storage.getDebug()) {
+    <div class="card">
+      <h3>{{'DEBUG OUTPUT' | translate}}</h3>
+      <pre>{{ appointments | json }}</pre>
+    </div>
+  }
 
-  <!-- <rac-old-creator></rac-old-creator> -->
 </div>

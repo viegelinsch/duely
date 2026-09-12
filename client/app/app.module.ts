@@ -40,7 +40,8 @@ import { AboutComponent } from './about/about.component';
 import { LegalComponent } from './legal/legal.component';
 // SettingsComponent is now standalone (Phase 2 pilot) — referenced only by the
 // router, no longer declared here.
-import { CreatorComponent } from './creator/creator.component';
+// CreatorComponent is now standalone (Phase 3.5) — referenced only by the
+// router, no longer declared here.
 import { NotFoundComponent } from './notFound/notFound.component';
 import { AppointmentFormComponent } from './creator/appointment-form/appointment-form.component';
 import { AdvancedSettingsComponent } from './creator/appointment-form/advanced-settings/advanced-settings.component';
@@ -68,7 +69,6 @@ export function createTranslateLoader(http: HttpClient) {
     AppComponent,
     AboutComponent,
     LegalComponent,
-    CreatorComponent,
     NotFoundComponent
   ],
   imports: [

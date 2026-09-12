@@ -18,11 +18,22 @@ import Holidays from 'date-holidays';
 import { CustomValidators } from '../validation/custom-validators';
 import { StorageService } from '../storage/storage.service';
 
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { JsonPipe } from '@angular/common';
+import { AppointmentFormComponent } from './appointment-form/appointment-form.component';
 /** A class used to manage multiple appointments */
 @Component({
   selector: 'rac-creator',
-  standalone: false,
+  standalone: true,
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    TranslateModule,
+    JsonPipe,
+    AppointmentFormComponent
+  ],
   templateUrl: './creator.component.html',
   styleUrls: ['./creator.component.scss'],
   providers: [AppointmentsService]
