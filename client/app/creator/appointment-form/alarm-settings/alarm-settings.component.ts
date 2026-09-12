@@ -137,7 +137,9 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
 
   /** get alarm intervall and caculates it to minutes */
   public recalculateInterval(alarm: AlarmData): void {
-    alarm.interval = alarm.intervalMinutes * 60;
+    if (alarm.intervalMinutes != null) {
+      alarm.interval = alarm.intervalMinutes * 60;
+    }
   }
 
 }

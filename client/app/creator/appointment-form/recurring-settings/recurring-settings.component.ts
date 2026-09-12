@@ -10,6 +10,7 @@ import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import type { Appointment } from '../../appointment';
 import { Exclusion } from '../../exclusion';
 import { RecurringSettings } from '../../recurring-settings';
+import type { frequency } from '../../recurring-settings';
 import { Subscription } from 'rxjs';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { StorageService } from '../../../storage/storage.service';
@@ -143,16 +144,15 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   endDateListener(event: MatDatepickerInputEvent<Date>): void {
     const value = event.value;
     if (value != null) {
-      const date = moment();
-      date.set({
+      const date = moment.utc().set({
         year: value.getFullYear(),
         month: value.getMonth(),
         date: value.getDate()
       });
-      if (date.toDate().valueOf() >= this.appointment.end!.valueOf()) {
-        this.recurringSettings.untilDate = date.toDate();
+      if (date.isSameOrAfter(moment.utc(this.appointment.end!), 'day')) {
+        this.recurringSettings.untilDate = date.format('YYYY-MM-DD');
       } else {
-        this.enddate = this.appointment.end!;
+        this.recurringForm.controls['untilDate'].setValue(this.appointment.end!);
       }
     }
   }
@@ -268,7 +268,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** creates the reccuring form */
   private createForm(): void {
     this.recurringForm = this.fb.group({
-      frequency: 'NEVER',
+      frequency: 'NEVER' as frequency,
       interval: [
         1, [
           Validators.required,
@@ -286,7 +286,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
       repByMonthly: 'MONTH',
       repByYearly: 'DAYMONTHYEAR',
       count: null,
-      untilDate: moment(new Date()).add(100, 'y'),
+      untilDate: moment(new Date()).add(100, 'y').format('YYYY-MM-DD'),
       exclusions: this.fb.array([]),
     });
   }
@@ -337,7 +337,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    */
   setExclusionDate(event: MatDatepickerInputEvent<Date>, i: number): void {
     if (event.value != null) {
-      this.exclusions[i].date = event.value;
+      this.exclusions[i].date = moment(event.value).format('YYYY-MM-DD');
     }
   }
 

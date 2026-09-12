@@ -2,8 +2,8 @@
 export interface AlarmData {
   triggerDelay: number;
   triggerUnit: 'MINUTES' | 'HOURS' | 'DAYS' | 'WEEKS';
-  /** Reminder repeat interval in minutes; every constructed alarm literal supplies it. */
-  intervalMinutes: number;
+  /** Reminder repeat interval in minutes; optional because records already in storage may predate the field. */
+  intervalMinutes?: number;
   // ICalAlarmData properties
   type?: string;
   trigger?: any;

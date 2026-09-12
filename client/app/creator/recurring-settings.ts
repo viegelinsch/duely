@@ -1,6 +1,6 @@
 import { Exclusion } from './exclusion';
 
-type frequency = 'NEVER' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+export type frequency = 'NEVER' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 type ends = 'NEVER' | 'COUNT' | 'UNTIL';
 type repByMonthly = 'MONTH' | 'MONTHINV' | 'WEEK' | 'WEEKINV' | 'WORK' | 'WORKINV';
 type repByYearly = 'DAYMONTHYEAR' | 'DAYMONTHYEARINV' | 'WEEKYEAR' | 'WEEKINVYEAR' | 'WORKINVYEAR' | 'WORKYEAR';

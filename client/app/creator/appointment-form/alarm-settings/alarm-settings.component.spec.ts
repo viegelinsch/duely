@@ -51,7 +51,7 @@ describe('AlarmSettingsComponent', () => {
             triggerUnit: 'MINUTES',
             repeat: 1,
             intervalMinutes: 5,
-            trigger: moment(component.appointment.start).subtract(10, 'minutes').toDate(),
+            trigger: moment(component.appointment.start).subtract(10, 'MINUTES' as unknown as moment.unitOfTime.DurationConstructor).toDate(),
             interval: 5 * 60
         };
         vi.spyOn(component.alarms, 'push');
@@ -69,7 +69,7 @@ describe('AlarmSettingsComponent', () => {
             triggerUnit: 'MINUTES',
             repeat: 1,
             intervalMinutes: 5,
-            trigger: moment(component.appointment.start).subtract(10, 'minutes').toDate(),
+            trigger: moment(component.appointment.start).subtract(10, 'MINUTES' as unknown as moment.unitOfTime.DurationConstructor).toDate(),
             interval: 5 * 60
         };
 
@@ -87,7 +87,7 @@ describe('AlarmSettingsComponent', () => {
             triggerUnit: 'MINUTES',
             repeat: 1,
             intervalMinutes: 5,
-            trigger: moment(component.appointment.start).subtract(10, 'minutes').toDate(),
+            trigger: moment(component.appointment.start).subtract(10, 'MINUTES' as unknown as moment.unitOfTime.DurationConstructor).toDate(),
             interval: 5 * 60
         };
 
@@ -106,7 +106,7 @@ describe('AlarmSettingsComponent', () => {
             repeat: 1,
             intervalMinutes: 5
         };
-        const expectedTrigger = moment(component.appointment.start).subtract(10, 'minutes').toDate();
+        const expectedTrigger = moment(component.appointment.start).subtract(10, 'MINUTES' as unknown as moment.unitOfTime.DurationConstructor).toDate();
         component.recalculateTrigger(defaultAlarm);
         expect(defaultAlarm.trigger).toEqual(expectedTrigger);
 

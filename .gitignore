@@ -65,3 +65,14 @@ playwright-report/
 test-results/
 .browserslistrc
 
+# TypeScript / Angular build output, regenerated per run.
+# Narrow and anchored on purpose: a blanket `dist/` rule would hide future
+# legitimate additions. Tracked files (dist/electron/*, dist/server/app.js,
+# dist/server/app.js.map, dist/server/package.json) are unaffected - gitignore
+# has no effect on already-tracked files; these rules only stop accidental
+# staging of generated output such as dist/server/static/ and dist/test-out/.
+/out-tsc/
+/dist/out-tsc/
+/dist/test-out/
+/dist/server/
+/dist/downloads/
