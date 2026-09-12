@@ -1,110 +1,86 @@
-<form [formGroup]="appointmentForm" class="form-horizontal" novalidate>
+<form [formGroup]="appointmentForm" class="stack" novalidate>
 
   <!-- Title -->
-  <div class="form-group row" [ngClass]="{
-  'has-danger': appointmentForm.controls.summary.invalid && appointmentForm.controls.summary.dirty || appointmentForm.controls.summary.pristine ,
-  'has-success': appointmentForm.controls.summary.valid && appointmentForm.controls.summary.dirty
-}">
-    <label for="title" class="col-sm-2 col-12 control-label">{{'TITLE' | translate}}</label>
-    <div class="col-sm-10 col-12">
-      <input formControlName="summary" [(ngModel)]="appointment.summary"
-            type="text" class="form-control" [placeholder]="this.translate.instant('TITLE')">
-          <div class="alert alert-warning"
-       *ngIf="appointmentForm.controls.summary.invalid  && appointmentForm.controls.summary.dirty || appointmentForm.controls.summary.pristine">
-        <p *ngIf="appointmentForm.controls.summary.hasError('required')">{{'REQUIRED' | translate}}</p>
-        <p *ngIf="appointmentForm.controls.summary.hasError('maxlength')">{{'REQUIRED25' | translate}}</p>
-        <p *ngIf="appointmentForm.controls.summary.errors != null && appointmentForm.controls.summary.errors.required">{{'REQUIRED' | translate}}</p>
-        <p *ngIf="appointmentForm.controls.summary.errors != null && appointmentForm.controls.summary.errors.maxlength">{{'REQUIRED25' | translate}}</p>
-
-          </div>
-    </div>
-  </div>
+  <mat-form-field appearance="fill">
+    <mat-label>{{'TITLE' | translate}}</mat-label>
+    <input matInput formControlName="summary" [(ngModel)]="appointment.summary"
+           type="text" [placeholder]="translate.instant('TITLE')">
+    @if (appointmentForm.controls.summary.hasError('required')) {
+      <mat-error>{{'REQUIRED' | translate}}</mat-error>
+    }
+    @if (appointmentForm.controls.summary.hasError('maxlength')) {
+      <mat-error>{{'REQUIRED25' | translate}}</mat-error>
+    }
+  </mat-form-field>
 
   <!-- Location -->
-  <div class="form-group row" [ngClass]="{
-  'has-danger': appointmentForm.controls.location.invalid && appointmentForm.controls.location.dirty ,
-  'has-success': appointmentForm.controls.location.valid && appointmentForm.controls.location.dirty
-}">
-    <label for="location" class="col-sm-2 col-xs-12 control-label">{{'LOCATION' | translate}}</label>
-    <div class="col-sm-10 col-xs-12">
-      <input formControlName="location" [(ngModel)]="appointment.location"
-            type="text" class="form-control" [placeholder]="this.translate.instant('LOCATION')">
-          <div class="alert alert-warning"
-       *ngIf="appointmentForm.controls.location.invalid && appointmentForm.controls.location.dirty">
-             <p *ngIf="appointmentForm.controls.location.errors != null && appointmentForm.controls.location.errors.maxlength">{{'REQUIRED25' | translate}}</p>
-          </div>
-    </div>
-  </div>
+  <mat-form-field appearance="fill">
+    <mat-label>{{'LOCATION' | translate}}</mat-label>
+    <input matInput formControlName="location" [(ngModel)]="appointment.location"
+           type="text" [placeholder]="translate.instant('LOCATION')">
+    @if (appointmentForm.controls.location.hasError('maxlength')) {
+      <mat-error>{{'REQUIRED25' | translate}}</mat-error>
+    }
+  </mat-form-field>
 
   <!-- Description -->
-  <div class="form-group row">
-    <label for="description" class="col-sm-2 col-xs-12 control-label">{{'DESCRIPTION' | translate}}</label>
-    <div class="col-sm-10 col-xs-12">
-      <textarea formControlName="description" [(ngModel)]="appointment.description"
-            class="form-control" [placeholder]="this.translate.instant('DESCRIPTION')" rows="1" racAutoResize></textarea>
-    </div>
-  </div>
+  <mat-form-field appearance="fill">
+    <mat-label>{{'DESCRIPTION' | translate}}</mat-label>
+    <textarea matInput formControlName="description" [(ngModel)]="appointment.description"
+              [placeholder]="translate.instant('DESCRIPTION')"
+              cdkTextareaAutosize cdkAutosizeMinRows="2"></textarea>
+  </mat-form-field>
 
   <hr>
 
   <!-- Start info (date & time) -->
-  <div formGroupName="start" class="form-group row">
-    <label class="col-sm-2 col-xs-12 control-label">{{'FROM' | translate}}</label>
-    <div class="col-sm-5 col-xs-6">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>{{'SELECT DATE' | translate}}</mat-label>
-        <input matInput 
-               [matDatepicker]="startPicker"
-               formControlName="date" 
-               [(ngModel)]="startdate" 
-               (dateChange)="startDateListener($event)">
-        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-        <mat-datepicker #startPicker showWeekNumbers="true"></mat-datepicker>
+  <div formGroupName="start" class="field-row">
+    <label>{{'FROM' | translate}}</label>
+    <mat-form-field appearance="fill">
+      <mat-label>{{'SELECT DATE' | translate}}</mat-label>
+      <input matInput
+             [matDatepicker]="startPicker"
+             formControlName="date"
+             [(ngModel)]="startdate"
+             (dateChange)="startDateListener($event)">
+      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+      <mat-datepicker #startPicker showWeekNumbers="true"></mat-datepicker>
+    </mat-form-field>
+    @if (!appointmentForm.controls.allDay.value) {
+      <mat-form-field appearance="fill" class="time-field">
+        <input matInput formControlName="time" type="time"
+               (blur)="validateStartTime(); onStartTimeChange(appointmentForm.get('start.time')!.value)">
       </mat-form-field>
-    </div>
-    <div class="col-sm-5 col-xs-6">
-      <input formControlName="time" type="time" class="form-control"
-        *ngIf="!appointmentForm.controls.allDay.value" (blur)="validateStartTime(); onStartTimeChange($event.target.value)">
-    </div>
+    }
   </div>
 
   <!-- End info (date & time) -->
-  <div formGroupName="end" class="form-group row">
-    <label class="col-sm-2 col-xs-12 control-label">{{'TO' | translate}}</label>
-    <div class="col-sm-5 col-xs-6">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>{{'SELECT DATE' | translate}}</mat-label>
-        <input matInput 
-               [matDatepicker]="endPicker"
-               formControlName="date" 
-               [(ngModel)]="enddate" 
-               (dateChange)="endDateListener($event)">
-        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-        <mat-datepicker #endPicker showWeekNumbers="true"></mat-datepicker>
+  <div formGroupName="end" class="field-row">
+    <label>{{'TO' | translate}}</label>
+    <mat-form-field appearance="fill">
+      <mat-label>{{'SELECT DATE' | translate}}</mat-label>
+      <input matInput
+             [matDatepicker]="endPicker"
+             formControlName="date"
+             [(ngModel)]="enddate"
+             (dateChange)="endDateListener($event)">
+      <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+      <mat-datepicker #endPicker showWeekNumbers="true"></mat-datepicker>
+    </mat-form-field>
+    @if (!appointmentForm.controls.allDay.value) {
+      <mat-form-field appearance="fill" class="time-field">
+        <input matInput formControlName="time" type="time"
+               (blur)="validateEndTime(); onEndTimeChange(appointmentForm.get('end.time')!.value)">
       </mat-form-field>
-    </div>
-    <div class="col-sm-5 col-xs-6">
-      <input formControlName="time" type="time" class="form-control"
-        *ngIf="!appointmentForm.controls.allDay.value" (blur)="validateEndTime(); onEndTimeChange($event.target.value)">
-    </div>
+    }
   </div>
 
   <!-- allDay Checkbox -->
-  <div class="row">
-    <div class="col-xs-12 col-sm-offset-2 col-sm-10">
-      <ul class="list-inline">
-        <li class="list-inline-item">
-          <div class="form-check">
-            <label class="form-check-label">
-              <input formControlName="allDay" [(ngModel)]="appointment.allDay"
-                    type="checkbox" class="form-check-input">
-              {{'ALL-DAY' | translate}}
-            </label>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>
+  <label class="all-day">
+    <input type="checkbox" formControlName="allDay" [(ngModel)]="appointment.allDay">
+    {{'ALL-DAY' | translate}}
+  </label>
+
   <hr>
   <rac-recurring-settings [appointment]="appointment"></rac-recurring-settings>
   <hr>

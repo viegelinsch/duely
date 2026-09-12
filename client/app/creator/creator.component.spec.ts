@@ -20,9 +20,9 @@ describe('CreatorComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [CreatorComponent, AppointmentFormComponent],
-            imports: [TranslateModule.forRoot(), ReactiveFormsModule, AdvancedSettingsComponent,
-                AlarmSettingsComponent, RecurringSettingsComponent],
+            declarations: [CreatorComponent],
+            imports: [TranslateModule.forRoot(), ReactiveFormsModule, AppointmentFormComponent,
+                AdvancedSettingsComponent, AlarmSettingsComponent, RecurringSettingsComponent],
             providers: [AppointmentsService, { provide: StorageService, useFactory: selectStorageService }]
         })
             .compileComponents();

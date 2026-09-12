@@ -1,9 +1,23 @@
 @import '../../../palette';
 
-hr  {
+hr {
   border-top: 1px solid $clr-background;
 }
 
-.text-div {
-  padding-top: 6px;
+.field-row > label {
+  flex: 0 0 auto;
+}
+
+mat-form-field {
+  flex: 1 1 auto;
+}
+
+.time-field {
+  flex: 0 1 8rem;
+}
+
+.all-day {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }

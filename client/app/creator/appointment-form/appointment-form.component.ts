@@ -7,20 +7,37 @@
  */
 import moment from 'moment-timezone';
 import { Component, Input, OnChanges, ViewChild, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RecurringSettingsComponent } from './recurring-settings/recurring-settings.component';
+import { AlarmSettingsComponent } from './alarm-settings/alarm-settings.component';
+import { AdvancedSettingsComponent } from './advanced-settings/advanced-settings.component';
 import { Subscription } from 'rxjs';
-import { MatDatepickerInputEvent } from '@angular/material/datepicker';
+import { MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { TextFieldModule } from '@angular/cdk/text-field';
 import { StorageService } from '../../storage/storage.service';
 import type { Appointment } from '../appointment';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { AppointmentsService } from '../appointments.service';
 /**
  * The appointmentforms will be validated, created and initialized.
  */
 @Component({
   selector: 'rac-appointment-form',
-  standalone: false,
+  standalone: true,
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    TextFieldModule,
+    TranslateModule,
+    AdvancedSettingsComponent,
+    AlarmSettingsComponent,
+    RecurringSettingsComponent
+  ],
   templateUrl: './appointment-form.component.html',
   styleUrls: ['./appointment-form.component.scss']
 })

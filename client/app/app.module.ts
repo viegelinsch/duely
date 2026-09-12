@@ -48,7 +48,6 @@ import { RecurringSettingsComponent } from './creator/appointment-form/recurring
 import { AlarmSettingsComponent } from './creator/appointment-form/alarm-settings/alarm-settings.component';
 
 import { AutoRedirectGuard } from './auto-redirect.guard';
-import { AutoResizeDirective } from './auto-resize.directive';
 
 /**
  * @version 0.4.0
@@ -70,9 +69,7 @@ export function createTranslateLoader(http: HttpClient) {
     AboutComponent,
     LegalComponent,
     CreatorComponent,
-    AppointmentFormComponent,
-    NotFoundComponent,
-    AutoResizeDirective
+    NotFoundComponent
   ],
   imports: [
     AppRoutingModule,
@@ -99,11 +96,11 @@ export function createTranslateLoader(http: HttpClient) {
     MatRadioModule,
     MatToolbarModule,
     MatSlideToggleModule,
-    // Standalone child components consumed by the still-declared
-    // AppointmentFormComponent (bottom-up migration; each moves here as it flips).
+    // Standalone child components (bottom-up migration; each moves here as it flips).
     AdvancedSettingsComponent,
     AlarmSettingsComponent,
-    RecurringSettingsComponent
+    RecurringSettingsComponent,
+    AppointmentFormComponent
   ],
   providers: [
     // Async so the ~30 KB animations chunk stays off the critical path; Material

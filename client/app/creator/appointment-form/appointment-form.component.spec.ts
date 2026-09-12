@@ -19,8 +19,8 @@ describe('AppointmentFormComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [AppointmentFormComponent, RecurringSettingsComponent, AlarmSettingsComponent, AdvancedSettingsComponent],
-            imports: [TranslateModule.forRoot(), ReactiveFormsModule],
+            imports: [TranslateModule.forRoot(), ReactiveFormsModule, AppointmentFormComponent,
+                RecurringSettingsComponent, AlarmSettingsComponent, AdvancedSettingsComponent],
             providers: [AppointmentsService, StorageService]
         })
             .compileComponents();
