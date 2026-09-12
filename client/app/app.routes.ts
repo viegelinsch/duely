@@ -1,11 +1,17 @@
 /**
+ * This file declares the application route table.
+ *
+ * Extracted verbatim from the former app-routing.module.ts (Phase 5.1) so the
+ * routes can be handed to `provideRouter(routes)` in app.config.ts under the
+ * standalone bootstrap. The eager `''` route keeps AutoRedirectGuard, which
+ * redirects to /settings while `storage.settingsLoaded === false`.
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { Routes } from '@angular/router';
 
 import { AboutComponent } from './about/about.component';
 import { CreatorComponent } from './creator/creator.component';
@@ -15,7 +21,7 @@ import { NotFoundComponent } from './notFound/notFound.component';
 
 import { AutoRedirectGuard } from './auto-redirect.guard';
 
-const routes: Routes = [
+export const routes: Routes = [
   {
     path: 'about',
     component: AboutComponent
@@ -44,14 +50,3 @@ const routes: Routes = [
     redirectTo: '404'
   }
 ];
-
-/**
- * @version 0.0.1
- * Routing module delegates url changes to modules
- * Assigned routes will be forwarded to main module
- */
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }

@@ -25,7 +25,6 @@
     "../client/**/*.d.ts"
   ],
   "exclude": [
-    "../client/**/*.spec.ts",
-    "../client/test.ts"
+    "../client/**/*.spec.ts"
   ]
 }

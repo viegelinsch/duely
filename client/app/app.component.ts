@@ -7,8 +7,12 @@
  */
 
 import { Component, OnInit } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { StorageService } from './storage/storage.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from './theme/theme.service';
 
 /**
@@ -18,7 +22,15 @@ import { ThemeService } from './theme/theme.service';
  */
 @Component({
   selector: 'rac-root',
-  standalone: false,
+  standalone: true,
+  imports: [
+    RouterLink,
+    RouterOutlet,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    TranslateModule
+  ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })

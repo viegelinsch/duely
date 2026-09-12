@@ -7,7 +7,7 @@
  */
 
 import { TestBed, inject, ComponentFixture } from '@angular/core/testing';
-// import { RouterTestingModule } from '@angular/router/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
@@ -15,12 +15,7 @@ import { AppComponent } from './app.component';
 import { SettingsComponent } from './settings/settings.component';
 import { StorageService } from './storage/storage.service';
 import { selectStorageService } from './storage/storage.factory';
-import { Router, RouterOutlet, ChildrenOutletContexts } from '@angular/router';
-
-class MockRouter {
-    navigateByUrl(url: string) { return url; }
-    navigate(url: any) { return url; }
-}
+import { Router } from '@angular/router';
 
 describe('AppComponent', () => {
     let component: AppComponent;
@@ -29,21 +24,17 @@ describe('AppComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [
-                // RouterTestingModule,
+                RouterTestingModule,
                 TranslateModule.forRoot(),
                 FormsModule,
                 ReactiveFormsModule,
-                RouterOutlet,
+                // AppComponent is standalone (Phase 5.4) → imported, not declared.
+                AppComponent,
                 // SettingsComponent is standalone (Phase 2 pilot) → imported, not declared.
                 SettingsComponent
             ],
-            declarations: [
-                AppComponent
-            ],
             providers: [
-                { provide: StorageService, useFactory: selectStorageService },
-                ChildrenOutletContexts,
-                { provide: Router, useClass: MockRouter }
+                { provide: StorageService, useFactory: selectStorageService }
             ]
         }).compileComponents();
     });

@@ -1,50 +1,38 @@
-@import '../palette';
+/**
+ * App shell styles (Phase 5.4).
+ *
+ * The Bootstrap navbar was replaced by <mat-toolbar color="primary">, which
+ * brings its own height, background (--mat-sys-primary), text colour and flex
+ * layout. What remains here is only what the toolbar and the shared layout
+ * vocabulary cannot express: the brand logo sizing, the flex spacer that pushes
+ * the settings action to the right edge, and the footer link row. The footer
+ * links are coloured through the accent token (--mat-sys-primary), so the old
+ * `.label-{accent}` class and the unused `../palette` import are both gone.
+ */
 
-.navbar {
-  color: white;
-
-  a {
-    color: white;
-    text-decoration: none;
-  }
-
-}
-.navbar-brand {
-  padding: 0px;
+.brand {
+  display: inline-flex;
+  align-items: center;
 
   img {
-    display: inline;
+    display: block;
     width: 118px;
     height: auto;
- }
+  }
+}
 
+.toolbar-spacer {
+  flex: 1 1 auto;
 }
 
 .additional-links {
   margin-top: 15px;
   margin-bottom: 15px;
   text-align: center;
+
   a {
     padding-left: 5px;
     padding-right: 5px;
+    color: var(--mat-sys-primary);
   }
-}
-
-.navbar-form {
-  width: auto;
-  padding: 0;
-  margin-right: 0;
-  margin-left: 0;
-  border: none;
-  box-shadow: none;
-}
-
-.button-icon {
-  color: white;
-  margin-top: 6px;
-}
-
-.btn-link {
-  padding: 0;
-  font-size: 22px;
 }

@@ -1,23 +1,16 @@
 <!--navigation bar-->
-<nav class="navbar navbar-fixed-top {{storage.getColor()}}">
-  <div class="container">
-    <div class="navbar-brand ms-auto">
-      <a routerLink="/">
-        <img src="./assets/duely_only_white.svg">
-      </a>
-    </div>
-    <div class="float-end">
-      <form class="navbar-form">
-        <a routerLink="settings"><button type="button" class="btn btn-link" aria-label="Left Align">
-          <span class="glyphicon glyphicon-cog button-icon" aria-hidden="true"></span>
-        </button></a>
-      </form>
-    </div>
-  </div>
-</nav>
+<mat-toolbar color="primary">
+  <a routerLink="/" class="brand" aria-label="Duely home">
+    <img src="./assets/duely_only_white.svg" alt="Duely">
+  </a>
+  <span class="toolbar-spacer"></span>
+  <a routerLink="settings" mat-icon-button aria-label="Settings">
+    <mat-icon svgIcon="duely:settings"></mat-icon>
+  </a>
+</mat-toolbar>
 <!--/navigation bar-->
 <main><router-outlet></router-outlet></main>
-<div class="container additional-links">
-  <a routerLink="legal" class="label-{{storage.getColor()}}">{{'LEGAL NOTICE' | translate}}</a>
-  <a routerLink="about" class="label-{{storage.getColor()}}">{{'ABOUT' | translate}}</a>
+<div class="additional-links">
+  <a routerLink="legal">{{'LEGAL NOTICE' | translate}}</a>
+  <a routerLink="about">{{'ABOUT' | translate}}</a>
 </div>
