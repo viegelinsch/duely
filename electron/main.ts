@@ -21,7 +21,7 @@ let mainWindow: Electron.BrowserWindow = null;
 /**
  * Computed directory of static files independent of operating system
  */
-const clientFolder: string = path.resolve(__dirname, 'static');
+const clientFolder: string = path.resolve(__dirname, 'static', 'browser');
 
 /**
  * Create a new main browser window

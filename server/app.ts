@@ -51,7 +51,7 @@ const mode = process.env.NODE_ENV || 'development';
 /**
  * Computed directory of static files independent of operating system
  */
-const files: string = path.resolve(__dirname, 'static');
+const files: string = path.resolve(__dirname, 'static', 'browser');
 
 if (mode === 'production') {
   app.use(compression());
@@ -63,7 +63,7 @@ app.use(express.static(files));
  * Let the angular router handle everything else
  */
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'static/index.html'));
+  res.sendFile(path.join(__dirname, 'static', 'browser', 'index.html'));
 });
 
 /**

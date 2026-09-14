@@ -310,8 +310,62 @@ is empty and is never used.
   Backlog-emptying **Phase 5** switches the builder to `@angular/build:application` (esbuild) and
   rebaselines the budget to *measured + 10%*; **Phase 11** adds route-level lazy loading. Treat these
   as a `ced1dc8` snapshot, not a permanent constant.
+  **UPDATE: Phase 5 has now landed — the entire table above is superseded. See the next subsection
+  for the live esbuild figures and the rebaselined budget.**
+
+### Production bundle after backlog-emptying Phase 5 — esbuild `@angular/build:application`
+
+The Webpack-based `@angular-devkit/build-angular:browser` builder above was replaced by the esbuild
+application builder. Measured with a cold `.angular/cache`, `--output-path /tmp/probe-dist-prod`:
+
+| Chunk | Raw | Estimated transfer |
+|---|---|---|
+| `main-IJN2BJGT.js` | **2.16 MB** | 311.85 kB |
+| `chunk-OBZMNR63.js` (initial, shared) | 157.02 kB | 46.75 kB |
+| `polyfills-5CFQRCPP.js` | 34.59 kB | 11.33 kB |
+| `styles-DRBU42VC.css` | 20.95 kB (20,951 B) | 1.94 kB |
+| **Initial total** | **2.37 MB** (exactly **2,369,889 B**) | **371.88 kB** |
+| `chunk-VOEP2MIL.js` (lazy; the CLI labels it `browser`) | 67.77 kB | 17.77 kB |
+
+- **The esbuild builder is materially smaller:** initial raw **2.71 MB → 2.37 MB** (−12.5%) and
+  transfer **417.53 kB → 371.88 kB** (−10.9%), from better tree-shaking and minification. `styles.css`
+  is **byte-identical in size** (20,951 B / 20.95 kB / 1.94 kB transfer) under both builders.
+- **Budget rebaselined (decision 11).** Angular's `initial` budget compares **raw** bytes and parses
+  `mb` decimally (1 mb = 1,000,000 B) — proven by the old warning `2.00 MB was not met by 708.05 kB
+  with a total of 2.71 MB` and the new `2.00 MB … by 369.89 kB with a total of 2.37 MB`
+  (2,000,000 + 369,890 ≈ 2,369,889). **Old:** `maximumWarning: "2mb"`, permanently breached by
+  708.05 kB under Webpack and by 369.89 kB under esbuild. **New:** `maximumWarning: "2.6mb"` —
+  2,369,889 B × 1.10 = 2,606,878 B = 2.607 MB, rounded to the sensible unit **2.6mb** (2,600,000 B),
+  leaving **+9.7% headroom** over the measurement. `maximumError` stays at **5mb**; `anyComponentStyle`
+  stays at **6kb/10kb** and still **PASSes** (0 component-style warnings).
+- **New chunk structure (Phases 6 and 11 depend on this):**
+  - **No `runtime.js`** — esbuild inlines the Webpack runtime chunk entirely.
+  - **No `vendor.js`** — the `vendorChunk` option is Webpack-only and was deleted; third-party code is
+    split into `chunk-*.js`.
+  - Lazy chunks are **`chunk-<HASH>.js`**, not Webpack's numeric **`700.<hash>.js`**, and the CLI now
+    labels the animations chunk `browser` instead of `angular-animations-browser`.
+  - Hash format changed from `[name].[16-hex].[js|css]` to `[name]-[8-char base32].[js|css]`.
+    Per-asset hashes remain **deterministic** (two consecutive production builds produced identical
+    filenames). **The Webpack session `Hash:` line no longer exists** — esbuild prints only
+    `Application bundle generation complete. [<n> seconds] - <ISO timestamp>`.
+  - Development filenames are **unhashed** (`main.js`, `styles.css`) because `outputHashing` is set
+    only for production.
+- **New output layout:** browser output lands in **`{outputPath}/browser/`**, so the configured
+  `dist/server/static` now yields `dist/server/static/browser/`. Two artefacts are written **outside**
+  `browser/`, at the `outputPath` root: **`3rdpartylicenses.txt`** (52,007 B, production only, because
+  `extractLicenses: true`) and **`prerendered-routes.json`** (18 B, `{"routes": {}}`). Three consumers
+  were repointed at `browser/` — see §7.
+- **Development bundle under esbuild:** initial total **8.65 MB → 5.43 MB**; `main.js` 4.39 MB,
+  `chunk-A2T56ZQ5.js` 922.72 kB, `polyfills.js` 89.77 kB, `styles.css` 24.73 kB, lazy
+  `chunk-M5ZYMOWS.js` 155.78 kB. The dev build prints **no transfer-size column** and emits `.js.map`
+  files plus **per-component `.css.map` files** (`about.component.css.map`, `settings.component.css.map`,
+  …) — a new esbuild behaviour. No `3rdpartylicenses.txt` in dev (`extractLicenses: false`).
 
 ### Development bundle (measured, `--configuration development`)
+
+> **⚠️ SUPERSEDED by backlog-emptying Phase 5.** This Webpack-era table is retained as a historical
+> snapshot. The live esbuild figures — initial total **5.43 MB**, no `vendor.js`, no `runtime.js` —
+> are in "Production bundle after backlog-emptying Phase 5" above.
 
 Unminified, so not comparable against the production budgets; `vendor.js` dominates.
 
@@ -351,6 +405,28 @@ Unminified, so not comparable against the production budgets; `vendor.js` domina
   `fileReplacements` swaps in only for production. Note also that the build's own `Hash:` line
   differs on every run (it is a session hash, not a content hash); the per-asset hashes are stable
   and are the ones to compare. Backlog §2(c)/§2(d) still carry the pre-dedup "5".
+- **⚠️ Phase 5 UPDATE — most of the inventory above no longer applies.** Under the esbuild
+  application builder, measured with a cold `.angular/cache`:
+  - **"part of the TypeScript compilation but it's unused" warnings: 5 prod / 6 dev → `0` / `0`.**
+    The esbuild builder does not emit this diagnostic at all. **Backlog §2(d)'s "5 → 4" closure
+    criterion is therefore unreachable and must be re-scoped** (Phase 7 can still delete the dead
+    files; it just cannot cite a warning-count reduction as evidence).
+  - **CommonJS/AMD bailouts: the message text changed** from Webpack's
+    `Warning: <file> depends on '<dep>'. CommonJS or AMD dependencies can cause optimization bailouts.`
+    to esbuild's `▲ [WARNING] Module '<dep>' used by '<file>' is not ESM`. The named specifier set grew
+    from 5 to **6**: `moment-timezone`, `file-saver`, `moment`, `deepmerge`, `jalaali-js` **and a newly
+    surfaced `uuid-random`** (via `node_modules/ical-generator/dist/index.js`) that Webpack never
+    reported. **Phase 13 must cite six specifiers, not four.** Still nondeterministic — never gate on it.
+  - **Sass deprecation warnings: 0 in both formats** (`Deprecation Warning on line N` and
+    `▲ [WARNING] Deprecation [plugin angular-sass]`), in `ng build` production *and* development. The
+    Webpack `sass-loader` is gone, so **its 0-based line-number off-by-one is gone with it** (§7).
+  - **`emitDecoratorMetadata` warning: 0** — confirmed *not* to reappear now that the build really is
+    esbuild, which is exactly why Phase 3 removed the flag.
+  - **NG8xxx / NG0xxx: 0**, verified with the multi-line-safe histogram form from
+    `docs/2026_MIGRATION_STATE.md` §1.
+  - **The development build emits ZERO warnings of any kind.**
+  - **The session `Hash:` line no longer exists** (see the chunk-structure bullets above), so the
+    "never gate on `Hash:`" rule is moot rather than merely observed.
 
 ### CSS
 
@@ -442,9 +518,42 @@ backlog AOT rework before a release.
    deferred-red anyway; revisit with the CollisionDetector/appointments backlog work.
 7. **`/settings` deep-links 404 on the dev server** — pre-existing `PathLocationStrategy` without a
    history fallback. Users reach Settings through in-app navigation from `/`.
+   **FIXED by backlog-emptying Phase 5.** `@angular/build:dev-server` supplies the SPA history
+   fallback that the Webpack dev-server did not. Measured against a live `ng serve` on :4200:
+   `/settings` → **200** returning the app's `index.html`, an arbitrary `/nope/not/a/route` → **200**
+   with `index.html` (the Angular router then renders `notFound`), while a genuinely missing asset
+   `/assets/does-not-exist.png` still correctly → **404**. Deep links therefore work on the dev
+   server; the Express catch-all in `server/app.ts` supplies the same fallback in production once
+   Phase 6 makes that bundle runnable. **Phase 9's Playwright `server` project should re-test this
+   rather than assume the 404.**
 8. **Visual delta versus the `before/` baseline is large and legitimate** — the navbar overlay fix
    (`54a4ffb`) alone changes every route. The 18 before-shots and 72 after-shots live under
    `docs/migration-shots/` (git-excluded).
+9. **NEW in backlog-emptying Phase 5 — the esbuild builder relocates browser output one level down.**
+   `@angular/build:application` writes to **`{outputPath}/browser/`**, so with
+   `outputPath: "dist/server/static"` the app now lands in `dist/server/static/browser/`, not
+   `dist/server/static/`. Three consumers were repointed, each by the smallest possible edit (path
+   segments only):
+   - `server/app.ts` — `path.resolve(__dirname, 'static')` feeding `express.static(…)` →
+     `path.resolve(__dirname, 'static', 'browser')`
+   - `server/app.ts` — the catch-all's `path.join(__dirname, 'static/index.html')` →
+     `path.join(__dirname, 'static', 'browser', 'index.html')`
+   - `electron/main.ts` — `const clientFolder = path.resolve(__dirname, 'static')` →
+     `path.resolve(__dirname, 'static', 'browser')`; the `loadURL` that interpolates `clientFolder`
+     follows automatically.
+
+   **Caveat:** `server/app.ts` and `electron/main.ts` sit outside every `tsconfig` include path, so
+   **no type-check gate covers them until Phase 6** adds `electron/tsconfig.json` (G1c) and exercises
+   `server/tsconfig.json` (G1b). They were verified by inspection and by an artefact-level runtime
+   probe only. Their other known defects (the `process.env.PORT || 8000` strict violation,
+   `import * as express` namespace style, `let mainWindow: Electron.BrowserWindow = null`, the
+   implicit-any `(event)`, the `console.log('ping')` leftover) were **deliberately left for Phase 6**
+   so a Phase 5 regression stays unambiguous.
+
+   **Also note:** `3rdpartylicenses.txt` and `prerendered-routes.json` are written at the `outputPath`
+   root, *outside* `browser/`, so the Express static root no longer serves `3rdpartylicenses.txt`.
+   Nothing in the app requests it, but a release-packaging step that expects it under the served root
+   must look one level up.
 
 ---
 
@@ -573,7 +682,8 @@ list are already captured in the Angular 20 subsection above (all four issues re
 and README_UPGRADE's Docker instructions duplicate `docker-compose.yml`. Their genuine residue (dead
 Protractor/tslint configs, broken `npm run lint`, lazy loading, trimmed moment-timezone) is already in
 `docs/2026_MIGRATION_BACKLOG.md` (e)/(f)/(g). **Fabricated claims NOT propagated:** README_UPGRADE
-stated a production bundle of "~800 KB" (measured: **2.71 MB**, §6), a Lighthouse score of 95 (no
+stated a production bundle of "~800 KB" (measured: **2.71 MB** under the Webpack builder, **2.37 MB**
+since backlog-emptying Phase 5 switched to esbuild — §6), a Lighthouse score of 95 (no
 Lighthouse measurement has ever been taken on this project), and "moment.js replaced with date-fns"
 (`moment-timezone` ^0.5.47 remains a live dependency; `date-fns` was added alongside, not as a
 replacement). The three stale documents have been consolidated into this section and deleted.
@@ -625,7 +735,7 @@ native CSS scrolling rather than `perfect-scrollbar` or `overlay-scrollbars`.
 
 | Claim | Measured reality |
 |---|---|
-| "Bundle size 2.5 MB → 800 KB (68% ↓)" | Production initial bundle is **2.71 MB** (`main.js` 2.65 MB raw / 402.94 kB transfer) — §6 |
+| "Bundle size 2.5 MB → 800 KB (68% ↓)" | Production initial bundle is **2.71 MB** under the Webpack builder (`main.js` 2.65 MB raw / 402.94 kB transfer) and **2.37 MB** since backlog-emptying Phase 5 switched to esbuild (`main-*.js` 2.16 MB raw / 311.85 kB transfer) — §6 |
 | "Lighthouse 65 → 95", "Accessibility 78 → 98" | No Lighthouse or accessibility audit has ever been run on this project; no config or tooling for either exists in the repo |
 | Build 45s → 12s, prod build 90s → 35s, memory 256 → 128 MB, boot 2.1s → 0.5s, initial load 3.2s → 0.8s, "runtime 50% faster (Angular Ivy/Velte)" | **Never measured** — no benchmark artefact exists. "Velte" is not an Angular compiler name; Ivy is the renderer |
 | "Moment.js 2.21.0 → removed, replaced with date-fns 4.1.0", and its "Moment.js ReDoS vulnerability eliminated" | **False.** `moment-timezone ^0.5.47` is live — 18 client source files carry a moment import, 13 of them literally `from 'moment-timezone'`. `date-fns ^4.1.0` is declared at `package.json:67` but imported by **zero** source files — backlog (g) |
