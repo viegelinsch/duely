@@ -132,6 +132,7 @@ Packages that are to stay on this versions:
   * Mike Kenneth Braun
   * Frederik Kammer
   * Lars Richard
+  * Hendrik Eggers
 
 ## Notice about standard conformity
 The implementation of timezones is not conform to the iCal standard specified in "RFC 5545 3.2.19. Time Zone Identifier"
@@ -141,7 +142,3 @@ to support older versions of Microsoft Outlook.
 ## License
 
 [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/)
-
-## Acknowledgments
-
-Many thanks for H. Eggers for kicking our buts when we where too slow.
