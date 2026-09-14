@@ -196,6 +196,25 @@ the new `standalone` and `@for` conventions during the migration.
   mutated the start. Pre-existing (byte-identical in `c5d3488` and its parent), not a `56722d4`
   regression. Candidate owner is the Phase 3.x appointment-form rework (annotated in the PLAN); if
   that phase does not absorb it, it stays here.
+- **Legacy persisted-state risk from pre-Phase-0 form defaults (surfaced by the TS1272/TS2872
+  re-investigation, both of which are already resolved):** before commit `6a228f3` step 0.9,
+  `createForm` in `recurring-settings.component.ts` passed the JavaScript **constructor functions**
+  `Boolean` and `Number` as FormControl defaults (`monday: Boolean` … all 7 weekdays, `count: Number`)
+  instead of `false` and `null`, so the initial form value literally *was* the function object and
+  two-way binding could write that reference into the appointment model. The SOURCE is fixed
+  (`Boolean -> false`, `Number -> null`; verified at `recurring-settings.component.ts:298-307`), but no
+  load-path guard, no shape normalization and no data migration were added:
+  `StorageService.loadSettings()` (`storage.service.ts:56-96`) still only does per-field
+  `hasOwnProperty` copies with zero type validation, and a grep confirms no guard exists anywhere.
+  **Accurate severity — do not overstate:** (1) `JSON.stringify` silently drops function-valued
+  properties, so any legacy record would deserialize with `undefined` in the affected weekday flag or
+  `count`, NOT a live function reference; (2) in the current architecture only the `settings` blob is
+  JSON-persisted (localStorage), and it holds none of these fields — appointments carrying the
+  weekday/`count` data live in `AppointmentsService.events` in memory and are exported as iCal text via
+  `saveText`, never round-tripped through `JSON.parse` — which bounds the realistic exposure further.
+  **Only data persisted before Phase 0 (2026-09-11) is in scope; fresh installs and anything saved
+  since are unaffected.** Decision needed: add a normalization guard on load, write a one-time
+  migration, or accept and document as won't-fix. No phase owns this.
 
 ### (h) The plan's rejected alternatives, summarised
 
