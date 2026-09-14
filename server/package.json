@@ -2,7 +2,7 @@
   "name": "duely",
   "productName": "Duely",
   "version": "2.0.0",
-  "license": "MPL v2.0",
+  "license": "MPL-2.0",
   "private": true,
   "bugs": {
     "url": "https://github.com/tubraunschweig/duely/issues"
