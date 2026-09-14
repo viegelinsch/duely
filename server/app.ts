@@ -7,10 +7,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import * as express from 'express';
-import * as path from 'path';
-import * as compression from 'compression';
-import * as os from 'os';
+import compression from 'compression';
+import express, { type Application } from 'express';
+import os from 'os';
+import path from 'path';
 
 /**
  * retrieves network ip addresses to show to the administrator
@@ -20,7 +20,11 @@ function getIPAddresses(): string[] {
   const network = os.networkInterfaces();
   const addresses: string[] = [];
   Object.keys(network).forEach((name) => {
-    network[name].forEach((iface) => {
+    const interfaces = network[name];
+    if (interfaces === undefined) {
+      return;
+    }
+    interfaces.forEach((iface) => {
       if (iface.internal !== false || iface.family !== 'IPv4') {
         return;
       } else {
@@ -34,14 +38,14 @@ function getIPAddresses(): string[] {
 /**
  * The Express application that creates the server
  */
-const app: express.Application = express();
+const app: Application = express();
 
 /**
  * The port the app should listen to
  * Can be entered via node environments,
  * defaults to port 8000
  */
-const port: number = process.env.PORT || 8000;
+const port: number = Number(process.env.PORT ?? 8000);
 /**
  * The mode used by the server
  * "production" enables compression

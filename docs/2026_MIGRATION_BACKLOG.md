@@ -116,7 +116,8 @@ reconsideration) happens there, not before. Until then the test stays LOUD/RED a
 
 Everything here is excluded from the migration by the "blocking fixes only" scope decision, or is
 context a future pass needs. Items with a named phase owner (navbar → Phase 5.4, Bootstrap /
-ngx-bootstrap → Phase 7, glyphicons → Phase 7.3, the Webpack-pipeline *revisit point* at Phase 5.3)
+ngx-bootstrap → Phase 7, glyphicons → Phase 7.3, the Webpack-pipeline *revisit point* at Phase 5.3 —
+the last of these now discharged, see **(e) CLOSED**)
 are annotated in `docs/2026_MIGRATION_PLAN.md`; only the unowned residue and the underlying defect
 records are kept here.
 
@@ -142,13 +143,44 @@ suggests that budget has never been measured either. (No phase owns re-measureme
 → `file-saver`; `date-holidays-parser` `Jalaali.js` → `jalaali-js`; `date-holidays-parser` `utils.js`
 → `deepmerge`.
 
+> **⚠️ Stale count — superseded by backlog-emptying Phases 5 and 6, re-measured cold-cache.** The
+> specifier set is now **6**, not 5: `moment-timezone`, `file-saver`, `jalaali-js`, `deepmerge`,
+> **`moment`** (via `client/app/DatesAndCollisions/Recurrence/DailyRecurrencePattern.ts`) and a newly
+> surfaced **`uuid-random`** (via `node_modules/ical-generator/dist/index.js`) that Webpack never
+> reported. The message text also changed, from Webpack's
+> `Warning: <file> depends on '<dep>'. CommonJS or AMD dependencies can cause optimization bailouts.`
+> to esbuild's `▲ [WARNING] Module '<dep>' used by '<file>' is not ESM`. **Still nondeterministic —
+> never gate on this count:** the CLI dedups per specifier over a nondeterministic traversal order,
+> and the *named* importing file varies run to run (`creator.component.ts` vs `settings.component.ts`
+> for `moment-timezone`, `web-storage.service.ts` vs `electron-storage.service.ts` for `file-saver`).
+> Phase 6 measured 6 in a single `ng build` and 12 in `npm run build:prod` (which runs two builds).
+> **Phase 13 must cite six specifiers, not four.**
+
 ### (d) 5 "part of the TypeScript compilation but unused" warnings
 
 The four `environment.electron*`/`environment.server*` files plus `client/polyfills.ts`. The unused
 environment files and the missing `environment.prod.ts` (see (a)) are the same underlying gap: the
 environment-file set matches no build configuration that is actually exercised.
 
-### (e) The Webpack/JIT production defect
+> **⚠️ CLOSURE CRITERION UNREACHABLE — re-scoped by backlog-emptying Phase 5, confirmed by Phase 6.**
+> The planned "5 → 4" reduction **cannot be evidenced by a warning count, because the diagnostic no
+> longer exists.** The esbuild `@angular/build:application` builder does not emit "…is part of the
+> TypeScript compilation but it's unused" at all: it measured **5 prod / 6 dev under Webpack** and is
+> **0 prod / 0 dev** under esbuild, re-confirmed at Phase 6 with a cold `.angular/cache` on both
+> `ng build --configuration production` and `npm run build:prod`. Deleting the dead files therefore
+> produces **no** observable warning delta.
+>
+> **The underlying dead-code finding is still valid and still actionable** — Phase 7 can delete the
+> files; it just must cite their existence and their zero import count, not a warning reduction.
+> **Phase 6 made one of them worse:** `client/polyfills.ts` is now **fully orphaned**, not merely
+> unused-by-the-builder. Its only remaining consumer was the `polyfills: […'client/polyfills.ts']`
+> entry in the deleted `webpack.client.config.js`; `angular.json` uses `polyfills: ["zone.js"]`, the
+> package specifier, and never references the file. It was **not** deleted in Phase 6 because that
+> phase changes zero files under `client/`.
+>
+> **Phase 13 must state that the diagnostic no longer exists rather than claim a reduction.**
+
+### (e) The Webpack/JIT production defect — **CLOSED by backlog-emptying Phase 6**
 
 `npm run build` and `build:prod` use `ts-loader` with `transpileOnly: true`, so they do not
 type-check, and `client/main.ts:26` uses `platformBrowserDynamic().bootstrapModule(AppModule)` — JIT,
@@ -156,6 +188,36 @@ with zero `@angular/compiler` imports anywhere in `client/`. The production bund
 compile templates at all, and `Dockerfile:22` ships exactly that bundle. **Phase 5.3's move to
 `bootstrapApplication(...)` is the natural point to revisit the whole Webpack pipeline, but the fix
 itself (the JIT → AOT / `ts-loader transpileOnly` → esbuild rework) is post-migration and unowned.**
+
+> **✅ CLOSED.** Backlog-emptying **Phase 5** half-closed it — switching the `build` and `serve`
+> targets to the esbuild `@angular/build:application` / `@angular/build:dev-server` builders made the
+> Angular CLI pipeline AOT-only, so the JIT half of this defect died there. **Phase 6 completed it** by
+> retiring the Webpack pipeline outright:
+>
+> - **All four configs deleted** — `webpack.config.js`, `webpack.client.config.js`,
+>   `webpack.electron.config.js`, `webpack.server.config.js` — plus `postcss.config.js`, whose only
+>   consumers were `postcss-loader`/autoprefixer inside the deleted CSS chain. `ts-loader
+>   { transpileOnly: true }` no longer exists, so **nothing in the repo builds without type-checking
+>   any more.**
+> - **Replaced by `scripts/build.mjs`**, a native Node 24 ESM script using esbuild's **Node API**.
+>   `npm run build:prod` exits **0** and the artefact was **runtime-probed**, not just built:
+>   `node dist/server/app.js` then `curl -I http://localhost:8000/` → **200** with the built
+>   `index.html`, plus **200** for a hashed JS asset and a hashed CSS asset.
+> - The AOT half is discharged too: the production bundle is `ng build --configuration production`,
+>   which is Ivy AOT by construction, so templates compile.
+> - `Dockerfile`'s `RUN npm run build:prod` now builds a working bundle, and its
+>   `CMD ["npm","run","build:watch"]` became `CMD ["npm", "run", "serve"]`.
+> - `dist/` is **no longer tracked** (42 ancient Angular-4.4.6-era artefacts untracked, one `/dist/`
+>   ignore rule).
+> - The two type-check gates this defect implied for the non-Angular sources now exist and pass:
+>   **G1b** `server/tsconfig.json` and **G1c** `electron/tsconfig.json`, both **0 errors**.
+>
+> See `docs/2026_MATERIAL_MIGRATION.md` §6 ("Build pipeline after backlog-emptying Phase 6") and §7
+> deviations 1, 9, 10 and **11**. Deviation 11 records the one loose thread Phase 6 deliberately left:
+> **`@angular-devkit/build-angular` is now a dead devDependency and is the sole reason Webpack is
+> still installed** (de-hoisted into its own nested `node_modules`). Removing the direct Webpack
+> devDependencies did not remove the toolchain. That is a dependency-hygiene item for Phase 7 or a
+> dedicated step, **not** a reopening of (e) — no build path reaches it.
 
 > **Historical context:** the Webpack configs (`webpack.client.config.js`, `webpack.server.config.js`,
 > `webpack.electron.config.js`) were fully rewritten from Webpack 2 to Webpack 5 in March 2026 — the
@@ -244,5 +306,5 @@ Recorded so the rationale survives; do not re-litigate without new evidence. (Al
 | Extracting an `exclusion-row` component | unnecessary — template reference variables inside `*ngFor` are already per-iteration scoped (verified twice, including empirically in gate 4). |
 | `standalone: false` as the end state | it is the unblock, not the destination — rejected by the user's sequencing decision. |
 | Mirroring Bootstrap's 12-column grid or drop-in identical class names | rejected by the user's layout decision in favour of seven intention-revealing classes; drop-in names would leave Bootstrap vocabulary in the codebase permanently, contradicting "remove Bootstrap entirely". |
-| Webpack/`ts-loader transpileOnly` JIT → `ng build` esbuild AOT, plus its neighbours (route-level lazy loading, shared `HolidayCatalogService`, `OnPush`, trimmed moment-timezone build, Playwright service) | all excluded by the "blocking fixes only" scope decision; the AOT item is the most consequential — see (e). |
+| Webpack/`ts-loader transpileOnly` JIT → `ng build` esbuild AOT, plus its neighbours (route-level lazy loading, shared `HolidayCatalogService`, `OnPush`, trimmed moment-timezone build, Playwright service) | all excluded by the "blocking fixes only" scope decision; the AOT item is the most consequential — see (e). **The AOT/Webpack-retirement half was subsequently DONE by backlog-emptying Phases 5–6, so (e) is CLOSED; the neighbours listed with it remain open and unowned.** |
 | ESLint flat config, dead Protractor/tslint deletion, the missing `environment.prod.ts`, an en/de key-parity test, the 7 unused ngx-bootstrap i18n keys, the 4 `aria-label="Left Align"` copies | excluded by the same scope decision; see (a), (d), (f) and (g). |

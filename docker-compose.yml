@@ -16,8 +16,7 @@ services:
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-    command: npm run build:watch
+    command: npm run serve
 
   # Production server
   duely-prod:

@@ -65,14 +65,17 @@ playwright-report/
 test-results/
 .browserslistrc
 
-# TypeScript / Angular build output, regenerated per run.
-# Narrow and anchored on purpose: a blanket `dist/` rule would hide future
-# legitimate additions. Tracked files (dist/electron/*, dist/server/app.js,
-# dist/server/app.js.map, dist/server/package.json) are unaffected - gitignore
-# has no effect on already-tracked files; these rules only stop accidental
-# staging of generated output such as dist/server/static/ and dist/test-out/.
+# Build output. Everything under /dist is generated: `npm run build`,
+# `npm run build:prod` and `scripts/build.mjs` recreate it from source, and
+# `npm run clean` (rimraf ./dist) deletes it. Tracking it was the source of a
+# long-standing contradiction - `/dist/server/` was ignored here while three
+# files inside it (app.js, app.js.map, package.json) were tracked, and
+# gitignore has no effect on already-tracked files. The tracked artefacts were
+# also frozen at the Angular 4.4.6 era (inline/vendor/main/polyfills/styles
+# `.bundle.js` names, a sw-precache service-worker.js, glyphicons-halflings
+# fonts and assets/tech/bootstrap.svg, all of which were removed from the
+# sources during the Bootstrap-to-Material migration), so a fresh clone shipped
+# a stale bundle that no build could reproduce. One blanket anchored rule
+# replaces the five narrow ones; nothing legitimate lives under /dist.
 /out-tsc/
-/dist/out-tsc/
-/dist/test-out/
-/dist/server/
-/dist/downloads/
+/dist/

@@ -10,13 +10,14 @@
  */
 
 import { app, BrowserWindow, ipcMain } from 'electron';
+import type { IpcMainEvent } from 'electron';
 import * as path from 'path';
 
 /**
  * Keep a global reference of the window object, if you don't, the window will
  * be closed automatically when the JavaScript object is garbage collected.
  */
-let mainWindow: Electron.BrowserWindow = null;
+let mainWindow: BrowserWindow | null = null;
 
 /**
  * Computed directory of static files independent of operating system
@@ -27,7 +28,7 @@ const clientFolder: string = path.resolve(__dirname, 'static', 'browser');
  * Create a new main browser window
  */
 function createWindow(): void {
-  mainWindow = new BrowserWindow({
+  const browserWindow: BrowserWindow = new BrowserWindow({
     width: 800,
     height: 600,
     title: 'Duely',
@@ -36,12 +37,13 @@ function createWindow(): void {
       // sandbox: true
     }
   });
-  mainWindow.loadURL(`file://${clientFolder}/index.html`);
-  mainWindow.setMenu(null);
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+  mainWindow = browserWindow;
+  browserWindow.loadURL(`file://${clientFolder}/index.html`);
+  browserWindow.setMenu(null);
+  browserWindow.once('ready-to-show', () => {
+    browserWindow.show();
   });
-  mainWindow.on('closed', () => {
+  browserWindow.on('closed', () => {
     mainWindow = null;
   });
 }
@@ -69,7 +71,6 @@ app.on('activate', () => {
   }
 });
 
-ipcMain.on('openSaveDialog', (event) => {
-  console.log('ping');  // prints "ping"
+ipcMain.on('openSaveDialog', (event: IpcMainEvent) => {
   event.sender.send('asynchronous-reply', 'pong');
 });

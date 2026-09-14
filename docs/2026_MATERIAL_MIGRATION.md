@@ -273,12 +273,14 @@ is empty and is never used.
 | Gate | Command | Result |
 |---|---|---|
 | 1 — app type-check | `npx tsc --noEmit -p client/tsconfig.app.json` | **PASS**, 0 errors |
+| 1b — server type-check *(new in backlog-emptying Phase 6)* | `npx tsc --noEmit -p server/tsconfig.json` | **PASS**, 0 errors — `server/app.ts` had **never** been type-checked before this gate existed |
+| 1c — electron type-check *(new in backlog-emptying Phase 6)* | `npx tsc --noEmit -p electron/tsconfig.json` | **PASS**, 0 errors — `electron/main.ts` had **never** been type-checked, and `electron/tsconfig.json` did not exist |
 | 2 — spec type-check | `npx tsc --noEmit -p client/tsconfig.spec.json` | **PASS**, 0 errors |
 | 2b — invariant | `... \| grep -cE 'error (TS2322\|TS2531)'` | **PASS**, literally `0` on both gates |
 | 3 — unit tests | `npm test` | **PASS**, 24 failed / 47 passed (71 specs), 0 NG8xxx |
 | 4 — production build | `npx ng build --configuration production` | **PASS** after `environment.prod.ts` was added (exit 0); budget warning, see below |
 | 5 — CSS audit | grep over the emitted `styles.css` | **PASS**, 165 distinct `--mat-sys-*` tokens, 0 Bootstrap selectors |
-| 6 — Webpack pipeline | `npm run build` / `build:prod` | **FAIL as expected** — backlog item (e), broken since Phase 5.3, not a migration regression |
+| 6 — build pipeline | `npm run build` / `build:prod` | **CLOSED by backlog-emptying Phase 6.** The Webpack pipeline no longer exists: `build:prod` runs `scripts/build.mjs` (esbuild Node API + `ng build`) and exits **0**, and the artefact was runtime-probed. Was **FAIL** for the whole migration — backlog item (e), broken since Phase 5.3, never a migration regression |
 | Browser visual pass | Playwright-in-Docker against `ng serve` | **PASS** — 72 screenshots (6 route states x 2 themes x 2 accents x 3 widths), all valid PNGs |
 
 ### Production bundle (measured, `--configuration production`)
@@ -360,6 +362,17 @@ application builder. Measured with a cold `.angular/cache`, `--output-path /tmp/
   `chunk-M5ZYMOWS.js` 155.78 kB. The dev build prints **no transfer-size column** and emits `.js.map`
   files plus **per-component `.css.map` files** (`about.component.css.map`, `settings.component.css.map`,
   …) — a new esbuild behaviour. No `3rdpartylicenses.txt` in dev (`extractLicenses: false`).
+- **✅ Re-confirmed unchanged by backlog-emptying Phase 6.** Every figure in this subsection was
+  re-measured with a cold `.angular/cache` after the Webpack retirement: gate G5
+  (`ng build --configuration production --output-path /tmp/probe-dist`) exits **0** and prints the
+  **identical asset hashes** — `main-IJN2BJGT.js` 2.16 MB / 311.85 kB, `chunk-OBZMNR63.js` 157.02 kB /
+  46.75 kB, `polyfills-5CFQRCPP.js` 34.59 kB / 11.33 kB, `styles-DRBU42VC.css` 20.95 kB / 1.94 kB,
+  **initial total 2.37 MB / 371.88 kB**, lazy `chunk-VOEP2MIL.js` 67.77 kB / 17.77 kB — with **0**
+  budget warnings at the rebaselined `2.6mb` / `5mb`. `npm run build:prod` builds the same bundle
+  twice (server static + electron static) and both report 2.37 MB / 371.88 kB, which is the evidence
+  that the two static bundles really do differ only in output path. The development figures were
+  likewise reproduced exactly (initial total **5.43 MB**). **So Phase 6 changed the build pipeline
+  without changing a single emitted byte of the client bundle.**
 
 ### Development bundle (measured, `--configuration development`)
 
@@ -457,22 +470,102 @@ specs.
 Also standing: i18n key parity **138 EN / 138 DE**, compile-time NG8xxx **0**, ProxyZone failures
 **0**.
 
-### Webpack pipeline
+### Build pipeline after backlog-emptying Phase 6 — Webpack retired
 
-`npm run build` / `build:prod` fail because `client/main.ts` now calls `bootstrapApplication(...)`
-while the Webpack config expects `bootstrapModule(AppModule)`. This is backlog item **(e)**: the
-pipeline was already JIT-only with `ts-loader { transpileOnly: true }` (no type-checking, no
-`@angular/compiler` anywhere in `client/`), so it could not compile templates even before Phase 5.
-The Angular CLI pipeline (`ng serve` / `ng build` / `ng test`) is unaffected and is what every gate
-uses. `Dockerfile` still runs `npm run build:prod`, so the desktop/server packaging path needs the
-backlog AOT rework before a release.
+> **⚠️ The "Webpack pipeline" subsection this replaces described a broken pipeline that no longer
+> exists.** For the whole migration, `npm run build` / `build:prod` failed because `client/main.ts`
+> calls `bootstrapApplication(...)` while `webpack.client.config.js` expected
+> `bootstrapModule(AppModule)` — backlog item **(e)**. The pipeline had been JIT-only with
+> `ts-loader { transpileOnly: true }` (no type-checking, no `@angular/compiler` anywhere in
+> `client/`), so it could not compile templates even before Phase 5.3. **Phase 6 deleted all four
+> Webpack configs plus `postcss.config.js` and replaced them with one script.**
+
+`scripts/build.mjs` is a native Node 24 ESM script — **no bundler builds the build script**. It uses
+esbuild's **Node API** (`import * as esbuild from 'esbuild'`, pinned exact at `0.25.9`), not a CLI
+string, so failures are typed objects and the script exits non-zero with a readable message.
+
+| Product | How it is made | Replaces |
+|---|---|---|
+| `dist/electron/index.js` | esbuild, `format: cjs`, `platform: node`, `target: node24`, `external: ['electron']` | the `electron-main` config in `webpack.electron.config.js` |
+| `dist/server/app.js` | esbuild, same options, `external: ['express', 'compression', 'path', 'os']` — they stay external because `server/package.json` declares them and a deployed server runs `npm install` against the copied manifest | the `target: node` config in `webpack.server.config.js` |
+| `dist/server/static/browser/` | `ng build --configuration <mode> --output-path dist/server/static` | `webpack.client.config.js`, server invocation |
+| `dist/electron/static/browser/` | the same `ng build`, different `--output-path` | `webpack.client.config.js`, electron invocation |
+| `dist/electron/{package.json,manifest.json,LICENSE}`, `dist/server/package.json` | plain `copyFileSync` | the `CopyWebpackPlugin` patterns |
+
+- **`--mode development|production`.** `development` skips minification of the two Node-side bundles,
+  builds the Angular client with `--configuration development`, and skips the second (Electron)
+  static bundle when `--target all`. `production` does the opposite and additionally asserts the
+  Electron layout. `isElectron` stays `false` in both bundles (locked decision 17).
+- **`--target all|server|electron`** backs `build:server` / `build:electron` and their `:prod` twins.
+- **`--watch` is real and proven.** esbuild's `context.watch()` watches `electron/main.ts` and
+  `server/app.ts`; a perturbation of `server/app.ts` produced `[watch] build started (change:
+  "server/app.ts")` / `[watch] build finished` and a new `dist/server/app.js` md5 within **1 s**, and
+  restoring the source byte-exactly returned the bundle to its original md5. **The Angular client is
+  deliberately not watched here** — its supported hot-reload path is `npm run serve` (`ng serve`),
+  which serves from memory and never writes `dist/`. Note that esbuild **0.25.9** removed the
+  `onRebuild` callback (`WatchOptions` is now just `{ delay }`), so watch feedback comes from
+  `logLevel: 'info'`, which is why watch mode logs at `info` and one-shot mode at `warning`.
+- **The Electron nesting is the one leg that could silently break the desktop app.** The old
+  `webpack.client.config.js` wrote the Electron client **flat** into `dist/electron/static`, but
+  Phase 5 repointed `electron/main.ts` at `static/browser`. Because the second `ng build` also uses
+  `@angular/build:application`, it emits `dist/electron/static/browser/` on its own — verified
+  empirically: **`dist/electron/static/browser/index.html`, 10,687 B**. `scripts/build.mjs` asserts
+  that path after every static build and fails loudly if it is missing.
+- **`prebuild` was deleted.** It invoked `mkdirp`, which was never a declared dependency; esbuild and
+  `ng build` both create their own output directories.
+- **`serve` is now plain `ng serve`** (was `webpack serve --mode development`). The script name is
+  load-bearing: `playwright.config.ts` starts it via `npm run serve`.
+- **Deliberately dropped,** each because the Angular esbuild builder now owns it: `postcss.config.js`
+  + autoprefixer (its only consumer was `postcss-loader` inside the deleted CSS chain),
+  `html-webpack-plugin`, `mini-css-extract-plugin`, `source-map-loader`, `terser-webpack-plugin`,
+  `splitChunks` / `runtimeChunk`, the `process.env.ELECTRON` `DefinePlugin` (no source file ever read
+  it) and the Webpack devServer (port 4200 + `historyApiFallback`).
+  **One inert loss worth recording:** `postcss.config.js`'s
+  `overrideBrowserslist: ['last 2 versions', '> 1%', 'not dead']` was the **only browser-target
+  declaration in the whole repository** — there is no `.browserslistrc` (it is `.gitignore`d *and*
+  absent from disk) and no `browserslist` key in `package.json`. The file had already been ignored
+  since Phase 5, when the esbuild builder took over autoprefixing and fell back to browserslist's own
+  defaults; `styles-DRBU42VC.css` is byte-identical before and after this deletion (20,951 B, same
+  hash), so nothing measurable changed. What changed is that the intent is no longer written down
+  anywhere. Restoring it means adding a **tracked** `.browserslistrc` — a source change, deliberately
+  not made here.
+- **`dist/` is no longer tracked.** 42 ancient artefacts were untracked and the five narrow
+  `.gitignore` rules collapsed into one `/dist/`. See §7 deviation 10.
+
+**Runtime proof (inside Docker, one invocation — a green build is not enough):**
+
+| Leg | Result |
+|---|---|
+| `npm run build:prod` | **exit 0**, cold `.angular/cache` |
+| `node dist/server/app.js` → `curl -I http://localhost:8000/` | **200**, `Content-Type: text/html`, `Content-Length: 10687` — the built `index.html` |
+| `curl -I /main-IJN2BJGT.js` | **200**, `application/javascript`, 2,157,337 B |
+| `curl -I /polyfills-5CFQRCPP.js` | **200**, `application/javascript`, 34,585 B |
+| `curl -I /styles-DRBU42VC.css` | **200**, `text/css`, 20,951 B |
+| `curl -I /favicon.ico` | **200** |
+| `dist/electron/index.js` is CJS | **0** top-level `import` / `export` / `await`; `require("electron")`, `require("path")` |
+| `dist/server/app.js` is CJS | **0** top-level `import`; `require("compression")`, `require("express")`, `require("os")`, `require("path")` |
+| `dist/electron/static/browser/index.html` | **present**, 10,687 B — the exact path `electron/main.ts` resolves |
+| Electron actually launching | **UNVERIFIED — the one unverified leg.** `node_modules/electron/dist/electron` exits **127**: `error while loading shared libraries: libnss3.so: cannot open shared object file`. Electron cannot run headless in this container and no system packages were installed to make it work |
+
+**`3rdpartylicenses.txt` decision — left where the builder puts it.** Two artefacts land at the
+`outputPath` root, *outside* `browser/`: `3rdpartylicenses.txt` (52,007 B, production only) and
+`prerendered-routes.json` (18 B, `{"routes": {}}`). Since `express.static` serves `static/browser`,
+the licence file is **not** reachable as itself: `curl -I /3rdpartylicenses.txt` returns **200** but
+with `Content-Type: text/html` and `Content-Length: 10687` — that is `index.html` from the
+unconditional Express catch-all, not the 52,007 B licence text. A repo-wide grep found **no code that
+fetches it**, so the layout stays as-is. A release-packaging step that wants it must look one level
+above the served root.
 
 ---
 
 ## 7. Known deviations
 
-1. **Webpack pipeline broken (backlog item e).** Broken since Phase 5.3's `bootstrapApplication`
-   switch; expected and documented above. Not a migration regression — the CLI pipeline is green.
+1. **CLOSED by backlog-emptying Phase 6 — the Webpack pipeline is gone (backlog item e).** It had
+   been broken since Phase 5.3's `bootstrapApplication` switch; that was expected and was never a
+   migration regression, because the CLI pipeline was green throughout. Phase 6 deleted
+   `webpack.config.js`, `webpack.client.config.js`, `webpack.electron.config.js`,
+   `webpack.server.config.js` and `postcss.config.js`, replaced them with `scripts/build.mjs`, and
+   `npm run build:prod` now exits 0 with a runtime-probed artefact. See §6.
 2. **`client/environments/environment.prod.ts` was missing from repo creation.** `angular.json`'s
    production `fileReplacements` pointed at a file that never existed, so the production
    configuration had never been exercised. Added in Phase 8 (`production: true`,
@@ -526,6 +619,17 @@ backlog AOT rework before a release.
    server; the Express catch-all in `server/app.ts` supplies the same fallback in production once
    Phase 6 makes that bundle runnable. **Phase 9's Playwright `server` project should re-test this
    rather than assume the 404.**
+   **Phase 6 addendum — the two fallbacks are NOT equivalent.** The Express catch-all is
+   *unconditional* (`app.use((req, res) => res.sendFile(...))`, with no `Accept` or extension test),
+   so against a running `node dist/server/app.js` **every** unmatched path returns **200 with
+   `index.html`**: measured `/definitely-not-here.txt` → 200 and `/assets/does-not-exist.png` →
+   **200**, where the dev server correctly gives 404 for the same asset path. Deep links work in both;
+   only genuine missing-asset detection differs. Pre-existing behaviour, not introduced by Phase 6,
+   and left alone — but **Phase 9's `server` project must not port the dev server's 404 expectation**.
+   Related: `client/index.html` has **no `<base href="/">`** and references its assets relatively, so
+   at a multi-segment path the fallback serves `index.html` and every relative asset resolves against
+   the wrong directory. Also pre-existing (the stale Webpack-era `dist/server/static/index.html` had
+   the same defect), also deliberately untouched in Phase 6.
 8. **Visual delta versus the `before/` baseline is large and legitimate** — the navbar overlay fix
    (`54a4ffb`) alone changes every route. The 18 before-shots and 72 after-shots live under
    `docs/migration-shots/` (git-excluded).
@@ -542,18 +646,78 @@ backlog AOT rework before a release.
      `path.resolve(__dirname, 'static', 'browser')`; the `loadURL` that interpolates `clientFolder`
      follows automatically.
 
-   **Caveat:** `server/app.ts` and `electron/main.ts` sit outside every `tsconfig` include path, so
-   **no type-check gate covers them until Phase 6** adds `electron/tsconfig.json` (G1c) and exercises
-   `server/tsconfig.json` (G1b). They were verified by inspection and by an artefact-level runtime
-   probe only. Their other known defects (the `process.env.PORT || 8000` strict violation,
-   `import * as express` namespace style, `let mainWindow: Electron.BrowserWindow = null`, the
-   implicit-any `(event)`, the `console.log('ping')` leftover) were **deliberately left for Phase 6**
-   so a Phase 5 regression stays unambiguous.
+   **Caveat — DISCHARGED by Phase 6.** `server/app.ts` and `electron/main.ts` sat outside every
+   `tsconfig` include path, so no type-check gate covered them. Phase 6 authored
+   `electron/tsconfig.json` (gate **G1c**), repaired `server/tsconfig.json` so it actually compiles
+   (gate **G1b**), and both gates now pass with **0 errors**. The repair was substantive: the
+   inherited `moduleResolution: "bundler"` combined with `module: "commonjs"` raised **TS5095** and
+   *aborted* compilation, so the config silently checked nothing while looking green; it also carried
+   `noImplicitAny: false`, which weakened the root's `strict`. Fixed defects, all of them the ones
+   Phase 5 deliberately left behind plus two the brief did not list: the `process.env.PORT || 8000`
+   strict violation (→ `Number(process.env.PORT ?? 8000)`), the `import * as express` namespace style
+   (→ default imports under `esModuleInterop`), **TS2532** on `network[name]` (an index-signature
+   possibly-undefined, *not* the implicit-any that was expected), **TS2349** on the resulting call,
+   `let mainWindow: Electron.BrowserWindow = null` (→ `BrowserWindow | null`), the implicit-any
+   `(event)` in `ipcMain.on` (→ `IpcMainEvent`), the `console.log('ping')` Quick-Start leftover
+   (deleted), **TS7016** for `compression` (→ `@types/compression@^1.8.1` added as a devDependency;
+   no ambient shim, no `as any`).
 
    **Also note:** `3rdpartylicenses.txt` and `prerendered-routes.json` are written at the `outputPath`
    root, *outside* `browser/`, so the Express static root no longer serves `3rdpartylicenses.txt`.
    Nothing in the app requests it, but a release-packaging step that expects it under the served root
-   must look one level up.
+   must look one level up. **Phase 6 confirmed this empirically** rather than by inspection: the file
+   is 52,007 B on disk, while `curl -I /3rdpartylicenses.txt` returns `Content-Type: text/html` /
+   `Content-Length: 10687`, i.e. `index.html`. Decision: leave the layout as-is. Full evidence in §6.
+
+10. **NEW in backlog-emptying Phase 6 — `dist/` is no longer tracked, and the contradiction that came
+    with it is gone.** `.gitignore` carried five narrow `/dist/...` rules, one of which was
+    `/dist/server/`, while **three files inside that very directory were tracked**
+    (`dist/server/app.js`, `app.js.map`, `package.json`) — an ignore rule that git honours only for
+    *untracked* paths, so the contradiction was invisible to `git status` and survived every previous
+    cleanup. `git rm -r --cached dist` removed **42** files and the five rules collapsed into a single
+    `/dist/`. The untracked artefacts were **ancient**: five `glyphicons-halflings-regular.*` font
+    files and `assets/tech/bootstrap.svg` (both deleted back in migration Phase 7), Angular-4-era
+    `inline.bundle.js` / `main.bundle.js` / `polyfills.bundle.js` / `styles.bundle.js` /
+    `vendor.bundle.js` names, a `service-worker.js` generated by `sw-precache-v3-duely` /
+    `sw-toolbox`, and a `vendor.bundle.js` whose embedded Angular version marker reads **4.4.6**.
+    **They predate Git itself.** Both tracked `dist/*/package.json` manifests are copies of a version
+    **`0.2.0`** `package.json` whose `repository` is `"type": "svn"`,
+    `https://sep.isf.cs.tu-bs.de/svn/17-cio_1/`, whose `bugs.url` is a **Redmine** project on the same
+    host, and whose licence string is the pre-SPDX `"MPL v2.0"`; the live root `package.json` is
+    version `2.0.0`, `"type": "git"`, `https://github.com/tubraenschweig/duely`, `"MPL-2.0"`, and
+    lists a fifth contributor the tracked copies do not have. So the tracked `dist/` was committed
+    under Subversion and migrated across — it is not merely stale, it belongs to a different VCS, and
+    `scripts/build.mjs`'s `copyManifests()` reproduces those `CopyWebpackPlugin` patterns and would
+    overwrite both `dist/` copies from the live `server/package.json` and `electron/package.json` —
+    version `2.0.0`, `"type": "git"`, GitHub — on the very next build anyway.
+    Nothing consumed them: the only `dist/` references in `Dockerfile`, `docker-compose.yml` and the
+    manifests are `COPY --from=builder /app/dist/server`, `CMD ["node","./dist/server/app.js"]`, the
+    two `start:*` scripts in `package.json`, the `duely-build` service's `./dist:/app/dist` bind
+    mount, `angular.json`'s `outputPath: "dist/server/static"` and **three** tsconfig `outDir`
+    settings (root `./dist/out-tsc`, `../dist/server`, `../dist/electron`) — all of which build
+    `dist/` themselves.
+    `scripts/build.mjs` also reproduces Webpack's `output.clean: true` by pruning each static output
+    directory before building, precisely so these Angular-4-era files cannot survive next to
+    `browser/`.
+
+11. **NEW in backlog-emptying Phase 6 — `@angular-devkit/build-angular` is now a dead devDependency,
+    and it is the only reason Webpack is still installed.** All three architect targets in
+    `angular.json` are `@angular/build:*` (`application`, `dev-server`, `unit-test`); there is no
+    `extract-i18n`, `lint` or `e2e` target. `npm ls @angular-devkit/build-angular --all` shows only
+    the root edge, and a recursive scan of every installed manifest found **0** packages declaring it
+    as a dependency, peer or optional peer — so unlike `@angular/animations` on v20 it is *not*
+    load-bearing. Removing the 15 Webpack-era devDependencies therefore did **not** delete the
+    toolchain: npm **de-hoisted** it into
+    `node_modules/@angular-devkit/build-angular/node_modules/*` (webpack 5.105.0, webpack-dev-server
+    5.2.2, copy-webpack-plugin 14.0.0, css-loader 7.1.2, mini-css-extract-plugin 2.9.4, postcss
+    8.5.6, postcss-loader 8.1.1, sass-loader 16.0.5, autoprefixer 10.4.21, serialize-javascript
+    7.0.5, plus `@ngtools/webpack`, `babel-loader`, `less-loader`, `terser`, …). It was **kept** in
+    Phase 6 deliberately: dropping it needs a second lockfile regeneration, a second
+    `docker compose build duely-dev` and a full gate re-run, which would have expanded this phase.
+    `webpack-dev-server`, `postcss`, `postcss-selector-parser` and `less` are still `npm audit`
+    entries **solely** because of it. **Phase 7 or a dedicated dependency-hygiene step should remove
+    it**; until then the "Webpack retired" claim is true of the *pipeline* and of the *direct*
+    dependency list, not of `node_modules`.
 
 ---
 
@@ -639,10 +803,12 @@ for Angular 19: `@ngtools/webpack` / `awesome-typescript-loader` → `ts-loader`
 Its completion report (`WEBPACK_FIX_SUMMARY.md`) also listed 7 source-code errors then blocking the
 build (`@angular/http` ×2, `ng2-datepicker` ×3, RxJS `Subscription` ×2); all 7 were resolved during
 Phases 0–8, and its moment.js / Bootstrap 3→5 / strict-TypeScript follow-ups are covered by backlog
-(g) and Phase 7. That report has been consolidated into this section and deleted. The **current**
-Webpack pipeline breakage (backlog item **e**, §6) is unrelated to this rewrite — it is caused by
-Phase 5's `bootstrapApplication(...)` switch, which left the JIT-only `ts-loader` pipeline expecting
-the deleted `bootstrapModule(AppModule)`.
+(g) and Phase 7. That report has been consolidated into this section and deleted. The Webpack
+pipeline breakage it predates (backlog item **e**, §6) was unrelated to this rewrite — it was caused
+by Phase 5's `bootstrapApplication(...)` switch, which left the JIT-only `ts-loader` pipeline
+expecting the deleted `bootstrapModule(AppModule)`. **All three configs this subsection describes,
+plus `webpack.config.js` and the `postcss.config.js` it added, were deleted by backlog-emptying
+Phase 6**; §6 records what replaced them.
 
 ### v2.0 upgrade status report (March 2026)
 
@@ -705,7 +871,7 @@ irreplaceable content is the *starting* point of the modernization, recorded now
 | Angular | 4.4.6 (2017) | **^20.3.18** — via 19.0.0 |
 | TypeScript | 2.4.0 | **~5.9.3** — via 5.7.2 |
 | RxJS | 5.5.7 | **~7.8.1** |
-| Webpack | 2.6.1 | **^5.97.1** — that pipeline is broken, backlog (e) |
+| Webpack | 2.6.1 | **removed entirely** by backlog-emptying Phase 6. It had reached ^5.97.1 (5.105.0 resolved); the pipeline was broken — backlog (e) — and `scripts/build.mjs` replaced it. Webpack is still *installed*, de-hoisted under the now-dead `@angular-devkit/build-angular` (§7 deviation 11) |
 | Electron | 1.8.4 | **^34.0.0** (34.5.8 resolved) |
 | zone.js | 0.8.20 | **~0.15.0** |
 | Removed entirely rather than upgraded | core-js 2.5.3, node-sass, PhantomJS, `intl`, Protractor 5.3.0, TSLint 5.9.1, Karma 2.0.0, Jasmine 3.1.0, Bootstrap 3.3.7, ngx-bootstrap, `ng2-datepicker`, `ng2-slimscroll`, `@angular/http` | absent from `package.json`; the dead `protractor.conf.js` and `tslint.json` files are backlog (g) |
@@ -745,11 +911,12 @@ native CSS scrolling rather than `perfect-scrollbar` or `overlay-scrollbars`.
 | "20+ CVEs eliminated" | **Unverifiable** — no historical `npm audit` artefact exists. The two CVE IDs cited are real identifiers (CVE-2018-1000136 Electron `remote`, CVE-2019-13174 Bootstrap XSS) and the risk genuinely is gone — Electron 34 ships no vulnerable `remote` module and `@electron/remote` is not a dependency, and Bootstrap is removed — but not by the path the doc describes |
 | Triage: "`electron-builder` ^25.1.8 → ^26.8.1 applied"; "`rimraf@3.0.2` still present from `karma@6.4.4`" | Doc-vs-manifest drift — `package.json:91` declares `^26.0.12`, a caret range that admits 26.8.1 but is not the value stated; and the named rimraf source no longer exists |
 
-Already covered elsewhere: the Sass `@import` deprecation the triage flagged is §7 item 4 (two legacy
-sites remain — `client/styles.scss:7` and
-`client/app/creator/appointment-form/appointment-form.component.scss:1`), and the Webpack pipeline,
-`npm run lint`, the dead Protractor/tslint configs and the trimmed `moment-timezone` build are backlog
-(e)/(f)/(g). The one genuinely new finding is `date-fns` declared but never imported — backlog (g).
+Already covered elsewhere: the Sass `@import` deprecation the triage flagged is §7 item 4 (both
+legacy sites were closed by backlog-emptying Phase 4 — `client/styles.scss:7` and
+`client/app/creator/appointment-form/appointment-form.component.scss:1`), the Webpack pipeline was
+closed by backlog-emptying Phase 6 (§6), and `npm run lint`, the dead Protractor/tslint configs and
+the trimmed `moment-timezone` build remain backlog (f)/(g). The one genuinely new finding is
+`date-fns` declared but never imported — backlog (g).
 Both stale documents have been consolidated into this section and deleted.
 
 ### Test evaluation summary (March 2026)
@@ -772,10 +939,14 @@ compile and proposed three fix options. Everything in it is superseded:
 - **Its test-file status table (17 spec files, 8 working / 9 needing fixes) is a historical
   baseline.** The suite is now 16 spec files at 24 failed / 47 passed (§6); the 24 are loud,
   classified and deferred, not compile blockers.
-- **Its `playwright.config.ts` "ready to use" claim is false today.** That config is broken — its
-  `webServer` runs `npm run serve` → `webpack serve`, dead since Phase 5 — and is repaired in
-  backlog-emptying Phase 9. The working visual tool is the Playwright-in-Docker capture recipe in
-  `TESTING_GUIDE.md`. The `test:e2e*` npm scripts still exist but route through that broken config.
+- **Its `playwright.config.ts` "ready to use" claim is false today.** That config is still broken and
+  is repaired in backlog-emptying Phase 9 — but the reason changed. Its `webServer` command
+  `npm run serve` used to run `webpack serve` and died with Phase 5; **Phase 6 repointed `serve` at
+  plain `ng serve`, so the command itself now works** (the script name was deliberately preserved for
+  exactly this consumer). What remains wrong is its `webServer.url`, `http://localhost:8000`, while
+  `ng serve` binds **4200** — a pre-existing mismatch Phase 6 left alone. The working visual tool is
+  the Playwright-in-Docker capture recipe in `TESTING_GUIDE.md`. The `test:e2e*` npm scripts still
+  exist but route through that broken config.
 - **Its moment.js → date-fns recommendation (fix-priority Phase 3 / "Option A") was not taken.**
   `moment-timezone` ^0.5.47 remains live and `date-fns` is declared but never imported — backlog (g)
   and §9's dependency subsection.
