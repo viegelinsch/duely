@@ -460,3 +460,13 @@ Phases 0–8, and its moment.js / Bootstrap 3→5 / strict-TypeScript follow-ups
 Webpack pipeline breakage (backlog item **e**, §6) is unrelated to this rewrite — it is caused by
 Phase 5's `bootstrapApplication(...)` switch, which left the JIT-only `ts-loader` pipeline expecting
 the deleted `bootstrapModule(AppModule)`.
+
+### v2.0 upgrade status report (March 2026)
+
+The root-level `STATUS_REPORT.md` (dated 2026-03-13) tracked the v2.0 modernization — dependency,
+Docker and configuration work complete, but Webpack configs, Angular source migration, Bootstrap
+3→5, testing and production deployment listed as incomplete at "25% complete, Phase 1". Every open
+item was subsequently finished by the Webpack 2→5 rewrite above, the Angular 19→20 upgrade, and
+Material migration Phases 0–8; its genuine residue (the JIT Webpack pipeline, `npm run lint`, dead
+Protractor/tslint configs, lazy loading) is already recorded in `docs/2026_MIGRATION_BACKLOG.md`
+(a)/(e)/(f)/(g). The stale snapshot has been consolidated into this section and deleted.
