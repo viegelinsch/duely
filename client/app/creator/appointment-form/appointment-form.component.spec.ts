@@ -1,5 +1,5 @@
 import { inject, ComponentFixture, TestBed } from '@angular/core/testing';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { provideNativeDateAdapter } from '@angular/material/core';
 
