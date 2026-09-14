@@ -503,3 +503,67 @@ stated a production bundle of "~800 KB" (measured: **2.71 MB**, §6), a Lighthou
 Lighthouse measurement has ever been taken on this project), and "moment.js replaced with date-fns"
 (`moment-timezone` ^0.5.47 remains a live dependency; `date-fns` was added alongside, not as a
 replacement). The three stale documents have been consolidated into this section and deleted.
+
+### v2.0 dependency upgrade and deprecation triage (March 2026)
+
+Two further root-level documents came from the same March 2026 v2.0 snapshot — both added in
+`1574db3` (2026-04-14), never modified since, internally dated 2026-03-13, which is why their version
+tables stop at Angular 19 / TypeScript 5.7.2 and never reflect the April 2026 Angular 20 bump:
+`DEPENDENCIES_UPGRADED.md` (434 lines, an executive summary of the dependency and Docker
+modernization written *before* the work finished) and `DEPRECATION_ANALYSIS.md` (260 lines, a triage
+of that month's `npm install` deprecation warnings). Neither had an inbound reference except a
+self-reference at `DEPENDENCIES_UPGRADED.md:143`, and the summary's three outbound links
+(`UPGRADE_CHANGELOG.md`, `README_UPGRADE.md`, `STATUS_REPORT.md`) were already dead. Their
+irreplaceable content is the *starting* point of the modernization, recorded nowhere else:
+
+| Package | v0.3.0 starting point | Current (`package.json`) |
+|---|---|---|
+| Angular | 4.4.6 (2017) | **^20.3.18** — via 19.0.0 |
+| TypeScript | 2.4.0 | **~5.9.3** — via 5.7.2 |
+| RxJS | 5.5.7 | **~7.8.1** |
+| Webpack | 2.6.1 | **^5.97.1** — that pipeline is broken, backlog (e) |
+| Electron | 1.8.4 | **^34.0.0** (34.5.8 resolved) |
+| zone.js | 0.8.20 | **~0.15.0** |
+| Removed entirely rather than upgraded | core-js 2.5.3, node-sass, PhantomJS, `intl`, Protractor 5.3.0, TSLint 5.9.1, Karma 2.0.0, Jasmine 3.1.0, Bootstrap 3.3.7, ngx-bootstrap, `ng2-datepicker`, `ng2-slimscroll`, `@angular/http` | absent from `package.json`; the dead `protractor.conf.js` and `tslint.json` files are backlog (g) |
+
+`package.json` pins `glob ^13.0.6` and `tar ^7.5.13` through npm `overrides` — the durable outcome of
+that triage — because both are transitive dependencies of build tooling with no direct upgrade path.
+Only two deprecations it named survive in today's tree, both unfixable upstream and **not to be
+re-triaged**: `boolean@3.2.0` (`electron → @electron/get → global-agent`, optional dev) and
+`rimraf@2.6.3` (`electron-builder → electron-winstaller → temp`, dev peer). `gauge`,
+`are-we-there-yet`, `npmlog`, `@npmcli/move-file` and `inflight` have zero entries in
+`package-lock.json` — they arrived via dependencies since removed — and the `rimraf@3.0.2` the triage
+traced to `karma@6.4.4` no longer exists because Karma is gone. Its 11-row "Original Analysis" table
+and "Action Plan" shell recipes are therefore not carried over: a host-side wipe-and-reinstall of
+`node_modules` plus the lockfile is destructive and meaningless here, since lock regeneration runs
+inside Docker via `docker compose run --rm duely-dev npm install --package-lock-only` plus one image
+rebuild.
+
+Three library substitutions were settled more concretely than the summary's option lists, and the
+rationale lives nowhere else: `ical-generator` moved off the `MKBraun` GitHub fork to the official
+npm package (`^7.2.0`, 7.2.0 resolved); `ng2-datepicker` was replaced by the Angular Material
+datepicker (`MatDatepicker`, used in `appointment-form` and `recurring-settings`), not by
+`ngx-datepicker` or a native `<input type="date">`; and `ng2-slimscroll` was dropped in favour of
+native CSS scrolling rather than `perfect-scrollbar` or `overlay-scrollbars`.
+
+**Fabricated or superseded claims NOT propagated.** The summary's "Impact Assessment" and
+"Performance Benchmarks" numbers were invented, never measured:
+
+| Claim | Measured reality |
+|---|---|
+| "Bundle size 2.5 MB → 800 KB (68% ↓)" | Production initial bundle is **2.71 MB** (`main.js` 2.65 MB raw / 402.94 kB transfer) — §6 |
+| "Lighthouse 65 → 95", "Accessibility 78 → 98" | No Lighthouse or accessibility audit has ever been run on this project; no config or tooling for either exists in the repo |
+| Build 45s → 12s, prod build 90s → 35s, memory 256 → 128 MB, boot 2.1s → 0.5s, initial load 3.2s → 0.8s, "runtime 50% faster (Angular Ivy/Velte)" | **Never measured** — no benchmark artefact exists. "Velte" is not an Angular compiler name; Ivy is the renderer |
+| "Moment.js 2.21.0 → removed, replaced with date-fns 4.1.0", and its "Moment.js ReDoS vulnerability eliminated" | **False.** `moment-timezone ^0.5.47` is live — 18 client source files carry a moment import, 13 of them literally `from 'moment-timezone'`. `date-fns ^4.1.0` is declared at `package.json:67` but imported by **zero** source files — backlog (g) |
+| "Content Security Policy ready", "Subresource Integrity support", "regular `npm audit` integration", "automated dependency updates (Dependabot/Renovate ready)" | **All false.** `client/index.html` has no CSP meta tag or header and no `integrity=`/`crossorigin` attribute; and there is no CI at all — `.github/` does not exist, nor does `renovate.json` or `.renovaterc` |
+| "Karma 2.0.0 → 6.4.4", "Jasmine 3.1.0 → 5.4.0", "Bootstrap 3.3.7 → 5.3.3" and "Bootstrap XSS vulnerabilities patched" | None was upgraded — all three were **removed**: Karma and Jasmine in the April 2026 Angular 20 step (replaced by Vitest 3.1 via `@angular/build:unit-test`), Bootstrap with ngx-bootstrap and the glyphicons in Phase 7 |
+| "Angular 4.4.6 → 19.0.0", "TypeScript 2.4.0 → 5.7.2" | Superseded rather than false when written: the current values are `^20.3.18` and `~5.9.3` |
+| "20+ CVEs eliminated" | **Unverifiable** — no historical `npm audit` artefact exists. The two CVE IDs cited are real identifiers (CVE-2018-1000136 Electron `remote`, CVE-2019-13174 Bootstrap XSS) and the risk genuinely is gone — Electron 34 ships no vulnerable `remote` module and `@electron/remote` is not a dependency, and Bootstrap is removed — but not by the path the doc describes |
+| Triage: "`electron-builder` ^25.1.8 → ^26.8.1 applied"; "`rimraf@3.0.2` still present from `karma@6.4.4`" | Doc-vs-manifest drift — `package.json:91` declares `^26.0.12`, a caret range that admits 26.8.1 but is not the value stated; and the named rimraf source no longer exists |
+
+Already covered elsewhere: the Sass `@import` deprecation the triage flagged is §7 item 4 (two legacy
+sites remain — `client/styles.scss:7` and
+`client/app/creator/appointment-form/appointment-form.component.scss:1`), and the Webpack pipeline,
+`npm run lint`, the dead Protractor/tslint configs and the trimmed `moment-timezone` build are backlog
+(e)/(f)/(g). The one genuinely new finding is `date-fns` declared but never imported — backlog (g).
+Both stale documents have been consolidated into this section and deleted.

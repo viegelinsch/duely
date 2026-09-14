@@ -215,6 +215,17 @@ the new `standalone` and `@for` conventions during the migration.
   **Only data persisted before Phase 0 (2026-09-11) is in scope; fresh installs and anything saved
   since are unaffected.** Decision needed: add a normalization guard on load, write a one-time
   migration, or accept and document as won't-fix. No phase owns this.
+- **`date-fns` declared but never imported (surfaced while consolidating `DEPENDENCIES_UPGRADED.md`,
+  now `docs/2026_MATERIAL_MIGRATION.md` §9):** `date-fns@^4.1.0` sits in `package.json:67`
+  `dependencies` but is imported by **zero** source files — `git grep "date-fns" --
+  ':!package-lock.json' ':!*.md'` returns only the declaration itself. The March 2026 upgrade summary
+  claimed it had *replaced* moment.js; it did not — `moment-timezone` ^0.5.47 is live and 18 client
+  source files carry a moment import. **Severity LOW:** date-fns is fully tree-shakeable ESM and is
+  never imported, so it does not appear in the production bundle (the 2.71 MB measurement in
+  `docs/2026_MATERIAL_MIGRATION.md` §6 is unaffected); the cost is `node_modules` bloat at install
+  time and a misleading manifest. Resolution options: remove the declaration, or migrate one of the
+  `moment-timezone` call sites to it — the natural pairing is the trimmed `moment-timezone` bullet
+  above. No phase owns this.
 
 ### (h) The plan's rejected alternatives, summarised
 
