@@ -404,3 +404,45 @@ c5d3488     fix(dates): timezone handling in the activated date handlers
 ```
 
 Branch `dev-v2` is unpushed with no upstream; nothing in the migration pushes or creates one.
+
+---
+
+## 9. Pre-migration infrastructure upgrade
+
+The Bootstrap-to-Material migration was preceded by an **Angular 19 → 20 LTS and Node.js 22 → 24
+LTS infrastructure upgrade**, completed 2026-04-14 (~2 hours). It is not part of Phases 0–8; it
+put the toolchain on the versions the migration then relied on — most importantly Angular 20's
+`@angular/build:unit-test` builder, which is the only way to get official Vitest support and which
+did not exist in Angular 19. Its two tracking documents (`ANGULAR_20_UPGRADE_PLAN.md` and
+`ANGULAR_20_UPGRADE_COMPLETE.md`) were consolidated into this section and deleted.
+
+| Component | Before | After |
+|---|---|---|
+| Angular | 19.2.20 | **20.3.18** |
+| Angular CLI / @angular/build | 19.2.24 | **20.3.23** |
+| TypeScript | 5.7.3 | **5.9.3** |
+| Node.js | 22.x | **24.14.1** |
+| vitest | not installed | **3.1.0** |
+| jsdom | not installed | **26.1.0** |
+
+Key changes: `ng update @angular/core@20 @angular/cli@20` schematics applied; Jasmine → Vitest
+migration (18 spec files scanned, 9 transformed) with Karma/Jasmine removed and `karma.conf.js`
+deleted; strict TypeScript mode enabled; deprecated API replacements (moment namespace → default
+imports, `ical-generator` and `date-holidays` type usage). Six commits, oldest first:
+
+```
+74eb1ad     feat: prepare for Angular 20 + Node.js 24 LTS upgrade
+4a43966     chore: upgrade ngx-bootstrap to v21 for Angular 20 compatibility
+f646b26     chore: update package-lock.json after ngx-bootstrap upgrade
+799f4ed     feat: upgrade to Angular 20 LTS
+384c19a     feat: configure Vitest for Angular 20
+51460c3     fix: update moment imports from namespace to default imports
+```
+
+The upgrade delivered working infrastructure but left the unit tests failing to compile against a
+set of **pre-existing** issues that TypeScript 5.9's stricter checking only then surfaced:
+strict-null errors, `ical-generator` / `date-holidays` type mismatches, missing return statements,
+Bootstrap CSS import paths and spec compilation failures. None was caused by the upgrade itself.
+All of them were subsequently resolved by Material migration **Phases 0–8** (§1), which reached the
+green baseline recorded in §6 (tsc 0 / 0 errors, 24F / 47P). These six upgrade commits sit below
+`17e88ea` at the foot of the §8 commit chain.
