@@ -4,7 +4,6 @@
    removed here — _theme.scss replaces it with Duely-branded --mat-sys-* tokens. */
 @use './styles/theme';
 @use './styles/layout';
-@import 'bootstrap/dist/css/bootstrap.css';
 @import 'palette';
 
 html, body {
