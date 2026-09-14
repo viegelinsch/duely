@@ -4,7 +4,7 @@
    removed here — _theme.scss replaces it with Duely-branded --mat-sys-* tokens. */
 @use './styles/theme';
 @use './styles/layout';
-@import 'palette';
+@use './palette' as palette;
 
 html, body {
   height: 100%;
@@ -13,7 +13,7 @@ html, body {
 }
 
 body {
-  background-color: $clr-background;
+  background-color: palette.$clr-background;
 }
 
 date-input-polyfill {

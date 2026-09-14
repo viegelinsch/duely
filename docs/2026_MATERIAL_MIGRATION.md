@@ -329,14 +329,28 @@ Unminified, so not comparable against the production budgets; `vendor.js` domina
   was measured at `d70817f` *before* Bootstrap was removed. The 9.18 → 8.65 MB drop is accounted for by
   migration Phase 7 (Bootstrap + ngx-bootstrap + the 215 KB glyphicons removed). Backlog §2(b) is
   **CLOSED** by this measurement.
+- **Two rows of the table above were superseded by backlog-emptying Phases 3–4** (the rest —
+  `vendor.js`, `polyfills.js`, `runtime.js`, the 8.65 MB initial total and the 236.72 kB lazy chunk —
+  are unchanged): `main.js` is now **361.45 kB** (−92 B, from Phase 3 dropping
+  `emitDecoratorMetadata`; the *production* build is unaffected because its optimiser already
+  eliminated the metadata calls — production `main.js` hash `408265f1673ac6ef` is byte-identical
+  before and after), and `styles.css` is now **26.44 kB** (26,444 B, from Phase 4's `@use` switch).
 - **Build-warning inventory (Phase 0, at `ced1dc8`), correcting two counts the backlog still cites:**
-  the CommonJS/AMD optimization-bailout warnings number **4, not 5** — the Angular CLI dedups the
-  warning *per dependency*, so `moment-timezone` is reported once (`creator.component.ts`) even though
-  `settings.component.ts:12` also imports it; the four are `moment-timezone`, `file-saver`,
-  `jalaali-js`, `deepmerge`. The "part of the TypeScript compilation but unused" warnings number **5 in
-  the production build but 6 in development** — dev additionally flags `environment.prod.ts`, which
-  `fileReplacements` swaps in only for production. Backlog §2(c)/§2(d) still carry the pre-dedup "5"; the
-  corrected counts here are the ones Phase 13's `docs/2026_KNOWN_LIMITATIONS.md` must cite.
+  the CommonJS/AMD optimization-bailout warnings number **4 or 5 — the count is NOT stable across
+  builds of an unchanged tree.** Three consecutive cold-cache production builds of one commit
+  reported **5, 4, 5**. The Angular CLI dedups the warning *per dependency specifier*, but *which*
+  importing file it names, and whether bare `moment` (reached via `MonthlyRecurrencePattern.ts`)
+  survives as its own line or is subsumed by `moment-timezone`, depends on module-graph traversal
+  order. The named reporter varies run to run between `creator.component.ts` and
+  `settings.component.ts` for `moment-timezone`, and between `web-storage.service.ts` and
+  `electron-storage.service.ts` for `file-saver`. The four always-present specifiers are
+  `moment-timezone`, `file-saver`, `jalaali-js`, `deepmerge`; `moment` is an intermittent fifth.
+  **Do not gate on this count** — Phase 13 must cite it as "4–5, nondeterministic". The "part of the
+  TypeScript compilation but it's unused" warnings, by contrast, **are** stable: **5 in the
+  production build but 6 in development** — dev additionally flags `environment.prod.ts`, which
+  `fileReplacements` swaps in only for production. Note also that the build's own `Hash:` line
+  differs on every run (it is a session hash, not a content hash); the per-asset hashes are stable
+  and are the ones to compare. Backlog §2(c)/§2(d) still carry the pre-dedup "5".
 
 ### CSS
 
@@ -344,7 +358,8 @@ Unminified, so not comparable against the production budgets; `vendor.js` domina
 |---|---|
 | Global `styles.css`, dev build, Phase 1 (Bootstrap still imported) | 301.92 kB |
 | Global `styles.css`, dev build, after Phase 7 | **27.46 kB** (27,459 B) — a 91% reduction |
-| Global `styles.css`, production (minified) | **20.95 kB** (20,951 B) |
+| Global `styles.css`, dev build, after backlog-emptying Phase 4 (`@import` → `@use`) | **26.44 kB** (26,444 B) — `_palette.scss`'s 24 utility classes stop being emitted twice |
+| Global `styles.css`, production (minified) | **20.95 kB** (20,951 B) — **unchanged** by Phase 4: the production CSS optimiser already deduplicated the double-emit, so only rule *order* changed (sha256 differs, byte count and selector multiplicities do not) |
 | Distinct `--mat-sys-*` tokens in the production CSS | 165 |
 | Bootstrap selectors (`.col-*-N`, `.btn-*`, `.form-control`, `.form-horizontal`, `.control-label`, `.has-danger`, `.navbar-fixed-top`, `.glyphicon`) in the production CSS | **0** |
 
@@ -391,13 +406,34 @@ backlog AOT rework before a release.
    `app.config.ts`, which spec TestBeds do not load, so `<mat-icon svgIcon="duely:...">` logs a
    lookup warning per render. Cosmetic — every affected spec still passes, and adding the provider
    to 10 TestBeds would only silence output.
-4. **Two legacy Sass `@import` sites remain** (`client/styles.scss:7` and
+4. **CLOSED by backlog-emptying Phase 4 — both legacy Sass `@import` sites are gone.** They were
+   `client/styles.scss:7` and
    `client/app/creator/appointment-form/appointment-form.component.scss:1`, both pulling
-   `_palette.scss`), and the Dart Sass deprecation-warning count is **asymmetric between the two
-   pipelines**: `npm test` emits **2** warnings (both sites), while `ng build` emits only **1**
-   (`appointment-form.component.scss:1`; the `styles.scss:7` site is *not* emitted by the build).
-   `@import` is removed in Dart Sass 3.0. All new SCSS uses `@use`. Backlog-emptying Phase 4
-   (`@import` → `@use`) removes both.
+   `_palette.scss`; both are now `@use … as palette` with namespaced members. `@import` is removed in
+   Dart Sass 3.0. All SCSS in `client/` now uses `@use`. **Zero** live `@import` directives remain;
+   the 7 surviving `@import` textual matches are all inside `/* */` header comments (prose, not
+   Sass) in 5 files and are deliberately untouched. Two claims this item previously made were
+   **wrong** and are corrected here from Phase 4's measurements:
+   - **The warning count was never asymmetric.** *Both* pipelines emitted **2** warnings, one per
+     site. The recorded "`ng build` emits only 1" was a **warm-`.angular/cache` under-count**: when
+     `styles.scss` is served from cache its deprecation warning is suppressed. Reproducibly 2 on a
+     cold *and* a warm cache in Phase 2, and 2 again in Phase 4. Both pipelines are now **0**. Any
+     future Sass measurement must `rm -rf .angular/cache` first.
+   - **The Webpack `sass-loader` prints 0-based line numbers.** It reported `styles.scss` at
+     `line 6` and `appointment-form.component.scss` at `line 0` for what are really lines **7** and
+     **1**; its own stack traces say `styles.scss 7:9 root stylesheet`. The esbuild pipeline behind
+     `npm test` prints correct 1-based positions (`client/styles.scss:7:8`). Cite the esbuild
+     numbers, and grep **both** warning formats — a single-format grep falsely reports 0.
+   Effects of the switch: the palette double-emit is gone, so **dev** `styles.css` fell 27,459 B →
+   **26,444 B** (each of `.label-red` / `.red` / `.border-red` went from 2 occurrences to 1).
+   **Production** `styles.css` is byte-identical at 20,951 B with identical selector multiplicities
+   — the production optimiser already deduplicated — but its content hash changed and the estimated
+   transfer rose 1.91 kB → 1.94 kB, because `@use` emits a module's CSS at its first dependency
+   encounter and `styles/_theme.scss` already `@use`d the palette, so the palette rules now hoist
+   ahead of `:root`. That reorder is inert: the only palette classes any template uses are
+   `.label-{accent}`, which set `color` and have no equal-specificity competitor, and a 72-shot
+   Playwright matrix (6 route states × 2 themes × 2 accents × 375/800/1440) captured before and
+   after inside one dev-server session was **byte-identical on all 72 PNGs**.
 5. **`npm run lint` cannot run** (backlog item f): `package.json` passes `--ext`, which ESLint 9
    removed. There is consequently no automated guard on the `standalone` / `@for` conventions —
    gates 1, 2 and 3 are the guard.
