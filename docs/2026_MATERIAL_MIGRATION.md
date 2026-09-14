@@ -485,3 +485,21 @@ subsequently covered by the Vitest suite (Phases 0–8) and the Playwright visua
 optional follow-ups (moment → date-fns, code splitting / lazy loading, `OnPush`) are already recorded
 in `docs/2026_MIGRATION_BACKLOG.md` (g). The stale report has been consolidated into this section and
 deleted.
+
+### v2.0 modernization planning documents (March 2026)
+
+Three root-level documents tracked the v2.0 modernization from planning through partial completion:
+`UPGRADE_CHANGELOG.md` (355 lines, a dependency analysis and six-phase migration plan written before
+execution began, created in `1574db3`), `README_UPGRADE.md` (328 lines, a user-facing Docker and
+upgrade guide with code examples and performance benchmarks, also `1574db3`), and
+`UPGRADE_SUMMARY.md` (155 lines, a completion report for the Angular 20 + Node 24 step, created in
+`54332f8`). All three are superseded: the six-phase plan was never followed (the actual path was the
+Angular 19→20 upgrade then Material Phases 0–8), UPGRADE_SUMMARY's version table and remaining-issues
+list are already captured in the Angular 20 subsection above (all four issues resolved by Phases 0–8),
+and README_UPGRADE's Docker instructions duplicate `docker-compose.yml`. Their genuine residue (dead
+Protractor/tslint configs, broken `npm run lint`, lazy loading, trimmed moment-timezone) is already in
+`docs/2026_MIGRATION_BACKLOG.md` (e)/(f)/(g). **Fabricated claims NOT propagated:** README_UPGRADE
+stated a production bundle of "~800 KB" (measured: **2.71 MB**, §6), a Lighthouse score of 95 (no
+Lighthouse measurement has ever been taken on this project), and "moment.js replaced with date-fns"
+(`moment-timezone` ^0.5.47 remains a live dependency; `date-fns` was added alongside, not as a
+replacement). The three stale documents have been consolidated into this section and deleted.
