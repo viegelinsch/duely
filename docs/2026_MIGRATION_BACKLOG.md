@@ -1,7 +1,7 @@
 # 2026 Migration Backlog — Bootstrap to Angular Material
 
 **Date:** 2026-09-12
-**Recorded at:** commit `09d44f4`, branch `dev-v2`.
+**Recorded at:** commit `b88b3cf`, branch `dev-v2`.
 
 ## Scope
 
@@ -16,7 +16,7 @@ things to do *after* Phases 1–8 are finished. It is one of three migration doc
 - This file — only the unowned, post-migration backlog below.
 
 The approved plan file is the contract and is never edited. Sources for this backlog: the migration
-working handoff, the commit bodies of `c5d3488` (date-handler fixes) and `cb9f9b0` (waitForAsync spec
+working handoff, the commit bodies of `98f603f` (date-handler fixes) and `937a920` (waitForAsync spec
 executability), the plan's rejected-alternatives section, and the 2026-09-12 visual baseline capture.
 
 The Phase-0 decision point was answered by the user on 2026-09-12: the `saveAs` failures (Q1), the
@@ -28,7 +28,7 @@ are recorded in section 1; Q4 (accept the extra Phase-0 commits, no squashing) c
 
 ## 1. Deferred test work with no phase owner
 
-The verified baseline at `cb9f9b0` is **39 failed / 38 passed, 77 executing**. Of the 39 failures,
+The verified baseline at `937a920` is **39 failed / 38 passed, 77 executing**. Of the 39 failures,
 **34 are phase-owned** and annotated in `docs/2026_MIGRATION_PLAN.md` (Phase 6: TranslateStore
 NG0201 ×23 + `mat-form-field` NG0304 ×10 = 33; Phase 3.4: `auto-resize.directive.spec` ×1). The
 **5 failures below have no phase owner** and stay loud until a post-migration pass:
@@ -94,7 +94,7 @@ called at least once". `generateAndSaveICAL()` early-returns because `appointmen
 `AppointmentFormComponent.endValidation()` on form `valueChanges` — a component this spec never
 instantiates; setting `summary = 'test'` on the model alone cannot flip it. The test previously
 appeared green only vacuously (assertions in a fire-and-forget `.then()` with no `await`) or was
-masked by the ProxyZone abort; the `cb9f9b0` conversion to `async it()` + `await` exposed it — the
+masked by the ProxyZone abort; the `937a920` conversion to `async it()` + `await` exposed it — the
 mechanism working as designed, not a regression.
 
 **User decision 2026-09-12 (~21:30): option C — accept reduced coverage.** Drop the positive test
@@ -129,7 +129,7 @@ run: `build.configurations.production.fileReplacements` points at
 `environment.server-prod.ts`), and the budgets — `initial` 2 MB warn / 5 MB error, `anyComponentStyle`
 6 KB / 10 KB — have never been measured.
 
-### (b) Dev bundle baseline at `705bf3c`
+### (b) Dev bundle baseline at `d70817f`
 
 Initial total **9.18 MB**, unminified: `vendor.js` 7.88 MB, `main.js` 538.37 kB,
 `styles.css`/`styles.js` 509.76 kB, `polyfills.js` 240.07 kB, `runtime.js` 7.27 kB. Not comparable
@@ -193,7 +193,7 @@ the new `standalone` and `@for` conventions during the migration.
 - **Model-band anomaly (promoted from the handoff per the impact review):** during a reverse end-date
   operation the start wall-clock time can shift 22:00→23:00 because `endDateListener`'s
   recompute-start branch compares stale `appEnd`/`appStart` captured before the preceding branch
-  mutated the start. Pre-existing (byte-identical in `c5d3488` and its parent), not a `56722d4`
+  mutated the start. Pre-existing (byte-identical in `98f603f` and its parent), not a `5a219bc`
   regression. Candidate owner is the Phase 3.x appointment-form rework (annotated in the PLAN); if
   that phase does not absorb it, it stays here.
 - **Legacy persisted-state risk from pre-Phase-0 form defaults (surfaced by the TS1272/TS2872

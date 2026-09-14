@@ -3,7 +3,7 @@
 - **Status:** RESOLVED (translations applied to the codebase)
 - **Date:** 2026-09-11
 - **Branch:** `dev-v2`
-- **Commit context:** applied on top of `17e88ea` (the TS2322 + TS2531 remediation). These i18n changes are left **uncommitted in the working tree** (nothing staged, nothing committed, no upstream created).
+- **Commit context:** applied on top of `443f17c` (the TS2322 + TS2531 remediation). These i18n changes are left **uncommitted in the working tree** (nothing staged, nothing committed, no upstream created).
 - **Original scope:** every user-visible string in `client/app/**/*.html` and `client/app/**/*.ts`, plus `client/index.html`, cross-referenced against `client/assets/i18n/en.json` / `de.json`.
 - **This file was moved** from the repo root to `docs/` (plain `mv`, it is untracked). It is kept as the record of what was applied and what was deliberately left alone.
 - **Historical snapshot (added 2026-09-14):** the build and compile statements in this document (the NG8xxx counts, the 154-error tsc histogram, "the application bundle still fails to build") describe the **pre-migration** state as of 2026-09-11. They were superseded by the completed Bootstrap→Material migration (Phases 0-8): both type-check gates (`client/tsconfig.app.json` and `client/tsconfig.spec.json`) now exit 0 with empty error histograms, and `ng build` succeeds in development and production. The i18n records below remain accurate and are unchanged.

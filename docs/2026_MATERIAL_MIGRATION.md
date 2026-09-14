@@ -32,14 +32,14 @@ application shell moved from an NgModule bootstrap onto **standalone components 
 
 | Phase | Commit | Outcome |
 |---|---|---|
-| 0 | `09e4821`, `705bf3c`, `c5d3488`, `cb9f9b0`, `56722d4`, `415da2c`, `09d44f4`, `f591e23` | Build unblocked: `standalone: false` on all 11 declarations cleared ~190 NG8xxx errors, moment default-import conversion, TS2564 initializers, `ng serve` schema fix, date-handler timezone repairs, `waitForAsync` specs made executable under vitest, navbar taken out of fixed position |
-| 1 | `c22cb40` | Design foundation: `_theme.scss` (M3 tokens), `_layout.scss` (7 classes), `_palette.scss` cleanup (-119 dead lines, `+$colors` map), indigo-pink deleted, icon provider, `ThemeService`, `themeMode` persistence, pre-paint theme script |
-| 2 | `fbb05f0` | Pilot: `SettingsComponent` standalone + Material form controls, `provideAnimationsAsync()`, destructive `cancel()` bug fixed. User sign-off APPROVED |
-| 3 | `c9e70e5`, `760d529`, `f49c307`, `48c89e0`, `616f2f6` | Creator family bottom-up: advanced-settings, alarm-settings, recurring-settings, appointment-form (auto-resize directive deleted), creator |
-| 4 | `efb42a8` | Static screens: about / legal / notFound standalone, three 97-line SCSS clones deleted |
-| 5 | `9b93dc9` | Standalone bootstrap: `app.routes.ts`, `app.config.ts`, `main.ts` -> `bootstrapApplication`, `mat-toolbar` shell; `app.module.ts`, `app-routing.module.ts` and `client/test.ts` deleted |
-| 6 | `9c4039f` | Regression net restored: `TranslateModule.forRoot()` and Material TestBed providers fixed 8 blocked tests, 5 stale tests deleted, 19 newly-unmasked failures triaged and deferred. Baseline 24F / 47P |
-| 7 | `eac4b64` | Bootstrap removed entirely: CSS import, `bootstrap` + `ngx-bootstrap` + `@types/moment*` dependencies, `client/fonts/` (215 KB glyphicons), `bootstrap.svg`, stale `electron/package.json` entries |
+| 0 | `6a228f3`, `d70817f`, `98f603f`, `937a920`, `5a219bc`, `5c84fe6`, `b88b3cf`, `54a4ffb` | Build unblocked: `standalone: false` on all 11 declarations cleared ~190 NG8xxx errors, moment default-import conversion, TS2564 initializers, `ng serve` schema fix, date-handler timezone repairs, `waitForAsync` specs made executable under vitest, navbar taken out of fixed position |
+| 1 | `348d835` | Design foundation: `_theme.scss` (M3 tokens), `_layout.scss` (7 classes), `_palette.scss` cleanup (-119 dead lines, `+$colors` map), indigo-pink deleted, icon provider, `ThemeService`, `themeMode` persistence, pre-paint theme script |
+| 2 | `2060558` | Pilot: `SettingsComponent` standalone + Material form controls, `provideAnimationsAsync()`, destructive `cancel()` bug fixed. User sign-off APPROVED |
+| 3 | `f334fe8`, `bf6de16`, `8b1d40a`, `ce7c6ff`, `0d53dfb` | Creator family bottom-up: advanced-settings, alarm-settings, recurring-settings, appointment-form (auto-resize directive deleted), creator |
+| 4 | `0483db3` | Static screens: about / legal / notFound standalone, three 97-line SCSS clones deleted |
+| 5 | `0f22483` | Standalone bootstrap: `app.routes.ts`, `app.config.ts`, `main.ts` -> `bootstrapApplication`, `mat-toolbar` shell; `app.module.ts`, `app-routing.module.ts` and `client/test.ts` deleted |
+| 6 | `201f166` | Regression net restored: `TranslateModule.forRoot()` and Material TestBed providers fixed 8 blocked tests, 5 stale tests deleted, 19 newly-unmasked failures triaged and deferred. Baseline 24F / 47P |
+| 7 | `619390b` | Bootstrap removed entirely: CSS import, `bootstrap` + `ngx-bootstrap` + `@types/moment*` dependencies, `client/fonts/` (215 KB glyphicons), `bootstrap.svg`, stale `electron/package.json` entries |
 | 8 | see §8 | Final gates + `client/environments/environment.prod.ts` + this document |
 
 ---
@@ -302,6 +302,41 @@ is empty and is never used.
 - This was the **first production build ever run in this repo**: `build.configurations.production`
   has `fileReplacements` pointing at `client/environments/environment.prod.ts`, which did not exist
   until Phase 8 (backlog item (a)).
+- **Provenance of the 2.71 MB figure:** first recorded at migration Phase 8 under this same
+  `@angular-devkit/build-angular:browser` (Webpack) builder, and **freshly re-confirmed at `ced1dc8`**
+  by backlog-emptying Phase 0 — the component sizes are byte-for-byte identical, so the number did not
+  drift, it is simply now re-measured against the live HEAD.
+- **Shelf life:** both this production figure and the development figure below will change again.
+  Backlog-emptying **Phase 5** switches the builder to `@angular/build:application` (esbuild) and
+  rebaselines the budget to *measured + 10%*; **Phase 11** adds route-level lazy loading. Treat these
+  as a `ced1dc8` snapshot, not a permanent constant.
+
+### Development bundle (measured, `--configuration development`)
+
+Unminified, so not comparable against the production budgets; `vendor.js` dominates.
+
+| Chunk | Raw |
+|---|---|
+| `vendor.js` | **8.13 MB** |
+| `main.js` | 361.54 kB |
+| `polyfills.js` | 116.11 kB |
+| `styles.css` | 27.46 kB |
+| `runtime.js` | 13.34 kB |
+| **Initial total** | **8.65 MB** |
+| `angular-animations-browser` (lazy) | 236.72 kB |
+
+- **This supersedes the 9.18 MB development record** in `docs/2026_MIGRATION_BACKLOG.md` §2(b), which
+  was measured at `d70817f` *before* Bootstrap was removed. The 9.18 → 8.65 MB drop is accounted for by
+  migration Phase 7 (Bootstrap + ngx-bootstrap + the 215 KB glyphicons removed). Backlog §2(b) is
+  **CLOSED** by this measurement.
+- **Build-warning inventory (Phase 0, at `ced1dc8`), correcting two counts the backlog still cites:**
+  the CommonJS/AMD optimization-bailout warnings number **4, not 5** — the Angular CLI dedups the
+  warning *per dependency*, so `moment-timezone` is reported once (`creator.component.ts`) even though
+  `settings.component.ts:12` also imports it; the four are `moment-timezone`, `file-saver`,
+  `jalaali-js`, `deepmerge`. The "part of the TypeScript compilation but unused" warnings number **5 in
+  the production build but 6 in development** — dev additionally flags `environment.prod.ts`, which
+  `fileReplacements` swaps in only for production. Backlog §2(c)/§2(d) still carry the pre-dedup "5"; the
+  corrected counts here are the ones Phase 13's `docs/2026_KNOWN_LIMITATIONS.md` must cite.
 
 ### CSS
 
@@ -358,8 +393,11 @@ backlog AOT rework before a release.
    to 10 TestBeds would only silence output.
 4. **Two legacy Sass `@import` sites remain** (`client/styles.scss:7` and
    `client/app/creator/appointment-form/appointment-form.component.scss:1`, both pulling
-   `_palette.scss`). Dart Sass emits a deprecation warning; `@import` is removed in Dart Sass 3.0.
-   All new SCSS uses `@use`.
+   `_palette.scss`), and the Dart Sass deprecation-warning count is **asymmetric between the two
+   pipelines**: `npm test` emits **2** warnings (both sites), while `ng build` emits only **1**
+   (`appointment-form.component.scss:1`; the `styles.scss:7` site is *not* emitted by the build).
+   `@import` is removed in Dart Sass 3.0. All new SCSS uses `@use`. Backlog-emptying Phase 4
+   (`@import` → `@use`) removes both.
 5. **`npm run lint` cannot run** (backlog item f): `package.json` passes `--ext`, which ESLint 9
    removed. There is consequently no automated guard on the `standalone` / `@for` conventions —
    gates 1, 2 and 3 are the guard.
@@ -369,7 +407,7 @@ backlog AOT rework before a release.
 7. **`/settings` deep-links 404 on the dev server** — pre-existing `PathLocationStrategy` without a
    history fallback. Users reach Settings through in-app navigation from `/`.
 8. **Visual delta versus the `before/` baseline is large and legitimate** — the navbar overlay fix
-   (`f591e23`) alone changes every route. The 18 before-shots and 72 after-shots live under
+   (`54a4ffb`) alone changes every route. The 18 before-shots and 72 after-shots live under
    `docs/migration-shots/` (git-excluded).
 
 ---
@@ -379,28 +417,28 @@ backlog AOT rework before a release.
 Newest first, from the migration handoff (`docs/2026_MIGRATION_STATE.md` §3):
 
 ```
-(this commit) Phase 8: final gates and documentation
-eac4b64     Phase 7: remove Bootstrap entirely
-9c4039f     Phase 6: test(specs) — restore the regression net
-9b93dc9     Phase 5: feat(shell) — standalone bootstrap, AppModule deleted
-efb42a8     Phase 4: feat(static-screens) — about, legal, notFound
-616f2f6     Phase 3.5: feat(creator)
-48c89e0     Phase 3.4: feat(appointment-form), auto-resize directive deleted
-f49c307     Phase 3.3: feat(recurring-settings)
-760d529     Phase 3.2: feat(alarm-settings)
-c9e70e5     Phase 3.1: feat(advanced-settings)
-fbb05f0     Phase 2: feat(settings) — Material pilot, user sign-off APPROVED
-c22cb40     Phase 1: feat(theme) — design foundation
-75a458d     doc restructuring (PLAN / STATE / BACKLOG)
-f591e23     fix(navbar): in-flow nav, right-aligned 25% logo
-09d44f4     docs(migration): correct two backlog facts
-56722d4     fix(dates): wall-clock-day dates into the datepicker controls
-415da2c     docs(migration): plan corrections and deferred backlog
-cb9f9b0     test(spec): waitForAsync specs execute under vitest
-c5d3488     fix(dates): timezone handling in the activated date handlers
-705bf3c     fix(build): ng serve under the Angular 20 dev-server schema
-09e4821     fix(build): app bundle compiles, unit tests execute
-17e88ea     (pre-migration) TS2322 / TS2531 driven to zero — the standing invariant
+87232ae     Phase 8: final gates and documentation
+619390b     Phase 7: remove Bootstrap entirely
+201f166     Phase 6: test(specs) — restore the regression net
+0f22483     Phase 5: feat(shell) — standalone bootstrap, AppModule deleted
+0483db3     Phase 4: feat(static-screens) — about, legal, notFound
+0d53dfb     Phase 3.5: feat(creator)
+ce7c6ff     Phase 3.4: feat(appointment-form), auto-resize directive deleted
+8b1d40a     Phase 3.3: feat(recurring-settings)
+bf6de16     Phase 3.2: feat(alarm-settings)
+f334fe8     Phase 3.1: feat(advanced-settings)
+2060558     Phase 2: feat(settings) — Material pilot, user sign-off APPROVED
+348d835     Phase 1: feat(theme) — design foundation
+e75d3c6     doc restructuring (PLAN / STATE / BACKLOG)
+54a4ffb     fix(navbar): in-flow nav, right-aligned 25% logo
+b88b3cf     docs(migration): correct two backlog facts
+5a219bc     fix(dates): wall-clock-day dates into the datepicker controls
+5c84fe6     docs(migration): plan corrections and deferred backlog
+937a920     test(spec): waitForAsync specs execute under vitest
+98f603f     fix(dates): timezone handling in the activated date handlers
+d70817f     fix(build): ng serve under the Angular 20 dev-server schema
+6a228f3     fix(build): app bundle compiles, unit tests execute
+443f17c     (pre-migration) TS2322 / TS2531 driven to zero — the standing invariant
 ```
 
 Branch `dev-v2` is unpushed with no upstream; nothing in the migration pushes or creates one.
@@ -431,12 +469,12 @@ deleted; strict TypeScript mode enabled; deprecated API replacements (moment nam
 imports, `ical-generator` and `date-holidays` type usage). Six commits, oldest first:
 
 ```
-74eb1ad     feat: prepare for Angular 20 + Node.js 24 LTS upgrade
-4a43966     chore: upgrade ngx-bootstrap to v21 for Angular 20 compatibility
-f646b26     chore: update package-lock.json after ngx-bootstrap upgrade
-799f4ed     feat: upgrade to Angular 20 LTS
-384c19a     feat: configure Vitest for Angular 20
-51460c3     fix: update moment imports from namespace to default imports
+1574db3     feat: prepare for Angular 20 + Node.js 24 LTS upgrade
+0c1bd71     chore: upgrade ngx-bootstrap to v21 for Angular 20 compatibility
+995e892     chore: update package-lock.json after ngx-bootstrap upgrade
+c710232     feat: upgrade to Angular 20 LTS
+dd594f2     feat: configure Vitest for Angular 20
+54332f8     fix: update moment imports from namespace to default imports
 ```
 
 The upgrade delivered working infrastructure but left the unit tests failing to compile against a
@@ -445,7 +483,7 @@ strict-null errors, `ical-generator` / `date-holidays` type mismatches, missing 
 Bootstrap CSS import paths and spec compilation failures. None was caused by the upgrade itself.
 All of them were subsequently resolved by Material migration **Phases 0–8** (§1), which reached the
 green baseline recorded in §6 (tsc 0 / 0 errors, 24F / 47P). These six upgrade commits sit below
-`17e88ea` at the foot of the §8 commit chain.
+`443f17c` at the foot of the §8 commit chain.
 
 ### Webpack 2 → 5 config rewrite (March 2026)
 
@@ -567,3 +605,36 @@ sites remain — `client/styles.scss:7` and
 `npm run lint`, the dead Protractor/tslint configs and the trimmed `moment-timezone` build are backlog
 (e)/(f)/(g). The one genuinely new finding is `date-fns` declared but never imported — backlog (g).
 Both stale documents have been consolidated into this section and deleted.
+
+### Test evaluation summary (March 2026)
+
+The root-level `TEST_EVALUATION_SUMMARY.md` (283 lines, internally dated 2026-03-13, created in
+`1574db3`) was a snapshot of the **pre-migration** test stack, written while the repo was still on
+Angular 19.2.20 with Jasmine 5.4.0, Karma and `client/test.ts`. It catalogued why the suite did not
+compile and proposed three fix options. Everything in it is superseded:
+
+- **The stack it documents no longer exists.** `karma.conf.js` and `client/test.ts` are deleted —
+  Karma/Jasmine were removed in the April 2026 Angular 20 step and `client/test.ts` in migration
+  Phase 5. The runner is now **Vitest 3.1** via `@angular/build:unit-test` (§9 above; see
+  `TESTING_GUIDE.md`), and Angular is 20.3.18, not 19.2.20.
+- **The 28 TypeScript compilation errors it lists were all resolved by Phases 0–8.** Its seven
+  categories — undefined-property access (×12), a moment.js call signature (×1), legacy
+  `@angular/http` in `legal.component.spec.ts` (×4), the `date-holidays` constructor (×1),
+  `ical-generator` type mismatches (×5), the removed `async` test utility (×2, → `waitForAsync`) and
+  validator return types (×2) — are exactly the pre-existing strict-null / strict-template issues that
+  TypeScript 5.9 surfaced and that the migration drove to the current 0-error tsc baseline (§6).
+- **Its test-file status table (17 spec files, 8 working / 9 needing fixes) is a historical
+  baseline.** The suite is now 16 spec files at 24 failed / 47 passed (§6); the 24 are loud,
+  classified and deferred, not compile blockers.
+- **Its `playwright.config.ts` "ready to use" claim is false today.** That config is broken — its
+  `webServer` runs `npm run serve` → `webpack serve`, dead since Phase 5 — and is repaired in
+  backlog-emptying Phase 9. The working visual tool is the Playwright-in-Docker capture recipe in
+  `TESTING_GUIDE.md`. The `test:e2e*` npm scripts still exist but route through that broken config.
+- **Its moment.js → date-fns recommendation (fix-priority Phase 3 / "Option A") was not taken.**
+  `moment-timezone` ^0.5.47 remains live and `date-fns` is declared but never imported — backlog (g)
+  and §9's dependency subsection.
+
+Not propagated: its "Option B — disable strict mode" (strict mode is a standing invariant), its 70 %
+coverage goal (no coverage target has ever been set on this project), and its Docker run instructions,
+which cite the one-shot `duely-build` service rather than the `duely-dev` service every gate uses. The
+stale snapshot has been consolidated into this section and deleted.

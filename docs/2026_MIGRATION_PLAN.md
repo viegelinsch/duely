@@ -1,6 +1,6 @@
 # 2026 Migration Plan — Bootstrap to Angular Material (Phases 1–8)
 
-> **Phase 0 is COMPLETE (commits `09e4821`, `705bf3c`). This document covers the remaining phases.**
+> **Phase 0 is COMPLETE (commits `6a228f3`, `d70817f`). This document covers the remaining phases.**
 
 This is the execution contract for the rest of the Bootstrap → Angular Material migration.
 It reproduces Phases 1–8 of the approved plan **verbatim**, with the plan corrections and the
@@ -37,7 +37,7 @@ Never on the host.
 ## Global caution (applies to every phase)
 
 > **Correction 5 — `client/polyfills.ts` is NOT an orphan; never delete it as part of this
-> migration.** The `09e4821` commit message claimed it was a deletion candidate; that claim is
+> migration.** The `6a228f3` commit message claimed it was a deletion candidate; that claim is
 > false. It is an orphan only for the Angular CLI pipeline: `webpack.client.config.js:30` still
 > declares `polyfills: './client/polyfills.ts'` as an explicit build entry, and
 > `webpack.electron.config.js:6` reuses that configuration. `npm run build`, `build:prod` and
@@ -93,9 +93,9 @@ Never on the host.
 > **Phase 1 commit-body ride-along corrections.** The Phase 1 commit body must carry the C-style
 > record corrections owed from the Phase 0 review cycle (do not amend the earlier hashes — three
 > reviewers cite them):
-> - **C-9 (already recorded in `56722d4`'s body):** `c5d3488`'s fix-11 miscounted the tracked `dist`
+> - **C-9 (already recorded in `5a219bc`'s body):** `98f603f`'s fix-11 miscounted the tracked `dist`
 >   inventory — actual is 39 `dist/electron` + 3 `dist/server` = **42 total**, not 42 + 3 = 45.
-> - **C-10 (owed to Phase 1's commit body):** `c5d3488`'s body fix-3 cites the `untilDate` site as
+> - **C-10 (owed to Phase 1's commit body):** `98f603f`'s body fix-3 cites the `untilDate` site as
 >   `:208`, but the post-image line was `:209` (now L212) — never prescribed, uncorrected. Correct it
 >   C-style here.
 > Fold in any further correction discovered before dispatch using the same C-style pattern.
@@ -177,7 +177,7 @@ A standalone parent cannot import a non-standalone child, so the order is forced
 > - The `untilDate` control is now polymorphic (string seed at rest, local-midnight `Date` after any
 >   auto-snap); it has zero current consumers — note it in the dispatch spec.
 > - Candidate owner for the reverse-path 22:00→23:00 model-band stale-comparison shift observed in
->   `endDateListener` (pre-existing, not a `56722d4` regression): confirm at dispatch whether the
+>   `endDateListener` (pre-existing, not a `5a219bc` regression): confirm at dispatch whether the
 >   Phase 3.x appointment-form rework re-reads the post-branch-A start in branch B's guard.
 
 **3.5** `creator` (50 hits + 160 SCSS lines) — 5 glyphicons → `mat-icon` (`remove`, `expand_more`, `chevron_right`, `add`, `save`); `.btn-default`/`.btn-primary`/`.btn-success` → `mat-stroked-button` / `mat-flat-button color="primary"`, deleting the hand-written `#3b973b` and `#337ab7` overrides at `creator.component.scss:102-120` (those are Bootstrap's hexes, not Duely's — the accent token now supplies the colour). Collisions table stays a plain `<table class="duely-table">`; delete the `thead,tbody,tr,td,th{display:block}` + `float:left` hack at lines 133–155. Both `@for` loops get `track` — **forced, since `@for` requires a track expression**, and it converts appointment removal from O(N) full-subtree rebuilds to O(1). Keep the native `alert()` at `creator.component.ts:60` under your scope choice; `JsonPipe` at `creator.component.html:60` is expected to be the only `@angular/common` pipe import surviving anywhere — verify with a grep before dropping `CommonModule`.
@@ -229,7 +229,7 @@ A standalone parent cannot import a non-standalone child, so the order is forced
 > parked at its static position, shrink-to-fit ~512–514 px wide and ~247–271 px tall
 > (`.navbar-brand img { height: 100% }` resolved to `auto`, so the logo SVG rendered at its intrinsic
 > 472×219), hiding the entire `/legal` content block behind it. **The core of this defect was fixed
-> early, by direct user decision, in commit `f591e23`** (nav rendered in flow above main, right-aligned
+> early, by direct user decision, in commit `54a4ffb`** (nav rendered in flow above main, right-aligned
 > 25%-size logo). **Phase 5.4 owns the residue:** the obsolete inert `navbar-fixed-top` HTML token, the
 > legacy `margin-top` clearings (about/notFound 65px, creator 58px) that `.page` now owns, and any
 > remaining placement polish. Expect a large legitimate visual delta on every route in the Phase 8
@@ -243,7 +243,7 @@ A standalone parent cannot import a non-standalone child, so the order is forced
 
 > **Correction 3 — the deletion checklist must include `client/test.ts`.** The plan lists
 > `app.module.ts` and `app-routing.module.ts` only. `client/test.ts` (whose single functional line is
-> `import './app/app.module';`) was added in `09e4821` as deviation D1 scaffolding to give the spec
+> `import './app/app.module';`) was added in `6a228f3` as deviation D1 scaffolding to give the spec
 > compilation an NgModule scope. Deleting `app.module.ts` without it leaves a dangling import that
 > fails the tsc and npm-test gates with TS2307 — self-enforcing, but it belongs on the checklist.
 > (Respect the Global caution: `client/polyfills.ts` is NOT part of this deletion.)
@@ -265,7 +265,7 @@ Flip the remaining `declarations:` → `imports: [ComponentUnderTest, …]` in `
 > failures into a new class of hard failure and destroy the regression net.
 
 > **Correction 4 — revert `private initializeCalendar()`.** `appointments.service.ts`'s
-> `initializeCalendar()` went from `private` to `public` in `09e4821` (deviation D5) solely so that
+> `initializeCalendar()` went from `private` to `public` in `6a228f3` (deviation D5) solely so that
 > `vi.spyOn(service, 'initializeCalendar')` at `appointments.service.spec.ts:156` would type-check.
 > **Phase 6 is the recorded revert point.**
 
@@ -273,7 +273,7 @@ Flip the remaining `declarations:` → `imports: [ComponentUnderTest, …]` in `
 > clusters in the 39/38 baseline —
 > - **TranslateStore NG0201 ×23** — `appointments.service.spec` (22; its TestBed has `providers` but
 >   no `imports` array at all — DI chain `_AppointmentsService → _TranslateService → TranslateStore`)
->   plus `legal.component.spec` (1; `LegalComponent` has injected `TranslateService` since `6c5fe0d`,
+>   plus `legal.component.spec` (1; `LegalComponent` has injected `TranslateService` since before the migration (that commit's SHA did not survive the history rewrite),
 >   but its TestBed declares the component with no `imports`). Fix for both: add
 >   `TranslateModule.forRoot()` to the TestBed `imports`.
 > - **`mat-form-field` NG0304 ×10** — `appointment-form.component.spec`. Extend the TestBed `imports`
@@ -322,7 +322,7 @@ Flip the remaining `declarations:` → `imports: [ComponentUnderTest, …]` in `
 > **Correction 6 — do not claim byte-identical iCal output.** The correct claim: the generation
 > function and its spec fixtures are byte-identical; the live default and UI-edited output changed
 > from broken to correct once the date handlers were activated. (Phase 0 step 0.7 switched three date
-> handlers from dead `ngModelChange`-bound code to live `(dateChange)` handlers, and `c5d3488` fixed
+> handlers from dead `ngModelChange`-bound code to live `(dateChange)` handlers, and `98f603f` fixed
 > the timezone defects that activation exposed — `UNTIL=`/`DTEND` values previously silently wrong in
 > some timezones are now correct. That is a change from broken to correct, not byte-identity.)
 
@@ -347,7 +347,7 @@ Four gates, all in Docker, all usable from Phase 0 onward:
 4. Browser on `localhost:4200` through the already-published port
 
 **Invariant asserted mechanically after every single step**, not eyeballed:
-`npm test`-independent `tsc` run piped to `grep -cE 'error (TS2322|TS2531)'` must output literally `0`. Both were driven to zero in commit `17e88ea` and must not regress. A non-zero value stops the step.
+`npm test`-independent `tsc` run piped to `grep -cE 'error (TS2322|TS2531)'` must output literally `0`. Both were driven to zero in commit `443f17c` and must not regress. A non-zero value stops the step.
 
 **Per-step ledger:** record NG8001/NG8002/NG8004/NG5002/NG8103 totals after each component. The converted component's own count must reach 0 and no global total may rise. Note when grepping esbuild output that it prints `✘ [ERROR] NG8004: …` with the file path on a *continuation line*, so a single-line regex like `file.html:[0-9]+ - error NG[0-9]+` matches nothing — use a broad `grep -E 'NG[0-9]{4}'` plus `sed 's/^ *//' | sort | uniq -c | sort -rn`.
 
