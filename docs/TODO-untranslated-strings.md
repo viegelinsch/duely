@@ -6,6 +6,7 @@
 - **Commit context:** applied on top of `17e88ea` (the TS2322 + TS2531 remediation). These i18n changes are left **uncommitted in the working tree** (nothing staged, nothing committed, no upstream created).
 - **Original scope:** every user-visible string in `client/app/**/*.html` and `client/app/**/*.ts`, plus `client/index.html`, cross-referenced against `client/assets/i18n/en.json` / `de.json`.
 - **This file was moved** from the repo root to `docs/` (plain `mv`, it is untracked). It is kept as the record of what was applied and what was deliberately left alone.
+- **Historical snapshot (added 2026-09-14):** the build and compile statements in this document (the NG8xxx counts, the 154-error tsc histogram, "the application bundle still fails to build") describe the **pre-migration** state as of 2026-09-11. They were superseded by the completed Bootstrap→Material migration (Phases 0-8): both type-check gates (`client/tsconfig.app.json` and `client/tsconfig.spec.json`) now exit 0 with empty error histograms, and `ng build` succeeds in development and production. The i18n records below remain accurate and are unchanged.
 
 ### i18n mechanism (confirmed)
 
@@ -67,7 +68,7 @@ The duplicated C1 row from the audit draft has been collapsed to a single item.
 
 `LegalComponent` now injects `TranslateService` and assembles the `content` HTML string in its constructor using **`.instant()`**. `.instant()` was chosen over `.get()` because the string is built **synchronously** in the constructor and interpolated into a plain template literal; `.get()` returns an `Observable` and cannot be interpolated directly. `.instant()` reads the already-loaded translations (the default lang is set at app startup in `AppComponent`).
 
-> **TestBed implication (reported, not fixed):** [legal.component.spec.ts](file:///Users/Shared/vcs/git/duely/client/app/legal/legal.component.spec.ts) already fails to compile for pre-existing reasons (`TS2305 async`, `TS2307 @angular/http`, `TS7006`). Because `LegalComponent` now depends on `TranslateService`, once the suite can finally build, its `TestBed.configureTestingModule` will additionally need `TranslateModule.forRoot()` (or a `TranslateService` mock) as a provider. Those pre-existing errors were **not** touched and the spec was **not** made worse.
+> **TestBed note (corrected 2026-09-14):** this document previously claimed that [legal.component.spec.ts](file:///Users/Shared/vcs/git/duely/client/app/legal/legal.component.spec.ts) "already fails to compile for pre-existing reasons (`TS2305 async`, `TS2307 @angular/http`, `TS7006`)". **That claim is stale and no longer true.** Those errors were resolved during the Bootstrap→Material migration: the spec imports only `ComponentFixture` and `TestBed` from `@angular/core/testing` (no `async`) and has no `@angular/http` import at all, and both tsc gates exit 0. The `TranslateService` dependency introduced by C3-C5 is also already satisfied - `TranslateModule.forRoot()` is present in the spec's `TestBed.configureTestingModule` imports, so the additional provider warned about below is no longer needed.
 
 ### C6 design decision (`EXCLUDED BY USER`)
 
@@ -205,11 +206,14 @@ Reused (unchanged, already present): `REQUIRED25` (C1), `LEGAL NOTICE` (C3).
 
 - **U1-U5** (Open Source, licence name, developer names, language endonyms, document title) - proper nouns / conventions / outside `@ngx-translate`; left as-is per instructions.
 - **All of Section D** (12 orphaned keys) - informational only; keys kept in both locales.
-- Standalone-components migration, moment-timezone import fix, ical-generator typing fix, `async`→`waitForAsync`, `@angular/http`, `rxjs/Subscription`, TS2564/TS1272/TS2872 cleanups, Bootstrap→Material migration, Protractor/ESLint dead-config cleanup, upgrade-docs consolidation - all explicitly out of scope and untouched.
+- Standalone-components migration, moment-timezone import fix, ical-generator typing fix, `async`→`waitForAsync`, `@angular/http`, `rxjs/Subscription`, TS2564/TS1272/TS2872 cleanups, Bootstrap→Material migration, Protractor/ESLint dead-config cleanup, upgrade-docs consolidation - all explicitly out of scope and untouched **at the time of this i18n pass**.
+  - **Update (2026-09-14):** every technical item in the bullet above was subsequently completed by the Bootstrap→Material migration (Phases 0-8). `@angular/http` and the `async`→`waitForAsync` rewrite are gone from the client sources, the TS2305/TS2307/TS7006/TS2564 clusters are at zero, and Bootstrap itself has been removed. Only the i18n records in this document are still current.
 
 ---
 
 ## Verification (all inside Docker, `duely-dev`)
+
+> **Historical numbers.** The measurements below are the pre-migration baseline recorded on 2026-09-11 (tsc TOTAL 154, NG8004 103, bundle build failing). They are kept as the audit trail of this i18n pass only. Current state after Phases 0-8: tsc app 0 errors, tsc spec 0 errors, 0 NG8xxx in `npm test`.
 
 Commands:
 - `docker compose run --rm duely-dev npx tsc --noEmit -p client/tsconfig.spec.json` - exit 2, TOTAL **154 -> 154** (no change). **TS2322 = 0, TS2531 = 0** (both unchanged).
