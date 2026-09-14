@@ -470,3 +470,18 @@ item was subsequently finished by the Webpack 2→5 rewrite above, the Angular 1
 Material migration Phases 0–8; its genuine residue (the JIT Webpack pipeline, `npm run lint`, dead
 Protractor/tslint configs, lazy loading) is already recorded in `docs/2026_MIGRATION_BACKLOG.md`
 (a)/(e)/(f)/(g). The stale snapshot has been consolidated into this section and deleted.
+
+### Angular 4 → 19 source-code migration (March 2026)
+
+The root-level `SOURCE_CODE_MIGRATION_COMPLETE.md` (dated 2026-03-13) reported the Angular 4 → 19
+source-code migration: `@angular/http` → `HttpClientModule`/`HttpClient`, RxJS 5 deep-path imports →
+flat RxJS 7 `rxjs`, and `ng2-datepicker` → the `ngx-bootstrap` `BsDatepicker`. Every item is now
+superseded — the `ngx-bootstrap` datepicker was itself replaced by the Angular Material datepicker and
+Bootstrap (with `ngx-bootstrap` and the glyphicons) removed entirely in Phase 7, the `app.module.ts`
+it edited was deleted in Phase 5, and strict TypeScript plus standalone components arrived with the
+Angular 20 upgrade and Phases 1–6. Its unchecked testing items (date/exclusion/holiday selection,
+recurring settings, timezone handling, recurrence patterns, collision detection, localization) were
+subsequently covered by the Vitest suite (Phases 0–8) and the Playwright visual baseline, and its
+optional follow-ups (moment → date-fns, code splitting / lazy loading, `OnPush`) are already recorded
+in `docs/2026_MIGRATION_BACKLOG.md` (g). The stale report has been consolidated into this section and
+deleted.
