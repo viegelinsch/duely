@@ -446,3 +446,17 @@ Bootstrap CSS import paths and spec compilation failures. None was caused by the
 All of them were subsequently resolved by Material migration **Phases 0–8** (§1), which reached the
 green baseline recorded in §6 (tsc 0 / 0 errors, 24F / 47P). These six upgrade commits sit below
 `17e88ea` at the foot of the §8 commit chain.
+
+### Webpack 2 → 5 config rewrite (March 2026)
+
+Earlier still, in March 2026, the three Webpack configs (`webpack.client.config.js`,
+`webpack.server.config.js`, `webpack.electron.config.js`) were rewritten from Webpack 2 to Webpack 5
+for Angular 19: `@ngtools/webpack` / `awesome-typescript-loader` → `ts-loader`, `ExtractTextPlugin` →
+`MiniCssExtractPlugin`, `node-sass` → Dart Sass, modern asset handling, and `postcss.config.js` added.
+Its completion report (`WEBPACK_FIX_SUMMARY.md`) also listed 7 source-code errors then blocking the
+build (`@angular/http` ×2, `ng2-datepicker` ×3, RxJS `Subscription` ×2); all 7 were resolved during
+Phases 0–8, and its moment.js / Bootstrap 3→5 / strict-TypeScript follow-ups are covered by backlog
+(g) and Phase 7. That report has been consolidated into this section and deleted. The **current**
+Webpack pipeline breakage (backlog item **e**, §6) is unrelated to this rewrite — it is caused by
+Phase 5's `bootstrapApplication(...)` switch, which left the JIT-only `ts-loader` pipeline expecting
+the deleted `bootstrapModule(AppModule)`.

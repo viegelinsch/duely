@@ -157,6 +157,15 @@ compile templates at all, and `Dockerfile:22` ships exactly that bundle. **Phase
 `bootstrapApplication(...)` is the natural point to revisit the whole Webpack pipeline, but the fix
 itself (the JIT → AOT / `ts-loader transpileOnly` → esbuild rework) is post-migration and unowned.**
 
+> **Historical context:** the Webpack configs (`webpack.client.config.js`, `webpack.server.config.js`,
+> `webpack.electron.config.js`) were fully rewritten from Webpack 2 to Webpack 5 in March 2026 — the
+> completion report was `WEBPACK_FIX_SUMMARY.md`, now deleted and consolidated into
+> `docs/2026_MATERIAL_MIGRATION.md` §9. All 7 source-code errors that report listed as blocking the
+> build (`@angular/http` ×2, `ng2-datepicker` ×3, RxJS `Subscription` ×2) were resolved during
+> migration Phases 0–8, and its moment.js / Bootstrap / strict-TypeScript follow-ups are covered by
+> (g) and Phase 7. The breakage recorded here is a **separate, later** issue caused by Phase 5's
+> `bootstrapApplication` switch — not a regression of that Webpack 2→5 rewrite.
+
 ### (f) `npm run lint` cannot run
 
 `package.json:44` passes `--ext`, which ESLint 9 removed. There is consequently no automated guard on
