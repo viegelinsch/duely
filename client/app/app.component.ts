@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -47,10 +47,5 @@ export class AppComponent {
     translate.use(storage.settings.language);
     theme.apply();
   }
-
-  /**
-   * Adds another event form to the collection
-   */
-  public addEvent(): void { }
 
 }

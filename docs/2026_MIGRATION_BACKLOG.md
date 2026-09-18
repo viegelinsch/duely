@@ -165,7 +165,7 @@ suggests that budget has never been measured either. (No phase owns re-measureme
 > Phase 6 measured 6 in a single `ng build` and 12 in `npm run build:prod` (which runs two builds).
 > **Phase 13 must cite six specifiers, not four.**
 
-### (d) 5 "part of the TypeScript compilation but unused" warnings
+### (d) 5 "part of the TypeScript compilation but unused" warnings — **CLOSED by backlog-emptying Phase 7 (task #32)**
 
 The four `environment.electron*`/`environment.server*` files plus `client/polyfills.ts`. The unused
 environment files and the missing `environment.prod.ts` (see (a)) are the same underlying gap: the
@@ -188,6 +188,21 @@ environment-file set matches no build configuration that is actually exercised.
 > phase changes zero files under `client/`.
 >
 > **Phase 13 must state that the diagnostic no longer exists rather than claim a reduction.**
+>
+> **✅ CLOSED by backlog-emptying Phase 7 (task #32), with the step-4 supersession rationale.** The
+> PLAN's step 4 demanded the unused-file warning count drop **5 → 4** (the four retained environment
+> files). That criterion is **UNREACHABLE and is hereby SUPERSEDED**: the esbuild
+> `@angular/build:application` builder emits **ZERO** "part of the TypeScript compilation but it's
+> unused" warnings (re-confirmed 0 prod / 0 dev at Phases 5 and 6), so the baseline is **already at the
+> floor** and no warning-count reduction can ever be evidenced. Phase 7 therefore closes §2(d) by
+> **deleting the provably-dead files** — `client/polyfills.ts` (fully orphaned once Phase 6 removed
+> `webpack.client.config.js`), `client/typings.d.ts`, `client/app/creator/mock-appointments.ts` plus its
+> dead import and commented use in `appointments.service.ts`, and the two unreachable root ambient
+> declarations `types/date-holidays/index.d.ts` and `types/file-saver/index.d.ts` (deleted under the
+> empirical protocol: G1 and G2 both stayed exit 0 after removal, so they were kept deleted) — citing
+> their existence and **zero import count**, never a warning delta. The four
+> `environment.electron*`/`environment.server*` files are **KEPT** per decision 17 and remain the
+> residual, un-closeable-by-count remainder. **Phase 13 records the diagnostic no longer exists.**
 
 ### (e) The Webpack/JIT production defect — **CLOSED by backlog-emptying Phase 6**
 
@@ -255,7 +270,10 @@ the new `standalone` and `@for` conventions during the migration.
 - The trimmed `moment-timezone` build (−25 KB gzip).
 - A Playwright Docker service (the validated capture recipe now lives in
   `docs/2026_MIGRATION_PLAN.md`'s Verification strategy).
-- Dead Protractor/tslint deletion.
+- ~~Dead Protractor/tslint deletion.~~ **CLOSED by backlog-emptying Phase 7 (task #32)** —
+  `protractor.conf.js` and `tslint.json` deleted (grep-proven zero references outside prose docs).
+  `e2e/tsconfig.e2e.json` was deliberately **KEPT** (it becomes orphaned once protractor.conf.js goes,
+  but the PLAN says *check* it, not delete it, and **Phase 9 owns `e2e/`**).
 - An en/de key-parity test.
 - The 7 unused ngx-bootstrap i18n keys.
 - The 4 copy-pasted `aria-label="Left Align"`.

@@ -7,7 +7,6 @@
  */
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { APPOINTMENTS } from './mock-appointments';
 import { StorageService } from '../storage/storage.service';
 import { CollisionDetector, Collision } from '../DatesAndCollisions/CollisionDetector';
 
@@ -30,7 +29,6 @@ export class AppointmentsService {
  * contructor initializes Storage
  */
   constructor(private StorageService: StorageService, private translate: TranslateService) {
-    // this.events = APPOINTMENTS;
   }
 
 /**

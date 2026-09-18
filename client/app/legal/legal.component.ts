@@ -7,7 +7,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { StorageService } from '../storage/storage.service';
 
@@ -18,11 +18,10 @@ import { StorageService } from '../storage/storage.service';
 @Component({
   selector: 'rac-impress',
   standalone: true,
-  imports: [],
   templateUrl: './legal.component.html',
   styleUrls: ['./legal.component.scss']
 })
-export class LegalComponent implements OnInit {
+export class LegalComponent {
 
 
   public content: string;
@@ -34,11 +33,6 @@ export class LegalComponent implements OnInit {
     this.content = `<h1>${this.translate.instant('LEGAL NOTICE')}</h1>
     ${this.translate.instant('LEGAL DEFAULT MESSAGE')}
     ${this.translate.instant('LEGAL EDIT HINT')}`;
-  }
-
-  ngOnInit() {
-
-
   }
 
 }
