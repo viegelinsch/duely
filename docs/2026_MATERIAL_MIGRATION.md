@@ -702,24 +702,56 @@ above the served root.
     directory before building, precisely so these Angular-4-era files cannot survive next to
     `browser/`.
 
-11. **NEW in backlog-emptying Phase 6 — `@angular-devkit/build-angular` is now a dead devDependency,
-    and it is the only reason Webpack is still installed.** All three architect targets in
-    `angular.json` are `@angular/build:*` (`application`, `dev-server`, `unit-test`); there is no
-    `extract-i18n`, `lint` or `e2e` target. `npm ls @angular-devkit/build-angular --all` shows only
-    the root edge, and a recursive scan of every installed manifest found **0** packages declaring it
-    as a dependency, peer or optional peer — so unlike `@angular/animations` on v20 it is *not*
-    load-bearing. Removing the 15 Webpack-era devDependencies therefore did **not** delete the
-    toolchain: npm **de-hoisted** it into
-    `node_modules/@angular-devkit/build-angular/node_modules/*` (webpack 5.105.0, webpack-dev-server
-    5.2.2, copy-webpack-plugin 14.0.0, css-loader 7.1.2, mini-css-extract-plugin 2.9.4, postcss
-    8.5.6, postcss-loader 8.1.1, sass-loader 16.0.5, autoprefixer 10.4.21, serialize-javascript
-    7.0.5, plus `@ngtools/webpack`, `babel-loader`, `less-loader`, `terser`, …). It was **kept** in
-    Phase 6 deliberately: dropping it needs a second lockfile regeneration, a second
-    `docker compose build duely-dev` and a full gate re-run, which would have expanded this phase.
-    `webpack-dev-server`, `postcss`, `postcss-selector-parser` and `less` are still `npm audit`
-    entries **solely** because of it. **Phase 7 or a dedicated dependency-hygiene step should remove
-    it**; until then the "Webpack retired" claim is true of the *pipeline* and of the *direct*
-    dependency list, not of `node_modules`.
+11. **CLOSED by task #52 (commit C, 2026-09-18) — `@angular-devkit/build-angular` is removed, and the
+    Webpack toolchain is now gone from `node_modules` too.** *Background:* it became a dead
+    devDependency in backlog-emptying Phase 6, when all three `angular.json` architect targets moved to
+    `@angular/build:*` (`application` line 18, `dev-server` line 70, `unit-test` line 85); there is no
+    `extract-i18n`, `lint`, `e2e`, `app-shell`, `prerender`, `server` or `deploy` target. It was kept in
+    Phase 6 — and deliberately *not* folded into Phase 7's dead-code commit `67d9465` — because a
+    dependency change forces its own lockfile regeneration, image rebuild and full gate re-run, and
+    mixing that with source deletions would have made the dead-code commit non-revertable in isolation.
+    *Verification before removal:* `npm ls @angular-devkit/build-angular --all` showed only the root
+    edge, and a recursive scan of **1280** installed manifests found **0** packages declaring it as a
+    dependency, peer or optional peer — so unlike `@angular/animations` on v20 it was not load-bearing.
+    The only tracked references were the `package.json` declaration itself plus prose in this document.
+
+    **What landed (commit C):** the `"@angular-devkit/build-angular": "^20.3.23"` line was removed from
+    `package.json` devDependencies; the lockfile was regenerated **inside Docker**
+    (`npm install --package-lock-only`); the image was rebuilt **once** (`docker compose build
+    duely-dev`, `3d6688fb1034` → `e73798458084`) so the pruned tree is baked in. `@types/file-saver`
+    and `@types/compression` were deliberately **not** touched, and no source, `angular.json`, tsconfig,
+    `Dockerfile` or `docker-compose.yml` was modified.
+
+    **Lockfile delta:** `packages` keys **1407 → 1076** (nodes **1406 → 1075**, **−331**); file
+    **18,523 → 13,915 lines** (**−4,608**). The exclusive transitive closure that left includes
+    `webpack` 5.105.0, `webpack-dev-server`, `postcss-selector-parser`, `less`, `source-map-loader`,
+    `copy-webpack-plugin`, `css-loader`, `@ngtools/webpack`, `babel-loader`, `terser`, `autoprefixer`,
+    `sass-loader`, `mini-css-extract-plugin`, `serialize-javascript`, `postcss-loader`, `less-loader`
+    and the whole de-hoisted `@angular-devkit/build-angular/node_modules/*` subtree. The 1,854
+    insertions in the lockfile diff are **re-hoistings, not new dependencies**: packages that had been
+    deduped *under* build-angular (`@angular-devkit/core`, `@angular-devkit/schematics` and their deps
+    `ajv`, `chalk`, `ora`, …) were promoted to the top level at the **same versions** for
+    `@angular/cli`. `npm audit` exposure dropped **60 → 45**.
+
+    **postcss correction:** the prior claim that `postcss` was an audit entry "solely because of"
+    build-angular was **incomplete**. The de-hoisted `postcss` **8.5.6** under build-angular did leave,
+    but `postcss` **8.5.9 remains** as a legitimate dependency of `@angular/build` (via `beasties` and
+    `vite`). `webpack-dev-server`, `postcss-selector-parser` and `less` are genuinely gone.
+
+    **Post-removal state:** `npm ls @angular-devkit/build-angular` → `(empty)`; the directory
+    `node_modules/@angular-devkit/build-angular` is absent; `npm ls --depth=0` is clean (no
+    extraneous/UNMET/invalid). The "Webpack retired" claim is now true of the *pipeline*, the *direct*
+    dependency list **and** `node_modules`.
+
+    **Gates (all in Docker, rebuilt image `e73798458084`; Node 24.21.0, npm 11.19.0, TS 5.9.3):**
+    G1/G1b/G1c/G2 `tsc --noEmit` exit 0; G3 `npm run build` exit 0 (dev initial 5.43 MB, 0 unused-file
+    warnings); G4 `npm test` 24F/47P (71), 5F/11P files (16), 44 icon errors, 0 NG8xxx, failing-name
+    diff vs baseline **EMPTY**, names md5 `172d78996b50c84e38211b529d76ab0b` unchanged; G5
+    `npm run build:prod` exit 0, **0 budget warnings**, initial **2.37 MB / 372.17 kB**. Because commit
+    C changes **no** file under `client/`, the production bundle is **byte-identical to Phase 7**:
+    `main-XSJNV6OY.js` **2,157,313 B** (sha256 `34c0e0ef…`), `chunk-OBZMNR63.js` 157,016 B,
+    `chunk-VOEP2MIL.js` 67,773 B, `polyfills-5CFQRCPP.js` 34,585 B, `styles-DRBU42VC.css` 20,951 B,
+    `index.html` 10,687 B — every artefact and hash unchanged. i18n parity 138/138 preserved.
 
 ---
 
@@ -873,7 +905,7 @@ irreplaceable content is the *starting* point of the modernization, recorded now
 | Angular | 4.4.6 (2017) | **^20.3.18** — via 19.0.0 |
 | TypeScript | 2.4.0 | **~5.9.3** — via 5.7.2 |
 | RxJS | 5.5.7 | **~7.8.1** |
-| Webpack | 2.6.1 | **removed entirely** by backlog-emptying Phase 6. It had reached ^5.97.1 (5.105.0 resolved); the pipeline was broken — backlog (e) — and `scripts/build.mjs` replaced it. Webpack is still *installed*, de-hoisted under the now-dead `@angular-devkit/build-angular` (§7 deviation 11) |
+| Webpack | 2.6.1 | **removed entirely** by backlog-emptying Phase 6. It had reached ^5.97.1 (5.105.0 resolved); the pipeline was broken — backlog (e) — and `scripts/build.mjs` replaced it. Webpack stayed *installed* (de-hoisted under the dead `@angular-devkit/build-angular`) only until task #52 (commit C) removed that package and pruned the entire Webpack subtree from `node_modules` — §7 deviation 11 (CLOSED) |
 | Electron | 1.8.4 | **^34.0.0** (34.5.8 resolved) |
 | zone.js | 0.8.20 | **~0.15.0** |
 | Removed entirely rather than upgraded | core-js 2.5.3, node-sass, PhantomJS, `intl`, Protractor 5.3.0, TSLint 5.9.1, Karma 2.0.0, Jasmine 3.1.0, Bootstrap 3.3.7, ngx-bootstrap, `ng2-datepicker`, `ng2-slimscroll`, `@angular/http` | absent from `package.json`; the dead `protractor.conf.js` and `tslint.json` files are backlog (g) |
