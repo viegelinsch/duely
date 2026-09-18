@@ -202,6 +202,12 @@ A standalone parent cannot import a non-standalone child, so the order is forced
 > above: the component builds its HTML via `translate.instant()` in the constructor. Confirm whether
 > these keys were inside `docs/TODO-untranslated-strings.md`'s recorded scope before assuming they
 > are a new defect.
+>
+> **[Resolved 2026-09-18, task #49.]** `docs/TODO-untranslated-strings.md` was retired on that date;
+> the answer is preserved in `docs/2026_MIGRATION_BACKLOG.md` §3(e): **confirmed yes** — both keys
+> came from Section C items C4/C5 in commit `dd11df7`, so `/legal` rendering raw keys is not a new
+> defect but the documented consequence of the `.instant()`-in-constructor decision, already tracked
+> as §2(g)-11 / Phase 10.3.
 
 ---
 

@@ -18,10 +18,10 @@ execute `npm i -g windows-build-tools`.
 - Install dependencies: `npm install`
 - Build project from source: `npm run build:prod`
 
-### Optional: Generate documentation and test results
-- Run `npm run doc`. You will find the generated documentation inside the `doc` folder.
-- Run `npm run test:chrome` to execute the unit tests and to show the results in your Chrome browser. You can replace `chrome` with `firefox` if you choose to do so.
-- Run `npm run selenium` in one console. Keep it running and execute `npm run e2e` (still within the source folder) in another one to execute the end to end tests and to show them in the console.
+### Optional: Run the tests
+- Run `npm run test` to execute the unit tests once (Vitest via `ng test`). Use `npm run test:watch`
+  to keep them running in watch mode, or `npm run test:coverage` to also write a coverage report.
+- Run `npm run test:e2e` to execute the end to end tests (Playwright) and to show the results in the console.
 
 ## Verify local installation
 You can try out the application by starting it on your local machine.
@@ -90,15 +90,10 @@ server {
 
 ## Package Electron as an application
 
-If you don't want to serve Duely from a server but generate a native Desktop application insted, you will need to package it for the targeted operating system.
-
-- After building, use `npm run package:win` to package the application for Windows x64.
-Packaging allows to install the resulting folder on any corresponding machine as a native application.
-- For Linux, replace `:win` with `:linux`
-- For MacOS, replace `:win` with `:mac`
-- For 32-bit systems append `:32`, e.g. `npm run package:win:32`
-
-You will find the resulting folders inside the `dist/` directory.
+Packaging Duely into a native Desktop application is currently not available: the repository
+defines no packaging script, so there is no `npm run` command that produces platform installers
+or binaries. `npm run build:electron:prod` builds the Electron bundle into `dist/electron/`, but
+turning that output into a packaged, installable application is not wired up yet.
 
 ## Full command overview
 You can find a full overview over the options inside the README file.

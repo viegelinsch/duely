@@ -3,6 +3,15 @@
 **Date:** 2026-09-12
 **Recorded at:** commit `b88b3cf`, branch `dev-v2`.
 
+> **NOTE (updated 2026-09-18 by task #49):** this file remains slated for emptying and deletion in
+> Phase 13 (task #38). The task #45 correction was applied in-place (§1(d)) and stands. Task #45's
+> "no new content should be added beyond that" is **superseded**: on 2026-09-18, **by direct user
+> instruction**, task #49 added **§3** — the consolidated open issues of the now-deleted
+> `docs/TODO-untranslated-strings.md` — because that file was retired and §3 is the only surviving
+> record of its content. **Phase 13 MUST carry §3(a), §3(b) and §3(c) (OPEN) and §3(d)
+> (closed-by-decision, limitation material) forward into `docs/2026_KNOWN_LIMITATIONS.md` instead of
+> discarding them with the rest of this file.** No further additions are expected after §3.
+
 ## Scope
 
 This is the committed record of the migration's deferred work that has **NO phase owner** — the
@@ -197,8 +206,11 @@ itself (the JIT → AOT / `ts-loader transpileOnly` → esbuild rework) is post-
 > - **All four configs deleted** — `webpack.config.js`, `webpack.client.config.js`,
 >   `webpack.electron.config.js`, `webpack.server.config.js` — plus `postcss.config.js`, whose only
 >   consumers were `postcss-loader`/autoprefixer inside the deleted CSS chain. `ts-loader
->   { transpileOnly: true }` no longer exists, so **nothing in the repo builds without type-checking
->   any more.**
+>   { transpileOnly: true }` no longer exists — the only build mechanism that explicitly disabled
+>   type-checking is gone. However, the two Node-side bundles (`server/app.ts`, `electron/main.ts`)
+>   are built by esbuild (`scripts/build.mjs`), which strips types without checking them
+>   (functionally equivalent to `transpileOnly`); their type correctness is ensured by separate
+>   `tsc --noEmit` gates **G1b** and **G1c**, not by the build command itself.
 > - **Replaced by `scripts/build.mjs`**, a native Node 24 ESM script using esbuild's **Node API**.
 >   `npm run build:prod` exits **0** and the artefact was **runtime-probed**, not just built:
 >   `node dist/server/app.js` then `curl -I http://localhost:8000/` → **200** with the built
@@ -308,3 +320,230 @@ Recorded so the rationale survives; do not re-litigate without new evidence. (Al
 | Mirroring Bootstrap's 12-column grid or drop-in identical class names | rejected by the user's layout decision in favour of seven intention-revealing classes; drop-in names would leave Bootstrap vocabulary in the codebase permanently, contradicting "remove Bootstrap entirely". |
 | Webpack/`ts-loader transpileOnly` JIT → `ng build` esbuild AOT, plus its neighbours (route-level lazy loading, shared `HolidayCatalogService`, `OnPush`, trimmed moment-timezone build, Playwright service) | all excluded by the "blocking fixes only" scope decision; the AOT item is the most consequential — see (e). **The AOT/Webpack-retirement half was subsequently DONE by backlog-emptying Phases 5–6, so (e) is CLOSED; the neighbours listed with it remain open and unowned.** |
 | ESLint flat config, dead Protractor/tslint deletion, the missing `environment.prod.ts`, an en/de key-parity test, the 7 unused ngx-bootstrap i18n keys, the 4 `aria-label="Left Align"` copies | excluded by the same scope decision; see (a), (d), (f) and (g). |
+
+---
+
+## 3. i18n / untranslated-string backlog (no phase owner)
+
+Consolidated here on **2026-09-18 by task #49** from `docs/TODO-untranslated-strings.md`, which was
+deleted in the same step. Everything below is that document's content, re-verified read-only against
+the working tree at task #49 (no build, test or container was run).
+
+> **PHASE 13 CARRY-FORWARD — MANDATORY.** Because the source file is gone, **this section is the only
+> record of it**. Phase 13 (task #38) empties and deletes this file; when it does it **MUST** move
+> **§3(a)**, **§3(b)** and **§3(c)** (the OPEN items) and **§3(d)** (the five deliberately
+> untranslated strings — accepted-limitation material) into `docs/2026_KNOWN_LIMITATIONS.md`, in that
+> document's *what the limitation is · why it is accepted · what the risk is · what would change the
+> decision* form. §3(e) is a closed historical record: Phase 13 may compress it, but it must keep the
+> **PLAN Correction 11 answer** and the **attribution of the agent-proposed wording**, both of which
+> are referenced from outside this file. Losing any OPEN item here is the worst possible outcome of
+> this consolidation.
+
+**Provenance.** The source was the record of the **2026-09-11 i18n pass** on branch `dev-v2`, applied
+on top of `443f17c` (the TS2322 + TS2531 remediation) and **committed as `dd11df7`
+`feat(i18n): apply missing translations and make calendar metadata configurable`**. Its scope was
+every user-visible string in `client/app/**/*.html` and `client/app/**/*.ts` plus `client/index.html`,
+cross-referenced against `client/assets/i18n/en.json` / `de.json`. Two of the source's own
+provenance claims were **stale and are corrected here**: it said the i18n changes were "left
+uncommitted in the working tree" (they are in `dd11df7`) and that the file itself was untracked after
+a plain `mv` from the repo root (it **was** tracked; `git ls-files` matched, last touched by
+`97e3120`). The i18n mechanism it documented is now: `@ngx-translate/core` +
+`@ngx-translate/http-loader` with `new TranslateHttpLoader(http, './assets/i18n/', '.json')` — the
+source cited `app.module.ts:53-55`, but `app.module.ts` no longer exists (Phase 5 deleted it); the
+equivalent config is `client/app/app.config.ts:25-37,51`, with `translate.setDefaultLang('en')` at
+`client/app/app.component.ts:46` and available langs `['de','en']`. Key-naming convention:
+**`UPPER CASE WITH SPACES`**.
+
+> **Cross-reference — Phase 12 (task #37, the en/de key-parity test, §2(g)-7).** Untranslated strings
+> are squarely inside Phase 12's subject area, so items a parity test touches are marked
+> **[Phase 12]** below. The boundary matters: Phase 12 asserts that `en.json` and `de.json` hold
+> **identical key sets**, so it can detect none of §3(a) (orphaned keys), §3(b) (unconfirmed wording)
+> or §3(c) (no runtime verification) — all three are perfectly symmetric across the two locales.
+> Measured at task #49: **138 keys in each file, empty symmetric difference.** Task #49 does **not**
+> change Phase 12's scope; these are notes for whoever executes it.
+
+### 3(a) OPEN — the 12 orphaned locale keys (source "Section D", deliberately untouched)
+
+The source's status was "**DELIBERATELY UNTOUCHED** … content unchanged … Removing them is optional
+future cleanup, out of scope for this task." They were never removed and are **still open**.
+
+| # | Unused key | EN value | DE value | Likely origin (verbatim from the source) |
+|---|---|---|---|---|
+| D1 | `TIME` | `time` | `Zeit` | superseded by `TIMEZONE` / `TIMES` / `TIME COUNT` |
+| D2 | `UNTIL YEAR` | `Until year` | `Bis zum Jahr` | old recurrence "ends" UI (now uses `UNTIL`) |
+| D3 | `TODAY` | `Today` | `Heute` | old date-picker button |
+| D4 | `CLEAR` | `Clear` | `Entfernen` | old date-picker button |
+| D5 | `SELECT YEAR` | `Select Year` | `Jahr auswählen` | old date-picker year view |
+| D6 | `MO` | `Mo` | `Mo` | old date-picker weekday header (the `'MO'` literals in `appointments.service.ts` are iCal `byDay` constants, not translate keys) |
+| D7 | `TU` | `Tu` | `Di` | old date-picker weekday header |
+| D8 | `WE` | `We` | `Mi` | old date-picker weekday header |
+| D9 | `TH` | `Th` | `Do` | old date-picker weekday header |
+| D10 | `FR` | `Fr` | `Fr` | old date-picker weekday header |
+| D11 | `SA` | `Sa` | `Sa` | old date-picker weekday header |
+| D12 | `SU` | `Su` | `So` | old date-picker weekday header |
+
+**Re-verified at task #49:** all 12 keys are still present in **both** `en.json` and `de.json`, both
+files are still exactly symmetric (**138 / 138**), and no `| translate` or `translate.instant()`
+reference to any of the 12 exists under `client/`. The only `'MO'`…`'SU'` literals in the sources are
+iCal `byDay` constants (`appointments.service.ts:268,291,328,330,369,371,400,433,446,484,486,526,528`,
+`RecurrencePattern.ts:209-229`, plus spec fixtures) — exactly the trap the source's D6 note warned
+about. **[Phase 12]** deleting them preserves parity only if they go from **both** locales together.
+
+> **Probable overlap with §2(g)-8 — Phase 10.3 (task #35) must reconcile, not double-delete.**
+> §2(g)-8 is "the 7 unused ngx-bootstrap i18n keys", which Phase 10.3 deletes from both locales while
+> keeping "138 EN / 138 DE equal". D6–D12 are exactly **7** keys (`MO TU WE TH FR SA SU`), all
+> unreferenced, all from the old date-picker — very likely the same seven, but **neither document
+> enumerates the §2(g)-8 set**, so this is recorded as *probable*, not proven. Whoever runs 10.3 must
+> decide it explicitly: if the sets are identical, D6–D12 close there and only **D1–D5** (`TIME`,
+> `UNTIL YEAR`, `TODAY`, `CLEAR`, `SELECT YEAR`) stay unowned here; if they are not, the two deletions
+> must not race. No phase owns D1–D5.
+
+### 3(b) OPEN — three Settings labels whose wording was agent-proposed and never confirmed
+
+U6 of the source made the iCal product metadata user-configurable (see §3(e)) and added three UI
+labels for it. The source's own flag, verbatim: "The user did not supply any wording for these three
+labels, so **all six values (3 EN + 3 DE) are agent-proposed and need user confirmation.**" No
+confirmation is recorded anywhere in the repo and the values are byte-identical to `dd11df7`, so the
+request is **still open**.
+
+| Key | EN | DE | Renders at (verified) | Attribution |
+|---|---|---|---|---|
+| `CALENDAR NAME` | Calendar name | Kalendername | `client/app/settings/settings.component.html:101` | agent-proposed — **please confirm** |
+| `CALENDAR PRODUCT ID` | Product ID | Produkt-ID | `client/app/settings/settings.component.html:105` | agent-proposed — **please confirm** |
+| `CALENDAR URL` | Calendar URL | Kalender-URL | `client/app/settings/settings.component.html:109` | agent-proposed — **please confirm** |
+
+Decision needed: confirm the six values as-is, or supply replacements. **[Phase 12]** either outcome
+keeps parity provided both locales are edited together. Related context Phase 13 already owns
+elsewhere: the backing settings fields default to the former hardcoded literals at
+`storage.service.ts:34-36` — `calendarName: 'Duely'`, `calendarProdId: '//TU Braunschweig//Duely//EN'`,
+`calendarUrl: 'https://duely.tu-braunschweig.de'` — consumed at `appointments.service.ts:67-69`
+(`name` / `prodId` / `url`), i.e. the hardcoded TU Braunschweig calendar defaults that Phase 13 lists
+as an accepted risk.
+
+### 3(c) OPEN — the i18n pass was never verified at runtime
+
+The source's final section, "**Could NOT be verified**", stated that because the application bundle did
+not build (the pre-existing NG8xxx / TS cluster), **no runtime or browser verification was possible**:
+"the actual rendered date-picker labels, the legal-notice page text, the collision 'excluded by user'
+reason, and the new Settings fields could not be exercised in a running app or by unit tests. These
+were verified by static analysis and by the type-check/compiler deltas only."
+
+**Still open, but the blocker is gone** — Phases 5–6 made `npm run build:prod` exit 0 and the
+artefact was runtime-probed (see §2(e)), so all four checks are now cheap and actionable. Current
+state of each:
+
+1. **Rendered date-picker labels** — partly moot: the audited `ng2-datepicker` UI was replaced by the
+   Material datepicker during the migration, so what needs checking now is Material's own
+   locale-driven labels, not the strings the 2026-09-11 pass touched.
+2. **Legal-notice page text** — has an owner: Phase 10.3 (task #35, §2(g)-11) must "**browser-verify
+   `/legal` in both locales**" when it rebuilds `legal.component.ts` on `translate.onLangChange`. That
+   discharges this item; until then it is open, and PLAN Correction 11 records that the live `/legal`
+   screen currently renders the **raw keys**.
+3. **The collision "excluded by user" reason** — no owner, never exercised. The string now comes from
+   `translate.instant('EXCLUDED BY USER')` at `appointments.service.ts:576`.
+4. **The three new Settings fields** (U6) — no owner, never exercised in a running app.
+
+No phase owns 1, 3 or 4. **[Phase 12]** a key-parity unit test does **not** discharge this item.
+
+### 3(d) CLOSED BY DECISION — five strings deliberately left untranslated (source U1–U5)
+
+These are **not open work**: the source recorded each as "**NOT changed**" and listed them under
+"Deliberately NOT done (out of scope)". They are carried here because Phase 13's
+`docs/2026_KNOWN_LIMITATIONS.md` is their correct home — **U5 above all**, which is a permanent
+architectural gap rather than a pending fix. All five locations were re-verified at task #49; where
+the source's line numbers drifted during the migration, both are given.
+
+| # | String | Location now (source cited) | Reason it is deliberately not translated |
+|---|---|---|---|
+| U1 | `Open Source` | `client/app/about/about.component.html:12` (`:11`) | Loan term, identical in DE; out of scope for that pass |
+| U2 | `Mozilla Public License v2.0` | `client/app/about/about.component.html:13` (`:12`) | Proper licence name; conventionally not translated |
+| U3 | Developer names — Till Affeldt, Mike Kenneth Braun, Marlen Bernier, Frederik Kammer, Lars Richard | `client/app/about/about.component.html:22-26` (`:19-23`) | Proper nouns; never translated |
+| U4 | `Deutsch` / `English` | `client/app/settings/settings.component.ts:105,107` (`:80,82`) | Language endonyms; each language is shown in its own spelling by convention |
+| U5 | `Duely - iCal generator` document title | `client/index.html:5` | Static title outside the Angular app; not covered by `@ngx-translate` — the browser tab title can never be translated by the current mechanism |
+
+### 3(e) CLOSED / RESOLVED — record of the applied i18n pass (history preserved)
+
+The source's headline status was **RESOLVED (translations applied to the codebase), 2026-09-11**.
+Every item below was verified as actually present in the working tree at task #49.
+
+**The 8 keys added by the pass** (all present in both locales, unchanged since `dd11df7`):
+
+| Key | EN | DE | Attribution as recorded by the source |
+|---|---|---|---|
+| `SELECT DATE` | Select date | Datum auswählen | **Supplied by the user** (EN `Select date`, DE `Datum auswählen`). The key was **renamed** from the convention-violating `SELECT_DATE` at the user's request; the old identifier existed in no locale file and now appears nowhere in `.html`/`.ts`/`.spec.ts`/JSON. Rendered at `appointment-form.component.html:40,61` and `recurring-settings.component.html:144,213` (source cited `:55,:76` and `:220,:275`) |
+| `DEBUG OUTPUT` | Debug output | Debug Ausgabe | Not stated; EN derives from the former hardcoded `DEBUG-OUTPUT` string (C2), DE written for the pass. Rendered at `creator.component.html:63` (source cited `:58`) |
+| `LEGAL DEFAULT MESSAGE` | This is the default legal notice message. | Dies ist der Standardtext für die rechtlichen Hinweise. | EN = the former hardcoded string (C4); DE written for the pass |
+| `LEGAL EDIT HINT` | To add your own, please edit the 'content' variable in static/main.bundle.js! | Um ihren eigenen Text hinzuzufügen, ändern Sie bitte die Variable 'content' in static/main.bundle.js! | EN = the former hardcoded string (C5); DE written for the pass |
+| `EXCLUDED BY USER` | excluded by user | vom Benutzer ausgeschlossen | Both values = the two literals of the former hand-rolled `this.language === 'de' ? … : …` ternary (C6) |
+| `CALENDAR NAME`, `CALENDAR PRODUCT ID`, `CALENDAR URL` | see §3(b) | see §3(b) | **Agent-proposed, still unconfirmed → §3(b)** |
+
+Reused rather than added: **`REQUIRED25`** (C1, replacing the hardcoded `max. 25 letters required`,
+now at `appointment-form.component.html:12,22`) and **`LEGAL NOTICE`** (C3, the `<h1>`, now at
+`legal.component.ts:34`). Other closed sections: **A** (`SELECT_DATE` missing key) DONE; **B**
+(asymmetric keys) NONE — the locales were and remain symmetric; **C1–C6** (six hardcoded user-visible
+strings) DONE; **U6** (iCal product metadata made configurable) DONE.
+
+**C6's design decision, as recorded** (kept because it explains the current constructor signatures):
+`RecurrencePattern` and its four subclasses are **not DI-managed** — they are created with `new` inside
+`CollisionDetector.getCollisions()`, itself created with `new` inside
+`AppointmentsService.addEventToCalendar()`; the subclasses declare no own constructor and the existing
+`language` parameter is still required for public-holiday localisation
+(`hd.setLanguages([this.language])`, `RecurrencePattern.ts:46`), so it could not be repurposed. The
+chosen shape — "pass the already-translated reason in from the DI-managed caller": (1)
+`AppointmentsService` injects `TranslateService` and resolves `translate.instant('EXCLUDED BY USER')`
+(`.instant()` because collision detection runs synchronously); (2) the resolved string is a **new
+optional 4th constructor argument** on `CollisionDetector`, forwarded to each `*RecurrencePattern`;
+(3) `RecurrencePattern` stores it in `excludedByUserReason` and uses it directly, so the locale JSON
+files are the single source of truth. The parameter is **optional with an English default**
+(`= 'excluded by user'`) purely so direct non-DI instantiation such as
+`new CollisionDetector(undefined, userExcludedDates, 'de')` in `CollisionDetector.spec.ts` keeps
+compiling (no `TS2554`) and its assertion holds regardless of the `'de'` argument. Verified current:
+`CollisionDetector.ts:44-49` (4th optional param, forwarded at `:63,68,73,78`) and
+`RecurrencePattern.ts:24,28,32,129`.
+
+**C3–C5's implementation note, as recorded:** `LegalComponent` injects `TranslateService` and
+assembles its `content` HTML in the constructor with `.instant()` — chosen over `.get()` because the
+string is built synchronously and interpolated into a template literal, whereas `.get()` returns an
+`Observable`. Current: `legal.component.ts:31-36`.
+
+> **Answer to PLAN Correction 11 (preserved here because the source file is deleted).**
+> `docs/2026_MIGRATION_PLAN.md:200-204` asks: "Confirm whether these keys
+> (`LEGAL DEFAULT MESSAGE`, `LEGAL EDIT HINT`) were inside `docs/TODO-untranslated-strings.md`'
+> recorded scope before assuming they are a new defect." **Confirmed — yes.** Both keys were
+> **introduced by that document's Section C, items C4 and C5**, in commit `dd11df7`; the EN values are
+> verbatim the previously hardcoded strings. They are therefore **not** a new defect and not a
+> translation gap: the raw-key rendering on `/legal` is the documented consequence of the C3–C5
+> `.instant()`-in-the-constructor decision above, which runs before the locale JSON is loaded. It is
+> already tracked as **§2(g)-11**, owned by **Phase 10.3 (task #35)** — rebuild on
+> `translate.onLangChange`. Do not open a second item for it.
+
+> **New observation recorded at consolidation time (task #49, not from the source).** The user-visible
+> text of `LEGAL EDIT HINT` instructs the reader to "edit the 'content' variable in
+> **`static/main.bundle.js`**" in both locales. That path is a Webpack-era artefact: `find dist -name
+> "*main.bundle*"` returns nothing, and §2(e) records that Phase 6 retired the Webpack pipeline for
+> `scripts/build.mjs` + esbuild with hashed asset names. The hint is therefore **stale in both
+> languages**, and §2(g)-11's rebuild is the natural moment to correct the wording (a content change
+> to two locale values — deliberately **not** made by task #49, which is documentation-only).
+
+**Items the source reported as open that have since closed** (do not resurrect them):
+
+- `appointments.service.spec.ts` "provides only `[AppointmentsService, StorageService]`; once the suite
+  can build it will need `TranslateModule.forRoot()` (or a mock) added. Reported, not fixed." —
+  **fixed since**: the spec imports `TranslateModule` at `:5` and configures
+  `imports: [TranslateModule.forRoot()]` at `:43`.
+- The **NG8004 caveat** ("known unfixed cluster", 98 → 103, +5 from the new pipes) — **superseded**:
+  the source's own 2026-09-14 historical-snapshot annotation states the current post-Phase-0–8 state
+  is **0 NG8xxx** in `npm test`.
+- The source's **verification numbers** — tsc TOTAL **154 → 154**, TS2322 = 0, TS2531 = 0, TS2564
+  **7 → 7**, NG8004 **98 → 103 (+5)**, NG8002 69, NG8103 41, NG8001 21, NG5002 2, and "the
+  application bundle still fails to build" — are the **pre-migration baseline of 2026-09-11 only**,
+  kept as that pass's audit trail. Both tsc gates now exit 0 and `ng build` succeeds; **never quote
+  these as current**.
+- The source's **TS2564 note** on U6 ("`settings.component.ts` already has 6 pre-existing TS2564
+  errors … count stayed at 7 total") and its **TestBed note** on `legal.component.spec.ts` (corrected
+  in-file on 2026-09-14: the claimed `TS2305 async` / `TS2307 @angular/http` / `TS7006` errors no
+  longer exist and `TranslateModule.forRoot()` is already in that spec's `TestBed`) — both closed.
+- The source's "Deliberately NOT done" technical bullet list (standalone migration, moment-timezone
+  import fix, ical-generator typing, `async` → `waitForAsync`, `@angular/http`, `rxjs/Subscription`,
+  TS2564/TS1272/TS2872 cleanups, Bootstrap→Material, Protractor/ESLint dead config, upgrade-docs
+  consolidation) — its own 2026-09-14 update records that **every** item was completed by Phases 0–8.

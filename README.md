@@ -35,7 +35,12 @@ For the server application the following browser are supported:
 ### Installing
     1. Download the application
     2. Execute `npm install` to install dependencies
-    3. Execute `npm run build` to compile source code
+    3. Execute `npm run build` to compile the source code for the web application, or
+       `npm run build:electron` to compile it for the Electron app. `npm run build:prod`
+       compiles both in production mode. For the Electron app a plain `npm run build` emits
+       `dist/electron/index.js` as its only artefact: it creates no `dist/electron/static/` and
+       copies no `dist/electron/package.json`, `manifest.json` or `LICENSE`, so
+       `npm run start:electron` needs `npm run build:electron` or `npm run build:prod` first.
     4. Start the application via `npm run start:server` to view the webapplcation or `npm run start:electron` to run the electron app
     5. if you started the server application type `http://localhost:8000`in your browser window.
 
@@ -43,27 +48,17 @@ For the server application the following browser are supported:
 ### Commands Overview
 |Command | Action|
 | ------------- | --------------------- |
-|`build`| Compile the source code for Electron and web use`|
+|`build`| Compile the source code for Electron and web use|
 |`build:prod`| Build the source code in production mode|
-|`build:watch`| Build the source code and watch for changes|
+|`build:watch`| Build the two Node-side bundles (`electron/main.ts`, `server/app.ts`) and keep watching them for changes. The Angular client is not watched - use `npm run serve` for client hot reload|
 |`build:electron`| Build the Electron code only|
 |`build:electron:prod`| Build the Electron code in production mode|
 |`build:server`| Build the server code only|
 |`build:server:prod`| Build the server code in production mode|
 |`clean`| Remove local files and unneeded dependencies|
-|`doc`| Generate documentation from comments|
-|`e2e`| Run end to end tests|
+|`serve`| Serve the Angular client from memory with hot reload on `http://localhost:4200` (`ng serve`)|
+|`test:e2e`| Run the end to end tests (Playwright)|
 |`lint`	| Check format of source code|
-|`package`| Package the Electron app for working system|
-|`package:linux`| Package the Electron app for Linux x64|
-|`package:linux:32`| Package the Electron app for Linux x32|
-|`package:mac`| Package the Electron app for Mac OS x64|
-|`package:mac:32`| Package the Electron app for Mac OS x32|
-|`package:win`| Package the Electron app for Windows x64|
-|`package:win:32`| Package the Electron app for Windows x32|
-|`package:all`| Package the Electron app for all x64 systems|
-|`package:all:32`| Package the Electron app for all x32 systems|
-|`selenium`| Boot a selenium server for e2e tests|
 |`start:server`	| Start the Node.js server|
 |`start:electron`| Start the Electron app|
 
@@ -72,23 +67,26 @@ For the server application the following browser are supported:
 When making changes to the source code make sure to run `npm run build` afterwards
 in order to apply the changes to your local copy.
 You can execute `npm run build:watch` instead. This will not only apply previous edits
-but also watch for file changes. Do not close the terminal until you are done. You can cancel the
-command by pressing Ctrl + C twice.
+but also keep watching `electron/main.ts` and `server/app.ts` and rebuild those two Node-side
+bundles on every change. The Angular client is not watched by this command: its supported
+hot-reload path is `npm run serve` (`ng serve`), which serves the client from memory on
+`http://localhost:4200` rather than writing to `dist/`. Do not close the terminal until you are
+done. You can cancel the command by pressing Ctrl + C.
 If you run into problems with files that should have updated, try running npm run clean and then
 npm run build to remove outdated files and start on a fresh base.
 
 ## Running unit tests
 
+Unit tests run on [Vitest](https://vitest.dev/) through the Angular CLI (`ng test`, using the
+`@angular/build:unit-test` builder). Use the following npm scripts:
+
 Command | Action
 | ------------- | --------------------- |
-| `test`  | Run unit tests using PhantomJS |
-| `test:chrome` | Run unit tests using Chrome |
-| `test:chrome:dev` | Run unit tests using Chrome Canary |
-| `test:firefox` | Run unit tests using Firefox |
-| `test:firefox:dev` | Run unit tests using Firefox Developer Edition |
-| `test:opera` | Run unit tests using Opera |
-| `test:safari` | Run unit tests using Safari |
-| `verify` | Run `test`, `lint` and `e2e` for validation |
+| `test` | Run the unit tests once (`ng test --watch=false`) |
+| `test:watch` | Run the unit tests in watch mode (`ng test`) |
+| `test:coverage` | Run the unit tests once and write a coverage report (`ng test --coverage --watch=false`) |
+
+End to end tests run on Playwright via `npm run test:e2e` (see the Commands Overview above).
 
 
 ## Deployment
@@ -96,15 +94,10 @@ Command | Action
 Before you can deploy the application you will need to build it for production mode.
 Use `npm run build:prod` to do so. The :prod appendix will enable truncating and bundling the code
 to minimize the file size.
-The Electron app will need to be packaged into an executable file as well.
-Utilize `npm run package:all` to create binaries for all supported operating systems
-with x64 architecture. For x32 architecture `run npm run package:all:32`. You can also target
-individual systems by writing `npm run package:linux`. Replace linux with win or mac
-appropriately. For x32 architectures append :32 to the command.
-
-You can also use `npm run package` without any parameters to build binaries for your own operating
-system. This should only be used for testing as the files will not be bundled and will not come
-with an installer.
+Packaging the Electron app into a distributable, installable executable is currently not
+available: the repository defines no packaging script, so there is no `npm run` command that
+produces platform binaries or installers. `npm run build:electron:prod` builds the Electron
+bundle into `dist/electron/`, but turning that output into a packaged application is not wired up.
 
 ## Contributing
 
@@ -115,16 +108,13 @@ We use Git for versioning. For the versions available, see the tags on this repo
 
 Packages that are to stay on this versions:
 
-    "bootstrap": "^3.3.7",
-    "@types/jasmine": "2.5.38",
-    "@types/node": "^6.0.80",
-    "awesome-typescript-loader": "^3.2.1",
-    "extract-text-webpack-plugin": "^2.1.2",
-    "postcss-loader": "^0.13.0",
-    "postcss-url": "^5.1.2",
-    "typescript": "^2.4.0",
-    "webpack": "^2.6.1",
-    "webpack-dev-server": "~2.3.0"
+    "esbuild": "0.25.9"
+
+`esbuild` is the only dependency pinned to an exact version: `scripts/build.mjs` builds and
+watches the two Node-side bundles through its `context()` / `watch()` / `rebuild()` API, whose
+watch options differ between esbuild releases. Bump the pin only together with a review of that
+script. Every other dependency floats on a `^` or `~` range, and `package.json` is the single
+source of truth for versions - do not re-add a pinned copy of it here.
 
 ## Authors
   * Till Affeldt

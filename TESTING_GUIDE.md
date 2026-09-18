@@ -277,11 +277,13 @@ item: the user's decision was that **the recipe is the answer**, not a dedicated
 
 ### `playwright.config.ts` is currently BROKEN (repaired in Phase 9)
 
-`playwright.config.ts` exists but does not work: its `webServer.command` is `npm run serve`, which is
-`webpack serve --mode development` — dead since migration Phase 5 switched `main.ts` to
-`bootstrapApplication(...)` (the Webpack pipeline still expects `bootstrapModule(AppModule)`). Its
-`baseURL` is `http://localhost:8000`. Consequently `npm run test:e2e` (which is `playwright test`)
-cannot start its web server.
+`playwright.config.ts` exists but does not work: its `webServer.command` is `npm run serve`, which
+is now `ng serve` (functional, listening on port 4200 — repointed from the former
+`webpack serve --mode development` in Phase 6, commit 56bb8d5). However, `baseURL` is
+`http://localhost:8000` while `ng serve` listens on 4200 — the port mismatch means Playwright's
+readiness wait never resolves. Consequently `npm run test:e2e` (which is `playwright test`) hangs
+indefinitely. This mismatch is pre-existing: at parent commit 4525785 the Webpack client devServer
+also used port 4200, so the `:8000` wait never resolved there either.
 
 **Backlog-emptying Phase 9 repairs `playwright.config.ts`** with two projects — a dev-server project
 on **4200** and a built-server project on **8000** (locked decision 18). Until then, **the capture
@@ -293,6 +295,12 @@ scripts are the working path**, not `playwright test`.
   `node_modules` as an anonymous volume, and **publishes ports `8000`, `4200` and `49152`**.
 - **Port 4200** = the Angular dev server (`ng serve`) — this is what the capture scripts shoot
   (`BASE_URL = 'http://localhost:4200'`, resolved *inside* the container).
+  Note: the default compose command (`npm run serve` = `ng serve`) binds to `localhost` inside the
+  container, so published port 4200 is **not reachable from the Docker host** without an explicit
+  `--host 0.0.0.0` override (the capture recipe below passes it). This is not a regression — at the
+  parent the container ran `webpack --watch` and served nothing on 4200, so host access never worked.
+  The in-container capture workflow is unaffected and in fact improved: the dev container now
+  auto-serves on 4200.
 - **Port 8000** = the Express static server (`server/app.ts`, `const port = process.env.PORT || 8000`,
   serving `dist/server/static`) — the built-app path Phase 9's second project will target.
 - The `duely-dev` image ships Playwright (`@playwright/test ^1.49.0`; the migration used 1.59.1) but

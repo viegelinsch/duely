@@ -650,8 +650,10 @@ above the served root.
    `tsconfig` include path, so no type-check gate covered them. Phase 6 authored
    `electron/tsconfig.json` (gate **G1c**), repaired `server/tsconfig.json` so it actually compiles
    (gate **G1b**), and both gates now pass with **0 errors**. The repair was substantive: the
-   inherited `moduleResolution: "bundler"` combined with `module: "commonjs"` raised **TS5095** and
-   *aborted* compilation, so the config silently checked nothing while looking green; it also carried
+   inherited `moduleResolution: "bundler"` combined with `module: "commonjs"` emitted **TS5095** (`server/tsconfig.json(6,25): error TS5095: Option 'bundler' can only be used
+   when 'module' is set to 'preserve' or to 'es2015' or later.`) and aborted compilation with exit
+   code 2 — neither silent nor green; no source-level type-checking was performed, and the gate was
+   never exercised before Phase 6 added **G1b**. It also carried
    `noImplicitAny: false`, which weakened the root's `strict`. Fixed defects, all of them the ones
    Phase 5 deliberately left behind plus two the brief did not list: the `process.env.PORT || 8000`
    strict violation (→ `Number(process.env.PORT ?? 8000)`), the `import * as express` namespace style
