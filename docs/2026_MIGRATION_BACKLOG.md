@@ -380,8 +380,13 @@ the new `standalone` and `@for` conventions during the migration.
   weekday/`count` data live in `AppointmentsService.events` in memory and are exported as iCal text via
   `saveText`, never round-tripped through `JSON.parse` — which bounds the realistic exposure further.
   **Only data persisted before Phase 0 (2026-09-11) is in scope; fresh installs and anything saved
-  since are unaffected.** Decision needed: add a normalization guard on load, write a one-time
-  migration, or accept and document as won't-fix. No phase owns this.
+  since are unaffected.** ~~Decision needed: add a normalization guard on load, write a one-time
+  migration, or accept and document as won't-fix. No phase owns this.~~
+  **CLOSED by backlog-emptying Phase 10, commit 10.2 (task #35)** — `loadSettings()` rewritten with a
+  `normalizeString` helper that validates `typeof persisted === 'string'` for every field and falls
+  back to the default when the check fails. Also replaces bare `.hasOwnProperty()` with
+  `Object.prototype.hasOwnProperty.call()` (−11 `no-prototype-builtins` findings). The three default
+  literals at `:34-36` are byte-identical; G4 diff empty.
 - **`date-fns` declared but never imported (surfaced while consolidating `DEPENDENCIES_UPGRADED.md`,
   now `docs/2026_MATERIAL_MIGRATION.md` §9):** `date-fns@^4.1.0` sits in `package.json:67`
   `dependencies` but is imported by **zero** source files — `git grep "date-fns" --

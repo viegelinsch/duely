@@ -58,41 +58,28 @@ export abstract class StorageService {
     const settingsstr = localStorage.getItem('settings');
     if (settingsstr) {
       this.settingsLoaded = true;
-      const settings = JSON.parse(settingsstr);
-      if (settings.hasOwnProperty('color')) {
-        this.settings.color = settings.color;
-      }
-      if (settings.hasOwnProperty('themeMode')) {
-        this.settings.themeMode = settings.themeMode;
-      }
-      if (settings.hasOwnProperty('language')) {
-        this.settings.language = settings.language;
-      }
-      if (settings.hasOwnProperty('timeZone')) {
-        this.settings.timeZone = settings.timeZone;
-      }
-      if (settings.hasOwnProperty('country')) {
-        this.settings.country = settings.country;
-      }
-      if (settings.hasOwnProperty('region')) {
-        this.settings.region = settings.region;
-      }
-      if (settings.hasOwnProperty('state')) {
-        this.settings.state = settings.state;
-      }
-      if (settings.hasOwnProperty('debug')) {
-        this.settings.debug = settings.debug;
-      }
-      if (settings.hasOwnProperty('calendarName')) {
-        this.settings.calendarName = settings.calendarName;
-      }
-      if (settings.hasOwnProperty('calendarProdId')) {
-        this.settings.calendarProdId = settings.calendarProdId;
-      }
-      if (settings.hasOwnProperty('calendarUrl')) {
-        this.settings.calendarUrl = settings.calendarUrl;
+      const persisted = JSON.parse(settingsstr);
+      const stringKeys: (keyof typeof this.settings)[] = [
+        'color', 'themeMode', 'language', 'timeZone',
+        'country', 'region', 'state', 'debug',
+        'calendarName', 'calendarProdId', 'calendarUrl'
+      ];
+      for (const key of stringKeys) {
+        if (Object.prototype.hasOwnProperty.call(persisted, key)) {
+          this.settings[key] = this.normalizeString(persisted[key], this.settings[key]);
+        }
       }
     }
+  }
+
+  /**
+   * Validates a persisted value against the expected type (string) and falls
+   * back to the current default when the stored value is null, undefined, or
+   * of the wrong type. Prevents corrupted or hand-edited localStorage from
+   * injecting non-string values into the settings object.
+   */
+  private normalizeString(persisted: unknown, fallback: string): string {
+    return typeof persisted === 'string' ? persisted : fallback;
   }
 
   /** get settings and saved them in JSON */
