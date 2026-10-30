@@ -316,8 +316,22 @@ the new `standalone` and `@for` conventions during the migration.
   `@ViewChild(RecurringSettingsComponent)` imperative calls plus the `ngOnChanges` patching make it
   unsafe in the same pass); remains an unowned post-migration item.
 - The trimmed `moment-timezone` build (−25 KB gzip).
-- A Playwright Docker service (the validated capture recipe now lives in
-  `docs/2026_MIGRATION_PLAN.md`'s Verification strategy).
+- ~~A Playwright Docker service (the validated capture recipe now lives in
+  `docs/2026_MIGRATION_PLAN.md`'s Verification strategy).~~ **CLOSED by backlog-emptying Phase 9
+  (task #34)** — `playwright.config.ts` rewritten with **two projects** (`dev` → Angular dev-server on
+  `:4200`; `server` → production build served by Express on `:8000`), fixing the port mismatch in which
+  the old single-project config polled `:8000` while `ng serve` listened on `:4200` and hung
+  indefinitely. **Both projects execute and terminate in Docker (43.7 s, no hang).** The suite is
+  **10 passed / 6 failed**; the 6 failures are stale pre-migration selectors (`button.btn-success`,
+  `input[ng-reflect-name="summary"]`) that no longer match the Material DOM, left red per the abort
+  criterion (test *fixing* was out of scope — assertions were **not** rewritten and no spec was deleted
+  to force green). The dead Protractor files (`e2e/app.e2e-spec.ts`, `e2e/app.po.ts`,
+  `e2e/tsconfig.e2e.json`) were `git rm`'d and `testMatch` pinned to `**/*.spec.ts` so only the
+  surviving Playwright spec (`e2e/app.e2e.spec.ts`) is collected. The capture recipe is hardened:
+  `e2e/capture-after-shots.cjs`'s hard-coded `OUTPUT_DIR` is now a parameter (`--output-dir` /
+  `CAPTURE_OUTPUT_DIR`) that **refuses to default onto the 72-PNG baseline**, and `TESTING_GUIDE.md` §8
+  now documents the mandatory `npx playwright install-deps chromium` step and the `03-creator` route
+  date hazard (it renders today's date → 12 permanent false positives against any stored baseline).
 - ~~Dead Protractor/tslint deletion.~~ **CLOSED by backlog-emptying Phase 7 (task #32)** —
   `protractor.conf.js` and `tslint.json` deleted (grep-proven zero references outside prose docs).
   `e2e/tsconfig.e2e.json` was deliberately **KEPT** (it becomes orphaned once protractor.conf.js goes,

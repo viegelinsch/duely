@@ -86,7 +86,7 @@ The npm scripts (from `package.json`) and their Docker form:
 | `npm test` | `ng test --watch=false` | `docker compose run --rm duely-dev npm test` |
 | `npm run test:watch` | `ng test` (watch) | `docker compose run --rm duely-dev npm run test:watch` |
 | `npm run test:coverage` | `ng test --coverage --watch=false` | `docker compose run --rm duely-dev npm run test:coverage` |
-| `npm run test:e2e` | `playwright test` | see §8 — **routes through the currently-broken `playwright.config.ts`** |
+| `npm run test:e2e` | `playwright test` | `docker compose run --rm duely-dev npx playwright test` — see §8 |
 
 ---
 
@@ -275,19 +275,27 @@ This is the mechanism behind the migration's visual pass and the working path fo
 screenshots **today**. Documenting it is what closes the "add a Playwright Docker service" backlog
 item: the user's decision was that **the recipe is the answer**, not a dedicated compose service.
 
-### `playwright.config.ts` is currently BROKEN (repaired in Phase 9)
+### `playwright.config.ts` — REPAIRED in Phase 9
 
-`playwright.config.ts` exists but does not work: its `webServer.command` is `npm run serve`, which
-is now `ng serve` (functional, listening on port 4200 — repointed from the former
-`webpack serve --mode development` in Phase 6, commit 56bb8d5). However, `baseURL` is
-`http://localhost:8000` while `ng serve` listens on 4200 — the port mismatch means Playwright's
-readiness wait never resolves. Consequently `npm run test:e2e` (which is `playwright test`) hangs
-indefinitely. This mismatch is pre-existing: at parent commit 4525785 the Webpack client devServer
-also used port 4200, so the `:8000` wait never resolved there either.
+`playwright.config.ts` now defines **two projects** per locked decision 18:
 
-**Backlog-emptying Phase 9 repairs `playwright.config.ts`** with two projects — a dev-server project
-on **4200** and a built-server project on **8000** (locked decision 18). Until then, **the capture
-scripts are the working path**, not `playwright test`.
+| Project | `baseURL` | `webServer.command` | Port |
+|---|---|---|---|
+| `dev` | `http://localhost:4200` | `npm run serve` (= `ng serve`) | 4200 |
+| `server` | `http://localhost:8000` | `npm run build:prod && npm run start:server` | 8000 |
+
+Both servers start inside the same container as Playwright, so `localhost` resolves correctly.
+The `server` project's `webServer.timeout` is **300 s** to cover the production build step.
+`testMatch` is explicit (`**/*.spec.ts`) so only the Playwright-convention spec is collected.
+
+**Historical defect (pre-Phase 9):** the old config pointed `baseURL` and `webServer.url` at
+`:8000` while `npm run serve` published `:4200` — the port mismatch meant Playwright's readiness
+wait never resolved, so `npm run test:e2e` hung indefinitely.
+
+> **Express catch-all limitation.** The `server` project cannot assert on HTTP 404 status codes
+> because `server/app.ts`'s unconditional catch-all returns 200 + `index.html` for every unmatched
+> path. Client-side routing (Angular's `AutoRedirectGuard` / wildcard) still works — the limitation
+> is HTTP-level only. Changing the server routing is out of scope (§15.9(b) open decision).
 
 ### How the container and ports work
 
@@ -314,15 +322,27 @@ scripts are the working path**, not `playwright test`.
 docker compose run --rm --name duely-serve -d duely-dev \
   npx ng serve --host 0.0.0.0 --port 4200
 
-# 2. Install the Chromium shell INTO that container (image ships no browser cache).
+# 2. Install system libraries required by headless Chromium (MANDATORY — without
+#    this step `playwright install chromium` downloads the binary but launch fails
+#    on missing libnss3, libnspr4, libatk1.0-0, libgbm1, libasound2, libatspi2.0-0, …).
+docker exec -w /app duely-serve npx playwright install-deps chromium
+
+# 3. Install the Chromium headless shell into the container (image ships no browser cache).
 docker exec -w /app duely-serve npx playwright install chromium --only-shell
 
-# 3. Run the capture script inside the same container (it targets localhost:4200).
-docker exec -w /app duely-serve node e2e/capture-after-shots.cjs
+# 4. Run the capture script inside the same container (it targets localhost:4200).
+#    --output-dir is MANDATORY; omitting it aborts to protect the reference baseline.
+docker exec -w /app duely-serve node e2e/capture-after-shots.cjs \
+  --output-dir docs/migration-shots/phase9-after
 
-# 4. Stop the container when done (never `docker compose down`).
+# 5. Stop the container when done (never `docker compose down`).
 docker stop duely-serve
 ```
+
+> **Step 2 is the most commonly omitted and causes silent failure.** Without
+> `install-deps`, `chromium.launch()` throws `browserType.launch: Executable doesn't exist`
+> or `host validation failed` depending on the Playwright version, and **no screenshot can be
+> taken at all**. The container runs as root on Debian bookworm, so `apt-get` works directly.
 
 Because `.:/app` is bind-mounted, the PNGs land directly on the host under
 `docs/migration-shots/` (git-excluded), no copy step needed.
@@ -331,6 +351,10 @@ Because `.:/app` is bind-mounted, the PNGs land directly on the host under
 
 `e2e/capture-after-shots.cjs` captures the **after** baseline: **6 route states × 2 themes × 2
 accents × 3 viewports = 72 PNGs** (it exits non-zero if it captures fewer than 72).
+
+**`--output-dir` is mandatory** (CLI flag or `CAPTURE_OUTPUT_DIR` env var). The script refuses to
+run without it and refuses to target the reference baseline directory
+(`docs/migration-shots/after`). This prevents accidental overwrite of the stored 72-PNG set.
 
 - **Viewports:** widths **375 / 800 / 1440**, height 900. (800 is the exact fixed Electron window
   width at `electron/main.ts:30-32` and is trivially forgotten.)
@@ -371,6 +395,17 @@ the dev server's HMR websocket keeps the connection open and hangs the wait inde
   the whole Bootstrap→Material restyle. This delta is the point of the migration, **not** a
   regression — do not file it as one.
 
+### ⚠️ Route `03-creator` date hazard
+
+The creator route (`/` with settings loaded) renders **today's date** in the appointment form's
+date inputs. Any visual diff against a stored baseline will therefore produce **12 permanent false
+positives** (1 route × 2 themes × 2 accents × 3 widths) that change daily and cannot be resolved
+by fixing code.
+
+**Mitigation for future visual passes:** use same-session before/after isolation (capture both
+within minutes of each other so the date is identical), or freeze/mock the date in the test
+context (`page.clock.install()` in Playwright 1.45+), or mask the date-input region before diffing.
+
 ---
 
 ## 9. Troubleshooting
@@ -382,10 +417,12 @@ the dev server's HMR websocket keeps the connection open and hangs the wait inde
   `^[[:space:]]*FAIL[[:space:]]` command (§7).
 - **44 `Error retrieving icon duely:*` lines.** Cosmetic and expected (§5). Do not "fix" by adding
   `provideDuelyIcons()` to TestBeds.
-- **`npm run test:e2e` cannot start / hangs.** `playwright.config.ts` is broken until Phase 9 (§8);
-  use the capture recipe instead.
+- **`npm run test:e2e` cannot start / hangs.** Verify the port alignment: `playwright.config.ts`
+  `webServer[0].url` must match the dev server's actual port (4200), and `webServer[1].url` must
+  match Express (8000). If `reuseExistingServer: true` and something else occupies the port, kill it.
 - **Playwright: "browser not found".** The image ships no browser cache — run
-  `npx playwright install chromium --only-shell` inside the container first (§8).
+  `npx playwright install-deps chromium` **then** `npx playwright install chromium --only-shell`
+  inside the container first (§8). The `install-deps` step is mandatory on Debian bookworm.
 - **A container is still listed by `docker ps` after a run.** `docker stop <id>` it; never
   `docker compose down`.
 
