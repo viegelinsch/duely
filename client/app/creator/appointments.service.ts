@@ -569,7 +569,7 @@ export class AppointmentsService {
       const repData: any = ev.repeating();
       const iCalEventData: any = ev.toJSON();
 
-      if (iCalEventData.repeating !== undefined) {
+      if (iCalEventData.repeating != null) {
         const collisionDetector = new CollisionDetector(holidayCountries, exclusionDates,
           this.StorageService.settings.language, this.translate.instant('EXCLUDED BY USER'));
         const cols: Collision[] = collisionDetector.getCollisions(iCalEventData);

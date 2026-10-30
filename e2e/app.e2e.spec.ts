@@ -34,13 +34,8 @@ test.describe('Duely Application', () => {
   });
 
   /**
-   * Tests whether a file is being downloaded.
-   *
-   * NOTE: the default appointment (frequency NEVER) triggers a pre-existing
-   * null-dereference in CollisionDetector.getCollisions (appointments.service.ts:572
-   * guards with `!== undefined` but ical-generator sets `repeating: null`).
-   * Setting frequency to DAILY avoids the bug and exercises the full ICS
-   * generation path including recurrence metadata.
+   * Tests whether an ICS file is generated and downloaded for a
+   * non-recurring appointment (the default path).
    */
   test('should generate an ICS file', async ({ page }) => {
     // Ensure settings exist so the guard lets us reach the creator page
@@ -54,11 +49,6 @@ test.describe('Duely Application', () => {
     await startTime.fill('09:00');
     const endTime = page.locator('div[formGroupName="end"] input[formControlName="time"]');
     await endTime.fill('10:00');
-
-    // Set frequency to DAILY so the collision detector receives a valid
-    // repeating object (works around the null-guard bug described above).
-    await page.click('[data-identifier="expand-recurring"]');
-    await page.locator('select[data-identifier="recurrence-selectbox"]').selectOption('DAILY');
 
     // Start download listener
     const [download] = await Promise.all([

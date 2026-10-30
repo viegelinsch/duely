@@ -57,7 +57,7 @@ export class CollisionDetector {
     public getCollisions(eventData: any): Collision[] {
         let collisions: Collision[] = [];
 
-        if (eventData.repeating !== undefined) {
+        if (eventData.repeating != null) {
           switch (eventData.repeating.freq) {
               case 'DAILY': {
                   const drp = new DailyRecurrencePattern(this.locations, this.userExclusions, this.language, this.excludedByUserReason);
