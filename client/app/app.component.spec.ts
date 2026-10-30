@@ -40,8 +40,8 @@ describe('AppComponent', () => {
     });
     beforeEach(() => {
         fixture = TestBed.createComponent(SettingsComponent);
-        settings = fixture.debugElement.componentInstance;
-        component = TestBed.createComponent(AppComponent).debugElement.componentInstance;
+        settings = fixture.debugElement.componentInstance as SettingsComponent;
+        component = TestBed.createComponent(AppComponent).debugElement.componentInstance as AppComponent;
     });
 
     it('should create the app', inject([TranslateService, Router], (translate: TranslateService, router: Router) => {

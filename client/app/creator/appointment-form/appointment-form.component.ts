@@ -88,7 +88,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
 /**
  * gets typed data, validats it with form properties
  */
-  endValidation(data: any) {
+  endValidation(_data: unknown) {
     this.appointment.valid![0] = this.appointmentForm.valid;
   }
   validateStartTime(): void {
@@ -245,7 +245,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     const endTime = moment.utc(this.appointment.end);
     const diffHour = endTime.hour() - startTime.hour();
     const diffMinute = endTime.minute() - startTime.minute();
-    let newDate: any;
+    let newDate: moment.Moment;
     try {
       newDate = moment.utc(value, 'HH:mm');
     } catch (e) {
@@ -278,7 +278,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
     const endTime = moment.utc(this.appointment.end);
-    let newDate: any;
+    let newDate: moment.Moment;
     try {
       newDate = moment.utc(value, 'HH:mm');
     } catch (e) {

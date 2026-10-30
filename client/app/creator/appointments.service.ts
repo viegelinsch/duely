@@ -9,9 +9,9 @@ import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { StorageService } from '../storage/storage.service';
 import { CollisionDetector, Collision } from '../DatesAndCollisions/CollisionDetector';
+import { EventCollisionData } from '../DatesAndCollisions/EventCollisionData';
 
-import ical from 'ical-generator';
-import Holidays from 'date-holidays';
+import ical, { ICalCalendar, ICalEvent, ICalEventData, ICalAlarmData, ICalRepeatingOptions } from 'ical-generator';
 type HolidaysCountry = { country: string; state?: string; region?: string };
 type ICalWeekday = string; // Weekday type for ical-generator
 import { Appointment } from './appointment';
@@ -60,7 +60,7 @@ export class AppointmentsService {
 /**
  * initializes the data for the output of the data
  */
-  public initializeCalendar(): any {
+  public initializeCalendar(): ICalCalendar {
     const calendar = ical({
       name: this.StorageService.settings.calendarName,
       prodId: this.StorageService.settings.calendarProdId,
@@ -133,23 +133,30 @@ export class AppointmentsService {
 /**
  * gets the data from the events , returns an ICal-String
  */
-  public addEventToCalendar(calendar: any, event: Appointment): void {
+  public addEventToCalendar(calendar: ICalCalendar, event: Appointment): void {
     // Guard clause: recurringSettings is required for this function
     if (!event.recurringSettings) {
       console.warn('addEventToCalendar called without recurringSettings');
       return;
     }
 
+    // ical-generator's ICalEventData uses nominal enums (ICalEventRepeatingFreq,
+    // ICalEventStatus, ICalWeekday) while Duely supplies runtime-compatible plain
+    // strings. This helper centralises the cast so every createEvent call site
+    // stays readable and type-safe at the ICalEvent level.
+    const createEvent = (data: object): ICalEvent =>
+      calendar.createEvent(data as unknown as ICalEventData);
+
     const start = new Date(event.start);
     const end = new Date(event.end!);
 
-    const events: any[] = [];
+    const events: ICalEvent[] = [];
 
     // add eventss to calendar
     if (event.recurringSettings.frequency === 'NEVER') {
 
       // add a single non-repeating events to calendar
-      events[0] = calendar.createEvent({
+      events[0] = createEvent({
         start: start,
         end: end,
         stamp: new Date(),
@@ -167,7 +174,7 @@ export class AppointmentsService {
     event.recurringSettings.repByYearly === 'DAYMONTHYEAR')) {
 
       // add a single repeating events to calendar
-      events[0] = calendar.createEvent({
+      events[0] = createEvent({
         start: start,
         end: end,
         stamp: new Date(),
@@ -219,7 +226,7 @@ export class AppointmentsService {
       if (weekdays[6]) {
         byDayWeek[byDayWeek.length] = 'sa';
       }
-      events[0] = calendar.createEvent({
+      events[0] = createEvent({
         start: event.start,
         end: event.end,
         stamp: new Date(),
@@ -242,7 +249,7 @@ export class AppointmentsService {
     } else if (event.recurringSettings.frequency === 'MONTHLY') {
 
       if (event.recurringSettings.repByMonthly === 'MONTHINV') {
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -264,7 +271,7 @@ export class AppointmentsService {
       } else if (event.recurringSettings.repByMonthly === 'WEEK') {
         const count = (start.getDate() - (start.getDate() % 7)) / 7 + 1;
         const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -287,7 +294,7 @@ export class AppointmentsService {
         const days = this.getDaysInMonth(event.start.getDate(), event.start.getFullYear()) - event.start.getDate();
         const count = -(((days - (days % 7)) / 7) + 1);
         const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -327,7 +334,7 @@ export class AppointmentsService {
         } else {
           daysArray = ['SA', 'SU'];
         }
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -368,7 +375,7 @@ export class AppointmentsService {
         } else {
           daysArray = ['SA', 'SU'];
         }
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -396,7 +403,7 @@ export class AppointmentsService {
       if (event.recurringSettings.repByYearly === 'WEEKYEAR') {
         const count = (start.getDate() - (start.getDate() % 7)) / 7 + 1;
         const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -417,7 +424,7 @@ export class AppointmentsService {
           floating: event.floating
         });
       } else if (event.recurringSettings.repByYearly === 'DAYMONTHYEARINV') {
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -442,7 +449,7 @@ export class AppointmentsService {
         const days = this.getDaysInMonth(event.start.getDate(), event.start.getFullYear()) - event.start.getDate();
         const count = -(((days - (days % 7)) / 7) + 1);
         const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -483,7 +490,7 @@ export class AppointmentsService {
         } else {
           daysArray = ['SA', 'SU'];
         }
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -525,7 +532,7 @@ export class AppointmentsService {
         } else {
           daysArray = ['SA', 'SU'];
         }
-        events[0] = calendar.createEvent({
+        events[0] = createEvent({
           start: event.start,
           end: event.end,
           stamp: new Date(),
@@ -566,12 +573,12 @@ export class AppointmentsService {
     this.collisions = [];
     // write collisions to excluded dates
     for (const ev of events) {
-      const repData: any = ev.repeating();
-      const iCalEventData: any = ev.toJSON();
+      const repData = ev.repeating() as ICalRepeatingOptions | null;
+      const iCalEventData = ev.toJSON() as unknown as EventCollisionData;
 
       if (iCalEventData.repeating != null) {
         const collisionDetector = new CollisionDetector(holidayCountries, exclusionDates,
-          this.StorageService.settings.language, this.translate.instant('EXCLUDED BY USER'));
+          this.StorageService.settings.language, this.translate.instant('EXCLUDED BY USER') as string);
         const cols: Collision[] = collisionDetector.getCollisions(iCalEventData);
 
         if (this.collisions.length === 0) {
@@ -585,7 +592,7 @@ export class AppointmentsService {
           exDates.push(col.date);
         }
 
-        repData.exclude = exDates;
+        repData!.exclude = exDates;
         ev.repeating(repData);
       }
     }
@@ -594,20 +601,20 @@ export class AppointmentsService {
     // add alarm to all events
     for (let i = 0; i < events.length; i++) {
       event.alarms?.forEach((val: AlarmData) => {
-          if (val.repeat > 1) {
+          if ((val.repeat ?? 0) > 1) {
             events[i].createAlarm({
               type: val.type,
               trigger: moment(start).clone().subtract(val.triggerDelay, val.triggerUnit as unknown as moment.unitOfTime.DurationConstructor).toDate(),
               repeat: val.repeat,
               interval: val.interval! > 0 ? (val.interval! * 60) : 1,
               description: val.description,
-            });
+            } as unknown as ICalAlarmData);
           } else {
             events[i].createAlarm({
               type: val.type,
               trigger: moment(start).clone().subtract(val.triggerDelay, val.triggerUnit as unknown as moment.unitOfTime.DurationConstructor).toDate(),
               description: val.description,
-            });
+            } as unknown as ICalAlarmData);
           }
         }
       );

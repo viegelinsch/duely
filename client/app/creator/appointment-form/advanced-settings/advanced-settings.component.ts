@@ -68,7 +68,7 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
   }
 
   /** gets the data, checks if the form is valid */
-  endValidation(data: any) {
+  endValidation(_data: unknown) {
     this.appointment.valid![3] = this.advancedForm.valid;
   }
 

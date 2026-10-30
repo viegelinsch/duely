@@ -40,7 +40,7 @@ import { AppointmentFormComponent } from './appointment-form/appointment-form.co
 })
 export class CreatorComponent implements OnInit {
   appointments: Appointment[] = [];
-  timeZoneNames: any;
+  timeZoneNames: string[];
   visible: boolean[] = [true];
   public valid: boolean[][] = [];
   public collisions: Collision[] = [];

@@ -20,7 +20,8 @@ export class CustomValidators {
    */
   public static max(max: number): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      return control.value <= max ? null : {'max': control.value};
+      const value = control.value as number;
+      return value <= max ? null : {'max': value};
     };
   }
 
@@ -31,7 +32,8 @@ export class CustomValidators {
    */
   public static min(min: number): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      return control.value >= min ? null : {'min': control.value};
+      const value = control.value as number;
+      return value >= min ? null : {'min': value};
     };
   }
 }

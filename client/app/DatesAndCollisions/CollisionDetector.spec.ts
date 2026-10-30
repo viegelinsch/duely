@@ -2,30 +2,26 @@ import ical from 'ical-generator';
 import Holidays from 'date-holidays';
 type HolidaysCountry = { country: string; state?: string; region?: string };
 import { CollisionDetector, Collision} from '../DatesAndCollisions/CollisionDetector';
+import { EventCollisionData, RepeatingCollisionData } from '../DatesAndCollisions/EventCollisionData';
 import moment from 'moment';
 
 describe('CollisionDetector', () => {
 let cd: CollisionDetector;
 let collisions: Collision[];
-let eventData: any;
+let eventData: EventCollisionData;
 
 beforeEach(() => {
-    eventData = {
-        start: new Date('2017-01-01'),
-        end: new Date('2017-01-01'),
-        stamp: new Date(),
-        summary: 'summary',
-        location: 'location',
-        allDay: false
-    };
-
-    const repeatingData: any = {
+    const repeatingData: RepeatingCollisionData = {
         freq: 'DAILY',
         interval: 1,
         until: new Date('2017-12-31')
     };
 
-    eventData.repeating = repeatingData;
+    eventData = {
+        start: new Date('2017-01-01'),
+        end: new Date('2017-01-01'),
+        repeating: repeatingData
+    };
 });
 
     it('should return an empty array if no holidays or dates selected by the user are excluded', () => {

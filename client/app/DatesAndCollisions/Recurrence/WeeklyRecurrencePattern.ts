@@ -1,7 +1,6 @@
-import ical from 'ical-generator';
-import Holidays from 'date-holidays';
 import moment from 'moment';
 import { RecurrencePattern } from './RecurrencePattern';
+import { EventCollisionData } from '../EventCollisionData';
 
 
 /**
@@ -9,15 +8,15 @@ import { RecurrencePattern } from './RecurrencePattern';
  */
 export class WeeklyRecurrencePattern extends RecurrencePattern {
 
-    public isMatch(eventData: any, date: Date): {match: boolean, break: boolean} {
-        const weekdays: string[] = eventData.repeating.byDay;
+    public isMatch(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
+        const weekdays: string[] = eventData.repeating!.byDay!;
 
-        if (this.isIn(eventData.repeating.byDay, date) === true) {
+        if (this.isIn(eventData.repeating!.byDay!, date) === true) {
             const diff = this.weeksBetween(eventData.start, date);
 
-            if (diff % eventData.repeating.interval === 0) {
-                if (eventData.repeating.count !== undefined) {
-                    if (diff / eventData.repeating.interval > eventData.repeating.count) {
+            if (diff % eventData.repeating!.interval === 0) {
+                if (eventData.repeating!.count !== undefined) {
+                    if (diff / eventData.repeating!.interval > eventData.repeating!.count) {
                         return {match: false, break: true};
                     } else {
                         return {match: true, break: false};

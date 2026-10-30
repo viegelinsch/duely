@@ -1,7 +1,6 @@
-import ical from 'ical-generator';
-import Holidays from 'date-holidays';
 import moment from 'moment';
 import { RecurrencePattern } from './RecurrencePattern';
+import { EventCollisionData } from '../EventCollisionData';
 
 /**
  * The class DailyRecurrencePattern.
@@ -14,15 +13,15 @@ export class DailyRecurrencePattern extends RecurrencePattern {
      * @param eventData     The data of the event.
      * @param date          The date to check.
      */
-    public isMatch(eventData: any, date: Date): {match: boolean, break: boolean} {
+    public isMatch(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
         if (moment(date).isSame(eventData.start, 'days') === true) {
             return {match: true, break: false};
         } else {
             const diff = this.daysBetween(eventData.start, date);
 
-            if (diff % eventData.repeating.interval === 0) {
-                if (eventData.repeating.count !== undefined) {
-                    if (diff / eventData.repeating.interval > eventData.repeating.count) {
+            if (diff % eventData.repeating!.interval === 0) {
+                if (eventData.repeating!.count !== undefined) {
+                    if (diff / eventData.repeating!.interval > eventData.repeating!.count) {
                         return {match: false, break: true};
                     } else {
                         return {match: true, break: false};

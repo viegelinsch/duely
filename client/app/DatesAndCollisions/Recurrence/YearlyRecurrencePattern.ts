@@ -1,7 +1,6 @@
-import ical from 'ical-generator';
-import Holidays from 'date-holidays';
 import moment from 'moment';
 import { RecurrencePattern } from './RecurrencePattern';
+import { EventCollisionData } from '../EventCollisionData';
 
 
 
@@ -16,18 +15,18 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
      * @param eventData     The data of the event.
      * @param date          The date to check.
      */
-    public isMatch(eventData: any, date: Date): {match: boolean, break: boolean} {
-        if (eventData.repeating.byMonthDay !== undefined) {
-            if (eventData.repeating.byMonthDay[0] === -1) {
+    public isMatch(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
+        if (eventData.repeating!.byMonthDay !== undefined) {
+            if (eventData.repeating!.byMonthDay[0] === -1) {
 
                 return this.lastDayOfMonth(eventData, date);
             }
             // If byMonthDay is defined but not -1, fall through to yearly check
             return this.yearly(eventData, date);
-        } else if (eventData.repeating.bySetPos !== undefined) {
+        } else if (eventData.repeating!.bySetPos !== undefined) {
 
             return this.bySetPos(eventData, date);
-        } else if (eventData.repeating.byDay !== undefined) {
+        } else if (eventData.repeating!.byDay !== undefined) {
 
             return this.byDay(eventData, date);
         } else {
@@ -40,7 +39,7 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
      * @param eventData     The data of the event.
      * @param date          The date to check.
      */
-    private lastDayOfMonth(eventData: any, date: Date): {match: boolean, break: boolean} {
+    private lastDayOfMonth(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
         if (+moment(date).endOf('month').toDate().setHours( 0, 0, 0, 0) === +moment(date).toDate().setHours( 0, 0, 0, 0)) {
             return this.isMatchOfInterval(eventData, date);
         }
@@ -52,8 +51,8 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
      * @param eventData     The data of the event.
      * @param date          The date to check.
      */
-    private byDay(eventData: any, date: Date): {match: boolean, break: boolean} {
-        const byDayString: string = eventData.repeating.byDay[0].toString();
+    private byDay(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
+        const byDayString: string = eventData.repeating!.byDay![0].toString();
         const dayPart: string = byDayString.slice(-2);
         const index: number = byDayString.length - 2;
         const factorPart: string = byDayString.slice(0, index);
@@ -88,17 +87,17 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
      * @param eventData     The data of the event.
      * @param date          The date to check.
      */
-    private bySetPos(eventData: any, date: Date): {match: boolean, break: boolean} {
+    private bySetPos(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
 
-        if (this.isIn(eventData.repeating.byDay, date) === true) {
+        if (this.isIn(eventData.repeating!.byDay!, date) === true) {
             let counter = 0;
 
-            if (eventData.repeating.bySetPos >= 0) {
+            if (eventData.repeating!.bySetPos! >= 0) {
                 const month: number = moment(date).get('month');
 
                 let d = date;
                 while (moment(d).get('month') === month) {
-                    if (this.isIn(eventData.repeating.byDay, d) === true) {
+                    if (this.isIn(eventData.repeating!.byDay!, d) === true) {
 
                         counter++;
                     }
@@ -109,7 +108,7 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
 
                 let d = date;
                 while (moment(d).get('month') === month) {
-                    if (this.isIn(eventData.repeating.byDay, d) === true) {
+                    if (this.isIn(eventData.repeating!.byDay!, d) === true) {
                         counter--;
                     }
                     d = moment(d).add(1, 'day').toDate();
@@ -117,7 +116,7 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
             }
 
 
-            if (counter === eventData.repeating.bySetPos) {
+            if (counter === eventData.repeating!.bySetPos) {
                 return this.isMatchOfInterval(eventData, date);
             }
         }
@@ -129,7 +128,7 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
      * @param eventData     The data of the event.
      * @param date          The date to check.
      */
-    private yearly(eventData: any, date: Date): {match: boolean, break: boolean} {
+    private yearly(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
         if (moment(date).date() === moment(eventData.start).date()) {
 
             return this.isMatchOfInterval(eventData, date);
@@ -142,13 +141,13 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
      * @param eventData     The data of the event.
      * @param date          The date to check.
      */
-    private isMatchOfInterval(eventData: any, date: Date): {match: boolean, break: boolean} {
+    private isMatchOfInterval(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
         const diff = this.yearsBetween(eventData.start, date);
 
         if (moment(eventData.start).get('month') === moment(date).get('month')) {
-            if (diff % eventData.repeating.interval === 0) {
-                    if (eventData.repeating.count !== undefined) {
-                        if (diff / eventData.repeating.interval > eventData.repeating.count) {
+            if (diff % eventData.repeating!.interval === 0) {
+                    if (eventData.repeating!.count !== undefined) {
+                        if (diff / eventData.repeating!.interval > eventData.repeating!.count) {
                             return {match: false, break: true};
                         } else {
                             return {match: true, break: false};

@@ -1,9 +1,9 @@
-import ical from 'ical-generator';
 import Holidays from 'date-holidays';
 type HolidaysCountry = { country: string; state?: string; region?: string };
 type HolidaysHoliday = { date: string; start: Date; end: Date; name: string; type: string; rule: string };
 import moment from 'moment-timezone';
 import { Collision } from '../CollisionDetector';
+import { EventCollisionData } from '../EventCollisionData';
 
 
 export abstract class RecurrencePattern {
@@ -36,8 +36,8 @@ export abstract class RecurrencePattern {
       * @param date, eventData A date , Event Data.
       * @return      collision dates.
       */
-    public abstract isMatch(eventData: any, date: Date): {match: boolean, break: boolean};
-    public getCollisions(eventData: any): Collision[] {
+    public abstract isMatch(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean};
+    public getCollisions(eventData: EventCollisionData): Collision[] {
         const collisions: Collision[] = [];
 
         // check public holidays
@@ -45,8 +45,8 @@ export abstract class RecurrencePattern {
             const hd = new Holidays();
 
             let year: number = moment(eventData.start).year();
-            const until = (eventData.repeating.until === undefined)
-                ? new Date('2080-12-31') : <Date> eventData.repeating.until;
+            const until = (eventData.repeating!.until === undefined)
+                ? new Date('2080-12-31') : eventData.repeating!.until;
             const untilYear = moment(until).year();
 
             while (year <= untilYear) {
@@ -65,7 +65,7 @@ export abstract class RecurrencePattern {
                 }
 
                 if (this.locations.length > 1) {
-                    holidays.sort((holiday1: any, holiday2: any) => {return holiday1.start - holiday2.start; });
+                    holidays.sort((holiday1: HolidaysHoliday, holiday2: HolidaysHoliday) => {return holiday1.start.getTime() - holiday2.start.getTime(); });
                     holidays = this.removeDuplicates(holidays, 'date');
                 }
 
@@ -111,8 +111,8 @@ export abstract class RecurrencePattern {
 
         // check dates excluded by user
         if (this.userExclusions !== undefined) {
-            const until = (eventData.repeating.until === undefined)
-                ? new Date('2080-12-31') : <Date> eventData.repeating.until;
+            const until = (eventData.repeating!.until === undefined)
+                ? new Date('2080-12-31') : eventData.repeating!.until;
 
             for (const exDate of this.userExclusions) {
                 if (+until >= +this.dateWithoutTime(exDate) && +exDate >= +this.dateWithoutTime(eventData.start)) {
@@ -157,10 +157,10 @@ export abstract class RecurrencePattern {
       * @param originalArray  array.
       * @return      trimmed array.
       */
-    private removeDuplicates(originalArray: any[], objKey: any): any[] {
-        const trimmedArray = [];
-        const values = [];
-        let value: any;
+    private removeDuplicates(originalArray: HolidaysHoliday[], objKey: keyof HolidaysHoliday): HolidaysHoliday[] {
+        const trimmedArray: HolidaysHoliday[] = [];
+        const values: unknown[] = [];
+        let value: unknown;
 
         for (let i = 0; i < originalArray.length; i++) {
             value = originalArray[i][objKey];

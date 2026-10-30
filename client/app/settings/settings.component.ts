@@ -46,10 +46,10 @@ export class SettingsComponent implements OnInit {
 
   public settingsForm: FormGroup = new FormGroup({});
   // locations exclusions:
-  public hd: any;
-  public countries: any[] = [];
-  public states: any[] = [];
-  public regions: any[] = [];
+  public hd: Holidays;
+  public countries: string[][] = [];
+  public states: string[][] = [];
+  public regions: string[][] = [];
   public statesVisible = false;
   public regionsVisible = false;
   /** names of time zones */
@@ -112,7 +112,7 @@ export class SettingsComponent implements OnInit {
    * used to translate values of the holiday database to an array
    * @return translatet array
    */
-  private objectToArray(obj: any): any[][] {
+  private objectToArray(obj: Record<string, string>): string[][] {
     const result = Object.keys(obj).map(function(e) {
       return [e, obj[e]];
     });
@@ -123,7 +123,7 @@ export class SettingsComponent implements OnInit {
    * returns all countries of the holiday database as an array
    * @return all countries of the holiday database as an array
    */
-  public getCountries(): any[] {
+  public getCountries(): string[][] {
     return this.objectToArray(this.hd.getCountries());
   }
 
@@ -131,7 +131,7 @@ export class SettingsComponent implements OnInit {
    * returns all states of the holiday database as an array
    * @return all states of the holiday database as an array
    */
-  public getStates(country: string): any[] | undefined {
+  public getStates(country: string): string[][] | undefined {
     const states = this.hd.getStates(country);
     if (states == null || states === undefined) {
       return undefined;
@@ -143,7 +143,7 @@ export class SettingsComponent implements OnInit {
    * returns all regions of the holiday database as an array
    * @return all regions of the holiday database as an array
    */
-  public getRegions(country: string, state: string): any[] | undefined {
+  public getRegions(country: string, state: string): string[][] | undefined {
     const regions = this.hd.getRegions(country, state);
     if (regions == null || regions === undefined) {
       return undefined;

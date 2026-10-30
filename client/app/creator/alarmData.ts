@@ -6,10 +6,12 @@ export interface AlarmData {
   intervalMinutes?: number;
   // ICalAlarmData properties
   type?: string;
-  trigger?: any;
-  repeat?: any;
-  attach?: any;
-  x?: any[];
+  /** Alarm trigger point. Duely computes this as a concrete Date (see recalculateTrigger). */
+  trigger?: Date;
+  /** Reminder repeat count. Duely stores this as a plain number, diverging from ICalAlarmRepeatData. */
+  repeat?: number;
+  attach?: string | null;
+  x?: unknown[];
   interval?: number;
   description?: string;
   summary?: string;

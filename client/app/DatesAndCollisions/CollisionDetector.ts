@@ -2,8 +2,8 @@ import { DailyRecurrencePattern } from './Recurrence/DailyRecurrencePattern';
 import { WeeklyRecurrencePattern } from './Recurrence/WeeklyRecurrencePattern';
 import { MonthlyRecurrencePattern } from './Recurrence/MonthlyRecurrencePattern';
 import { YearlyRecurrencePattern } from './Recurrence/YearlyRecurrencePattern';
-import ical from 'ical-generator';
-import Holidays from 'date-holidays';
+import { EventCollisionData } from './EventCollisionData';
+
 type HolidaysCountry = { country: string; state?: string; region?: string };
 
 /**
@@ -54,7 +54,7 @@ export class CollisionDetector {
      * @param eventData     The data of an iCal event.
      * @return              The collisions.
      */
-    public getCollisions(eventData: any): Collision[] {
+    public getCollisions(eventData: EventCollisionData): Collision[] {
         let collisions: Collision[] = [];
 
         if (eventData.repeating != null) {

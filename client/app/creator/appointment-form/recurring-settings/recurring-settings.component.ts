@@ -66,13 +66,13 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** the text displayed in repeats by section if yearly is selected a repeat interval (e.g. Every 25. last tuesday) */
   public weekInvYear!: string;
   /** Contains the Holiday instance of 'date-holidays' framework */
-  public hd: any;
+  public hd: Holidays;
   /** Contains strings of all countries provided by date-holidays */
-  public countries: any[][];
+  public countries: string[][];
   /** Contains strings of all states of current country */
-  public states: any[][][];
+  public states: string[][][];
   /** Contains strings of all states of current state and country in given appointment */
-  public regions: any[][][];
+  public regions: string[][][];
   /** Determines wether the Selectbox 'States' of given appointment is visible or not */
   public statesVisible: boolean[];
   /** Determines wether the Selectbox 'Regions' of given appointment is visible or not */
@@ -152,7 +152,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   }
 
   /** get the data, checks the validaton of the reccuringsettings */
-  public endValidation(data: any) {
+  public endValidation(_data: unknown) {
     this.appointment.valid![1] = this.recurringForm.valid;
   }
 
@@ -193,7 +193,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    * used to translate values of the holiday database to an array
    * @return translatet array
    */
-  private objectToArray(obj: any): any[][] {
+  private objectToArray(obj: Record<string, string>): string[][] {
     const result = Object.keys(obj).map(function(e) {
       return [e, obj[e]];
     });
@@ -204,7 +204,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    * returns all countries of the holiday database as an array
    * @return all countries of the holiday database as an array
    */
-  public getCountries(): any[][] {
+  public getCountries(): string[][] {
     return this.objectToArray(this.hd.getCountries());
   }
 
@@ -212,7 +212,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    * returns all states of the holiday database as an array
    * @return all states of the holiday database as an array
    */
-  public getStates(country: string): any[][] | undefined {
+  public getStates(country: string): string[][] | undefined {
     const states = this.hd.getStates(country);
     if (states == null || states === undefined) {
       return undefined;
@@ -224,7 +224,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    * returns all regions of the holiday database as an array
    * @return all regions of the holiday database as an array
    */
-  public getRegions(country: string, state: string): any[][] | undefined {
+  public getRegions(country: string, state: string): string[][] | undefined {
     const regions = this.hd.getRegions(country, state);
     if (regions == null || regions === undefined) {
       return undefined;
@@ -384,27 +384,27 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
      const currentDate = new Date(start.getTime());
      const day: number = start.getDay();
      let i: number;
-     const weekday = new Array(7);
-     const month = new Array(12);
-     weekday[0] = this.translate.instant('SUNDAY');
-     weekday[1] = this.translate.instant('MONDAY');
-     weekday[2] = this.translate.instant('TUESDAY');
-     weekday[3] = this.translate.instant('WEDNESDAY');
-     weekday[4] = this.translate.instant('THURSDAY');
-     weekday[5] = this.translate.instant('FRIDAY');
-     weekday[6] = this.translate.instant('SATURDAY');
-     month[0] = this.translate.instant('JANUARY');
-     month[1] = this.translate.instant('FEBRUARY');
-     month[2] = this.translate.instant('MARCH');
-     month[3] = this.translate.instant('APRIL');
-     month[4] = this.translate.instant('MAY');
-     month[5] = this.translate.instant('JUNE');
-     month[6] = this.translate.instant('JULY');
-     month[7] = this.translate.instant('AUGUST');
-     month[8] = this.translate.instant('SEPTEMBER');
-     month[9] = this.translate.instant('OCTOBER');
-     month[10] = this.translate.instant('NOVEMBER');
-     month[11] = this.translate.instant('DECEMBER');
+     const weekday: string[] = new Array<string>(7);
+     const month: string[] = new Array<string>(12);
+     weekday[0] = this.translate.instant('SUNDAY') as string;
+     weekday[1] = this.translate.instant('MONDAY') as string;
+     weekday[2] = this.translate.instant('TUESDAY') as string;
+     weekday[3] = this.translate.instant('WEDNESDAY') as string;
+     weekday[4] = this.translate.instant('THURSDAY') as string;
+     weekday[5] = this.translate.instant('FRIDAY') as string;
+     weekday[6] = this.translate.instant('SATURDAY') as string;
+     month[0] = this.translate.instant('JANUARY') as string;
+     month[1] = this.translate.instant('FEBRUARY') as string;
+     month[2] = this.translate.instant('MARCH') as string;
+     month[3] = this.translate.instant('APRIL') as string;
+     month[4] = this.translate.instant('MAY') as string;
+     month[5] = this.translate.instant('JUNE') as string;
+     month[6] = this.translate.instant('JULY') as string;
+     month[7] = this.translate.instant('AUGUST') as string;
+     month[8] = this.translate.instant('SEPTEMBER') as string;
+     month[9] = this.translate.instant('OCTOBER') as string;
+     month[10] = this.translate.instant('NOVEMBER') as string;
+     month[11] = this.translate.instant('DECEMBER') as string;
      // Monthly
 
      // repeat by x-th weekday of month

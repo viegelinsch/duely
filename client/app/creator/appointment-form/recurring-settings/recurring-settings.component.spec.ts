@@ -58,14 +58,14 @@ describe('RecurringSettingsComponent', () => {
     });
 
     it('should return no states if country does not exist', () => {
-        const hdSpy = vi.spyOn(component.hd, 'getStates').mockReturnValue(null);
+        const hdSpy = vi.spyOn(component.hd, 'getStates').mockReturnValue(null as unknown as Record<string, string>);
         const ret = component.getStates('xyz');
         expect(ret).toBeUndefined();
         expect(hdSpy).toHaveBeenCalledWith('xyz');
     });
 
     it('should return no regions if state does not exist', () => {
-        const hdSpy = vi.spyOn(component.hd, 'getRegions').mockReturnValue(null);
+        const hdSpy = vi.spyOn(component.hd, 'getRegions').mockReturnValue(null as unknown as Record<string, string>);
         const ret = component.getRegions('abc', 'def');
         expect(ret).toBeUndefined();
         expect(hdSpy).toHaveBeenCalledWith('abc', 'def');

@@ -58,7 +58,7 @@ export abstract class StorageService {
     const settingsstr = localStorage.getItem('settings');
     if (settingsstr) {
       this.settingsLoaded = true;
-      const persisted = JSON.parse(settingsstr);
+      const persisted = JSON.parse(settingsstr) as Record<string, unknown>;
       const stringKeys: (keyof typeof this.settings)[] = [
         'color', 'themeMode', 'language', 'timeZone',
         'country', 'region', 'state', 'debug',
@@ -83,7 +83,7 @@ export abstract class StorageService {
   }
 
   /** get settings and saved them in JSON */
-  public saveSettings(settings: any): void {
+  public saveSettings(settings: typeof this.settings): void {
     localStorage.setItem('settings', JSON.stringify(settings));
     this.loadSettings();
   }
