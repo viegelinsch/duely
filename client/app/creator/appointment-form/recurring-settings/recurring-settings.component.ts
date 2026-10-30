@@ -52,19 +52,19 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   public recurringSettings!: RecurringSettings;
   public exclusions!: Exclusion[];
   public hideSettings = true;
-  public month!: String;
+  public month!: string;
   /** the text displayed in repeats by section if monthly is selected a repeat interval (e.g. Every 23. last) */
-  public monthInv!: String;
+  public monthInv!: string;
   /** the text displayed in repeats by section if monthly is selected a repeat interval (e.g. Every second tuesday) */
-  public week!: String;
+  public week!: string;
   /** the text displayed in repeats by section if monthly is selected a repeat interval (e.g. Every second last tuesday) */
-  public weekInv!: String;
+  public weekInv!: string;
   /** the text displayed in repeats by section if yearly is selected a repeat interval (e.g. Every 23.3.) */
-  public dayMonthYear!: String;
+  public dayMonthYear!: string;
   /** the text displayed in repeats by section if yearly is selected a repeat interval (e.g. Every 25. tuesday) */
-  public weekYear!: String;
+  public weekYear!: string;
   /** the text displayed in repeats by section if yearly is selected a repeat interval (e.g. Every 25. last tuesday) */
-  public weekInvYear!: String;
+  public weekInvYear!: string;
   /** Contains the Holiday instance of 'date-holidays' framework */
   public hd: any;
   /** Contains strings of all countries provided by date-holidays */
@@ -81,11 +81,11 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   public cities!: string[];
   /** the date format used in the date forms */
   public datePattern = /\d{4}-\d{2}-\d{2}/;
-  public work!: String;
-  public workInv!: String;
-  public dayMonthYearInv!: String;
-  public workInvYear!: String;
-  public workYear!: String;
+  public work!: string;
+  public workInv!: string;
+  public dayMonthYearInv!: string;
+  public workInvYear!: string;
+  public workYear!: string;
 
   enddate!: Date | null;
 
@@ -131,7 +131,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
       };
     }
     this.recurringSettings = this.appointment.recurringSettings;
-    this.subscription[0] = this.recurringForm.controls['ends'].valueChanges.subscribe((end: String) => {
+    this.subscription[0] = this.recurringForm.controls['ends'].valueChanges.subscribe((end: string) => {
       if (end === 'COUNT') {
         this.recurringForm.controls['count'].setValidators([Validators.min(1), Validators.required]);
       } else {
@@ -153,7 +153,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
 
   /** get the data, checks the validaton of the reccuringsettings */
   public endValidation(data: any) {
-    this.appointment!.valid![1] = this.recurringForm.valid;
+    this.appointment.valid![1] = this.recurringForm.valid;
   }
 
   /** gets event data, checks the end date. Checks if it is not
@@ -167,10 +167,10 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
         month: value.getMonth(),
         date: value.getDate()
       });
-      if (date.isSameOrAfter(moment.utc(this.appointment.end!), 'day')) {
+      if (date.isSameOrAfter(moment.utc(this.appointment.end), 'day')) {
         this.recurringSettings.untilDate = date.format('YYYY-MM-DD');
       } else {
-        const d = moment.utc(this.appointment.end!);
+        const d = moment.utc(this.appointment.end);
         this.recurringForm.controls['untilDate'].setValue(new Date(d.year(), d.month(), d.date()));
       }
     }
@@ -244,11 +244,11 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
     if (states !== undefined) {
       this.statesVisible[i] = true;
       this.regionsVisible[i] = false;
-      this.appointment.recurringSettings!.exclusions![i].holiday_states = this.states[i][0][0];
+      this.appointment.recurringSettings!.exclusions[i].holiday_states = this.states[i][0][0];
     } else {
       this.statesVisible[i] = false;
       this.regionsVisible[i] = false;
-      this.appointment.recurringSettings!.exclusions![i].holiday_states = '';
+      this.appointment.recurringSettings!.exclusions[i].holiday_states = '';
     }
     this.showRegions(i);
   }
@@ -266,10 +266,10 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
     if (regions !== undefined) {
       this.statesVisible[i] = true;
       this.regionsVisible[i] = true;
-      this.appointment.recurringSettings!.exclusions![i].holiday_regions = this.regions[i][0][0];
+      this.appointment.recurringSettings!.exclusions[i].holiday_regions = this.regions[i][0][0];
     } else {
       this.regionsVisible[i] = false;
-      this.appointment.recurringSettings!.exclusions![i].holiday_regions = '';
+      this.appointment.recurringSettings!.exclusions[i].holiday_regions = '';
     }
   }
 
@@ -287,7 +287,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   /** creates the reccuring form */
   private createForm(): void {
     this.recurringForm = this.fb.group({
-      frequency: 'NEVER' as frequency,
+      frequency: 'NEVER',
       interval: [
         1, [
           Validators.required,

@@ -89,7 +89,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
  * gets typed data, validats it with form properties
  */
   endValidation(data: any) {
-    this.appointment!.valid![0] = this.appointmentForm.valid;
+    this.appointment.valid![0] = this.appointmentForm.valid;
   }
   validateStartTime(): void {
      const start = this.appointmentForm.controls['start'] as FormGroup;
@@ -223,7 +223,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
         this.appointmentForm.get('start.time')!.setValue(startTime.format('HH:mm'));
       }
       if (this.appointment.hasOwnProperty('recurringSettings')) {
-        if (moment.utc(this.appointment.end).isAfter(moment.utc(this.appointment.recurringSettings!.untilDate!), 'day')) {
+        if (moment.utc(this.appointment.end).isAfter(moment.utc(this.appointment.recurringSettings!.untilDate), 'day')) {
           this.appointment.recurringSettings!.untilDate = moment.utc(this.appointment.end).format('YYYY-MM-DD'); // make a copy; producer stays a 'YYYY-MM-DD' string
           const d = moment.utc(this.appointment.end);
           this.recurring.recurringForm.controls['untilDate'].setValue(new Date(d.year(), d.month(), d.date()));

@@ -83,7 +83,7 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
 
   /** gets alarm data and validates it */
   endValidation(data: any) {
-    this.appointment!.valid![2] = this.alarmsForm.valid;
+    this.appointment.valid![2] = this.alarmsForm.valid;
   }
 
   /** creates alarm */

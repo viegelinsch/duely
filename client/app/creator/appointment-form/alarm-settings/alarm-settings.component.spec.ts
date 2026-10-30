@@ -39,7 +39,7 @@ describe('AlarmSettingsComponent', () => {
 
     it('should send validator information to appointment', inject([TranslateService], (translate: TranslateService) => {
         component.endValidation(null);
-        expect(component.appointment!.valid![2]).toEqual(component.alarmsForm.valid);
+        expect(component.appointment.valid![2]).toEqual(component.alarmsForm.valid);
     }));
 
     it('should add an alarm', inject([TranslateService], (translate: TranslateService) => {

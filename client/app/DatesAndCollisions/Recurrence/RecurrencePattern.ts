@@ -158,8 +158,8 @@ export abstract class RecurrencePattern {
       * @return      trimmed array.
       */
     private removeDuplicates(originalArray: any[], objKey: any): any[] {
-        const trimmedArray = new Array();
-        const values = new Array();
+        const trimmedArray = [];
+        const values = [];
         let value: any;
 
         for (let i = 0; i < originalArray.length; i++) {

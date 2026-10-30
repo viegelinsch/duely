@@ -40,7 +40,7 @@ describe('AppointmentFormComponent', () => {
 
     it('should set the validation correct', inject([TranslateService], (translate: TranslateService) => {
         component.endValidation(null);
-        expect(component.appointment!.valid![0]).toEqual(component.appointmentForm.valid);
+        expect(component.appointment.valid![0]).toEqual(component.appointmentForm.valid);
     }));
 
     it('should create an appointmentForm', inject([TranslateService], (translate: TranslateService) => {

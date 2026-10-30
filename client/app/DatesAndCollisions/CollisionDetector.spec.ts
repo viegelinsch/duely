@@ -19,7 +19,7 @@ beforeEach(() => {
         allDay: false
     };
 
-    let repeatingData: any = {
+    const repeatingData: any = {
         freq: 'DAILY',
         interval: 1,
         until: new Date('2017-12-31')

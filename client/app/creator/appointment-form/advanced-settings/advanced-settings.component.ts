@@ -69,7 +69,7 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
 
   /** gets the data, checks if the form is valid */
   endValidation(data: any) {
-    this.appointment!.valid![3] = this.advancedForm.valid;
+    this.appointment.valid![3] = this.advancedForm.valid;
   }
 
   /** sets timezone and status if changed */
