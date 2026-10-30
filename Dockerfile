@@ -69,6 +69,20 @@ COPY package.json package-lock.json* ./
 # Install all dependencies (including devDependencies)
 RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
+# Provision Playwright Chromium + OS-level libraries (libnss3, libatk, libgbm, …).
+# Pinned to the exact @playwright/test version installed by npm ci above — the
+# lockfile determines the browser revision. Layer cache busts on lockfile change,
+# so a Playwright version bump always re-downloads the matching browser.
+# The assertion at the end hard-fails the build on any driver/browser mismatch.
+RUN PW_PKG_VERSION=$(node -p "require('./node_modules/@playwright/test/package.json').version") \
+    && echo "Provisioning Chromium for @playwright/test ${PW_PKG_VERSION}" \
+    && npx playwright install --with-deps chromium \
+    && INSTALLED_VERSION=$(npx playwright --version | grep -oP '[\d.]+') \
+    && if [ "$INSTALLED_VERSION" != "$PW_PKG_VERSION" ]; then \
+         echo "FATAL: Playwright driver ${INSTALLED_VERSION} != package ${PW_PKG_VERSION}"; exit 1; \
+       fi \
+    && echo "Playwright ${INSTALLED_VERSION} — Chromium provisioned OK"
+
 # Copy source code
 COPY . .
 

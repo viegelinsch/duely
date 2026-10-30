@@ -345,6 +345,10 @@ the new `standalone` and `@for` conventions during the migration.
   `CAPTURE_OUTPUT_DIR`) that **refuses to default onto the 72-PNG baseline**, and `TESTING_GUIDE.md` §8
   now documents the mandatory `npx playwright install-deps chromium` step and the `03-creator` route
   date hazard (it renders today's date → 12 permanent false positives against any stored baseline).
+  > **⚠️ ANNOTATION (task #57, 2026-10-30):** the "mandatory `install-deps chromium` step"
+  > documented above is now **operationally obsolete** — Chromium and all OS-level dependencies are
+  > baked into the `duely-dev` image at build time. `TESTING_GUIDE.md` §8 has been corrected.
+  > Original text preserved verbatim for provenance.
 - ~~Dead Protractor/tslint deletion.~~ **CLOSED by backlog-emptying Phase 7 (task #32)** —
   `protractor.conf.js` and `tslint.json` deleted (grep-proven zero references outside prose docs).
   `e2e/tsconfig.e2e.json` was deliberately **KEPT** (it becomes orphaned once protractor.conf.js goes,

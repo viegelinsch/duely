@@ -86,7 +86,7 @@ The npm scripts (from `package.json`) and their Docker form:
 | `npm test` | `ng test --watch=false` | `docker compose run --rm duely-dev npm test` |
 | `npm run test:watch` | `ng test` (watch) | `docker compose run --rm duely-dev npm run test:watch` |
 | `npm run test:coverage` | `ng test --coverage --watch=false` | `docker compose run --rm duely-dev npm run test:coverage` |
-| `npm run test:e2e` | `playwright test` | `docker compose run --rm duely-dev npx playwright test` — see §8 |
+| `npm run test:e2e` | `playwright test` | `docker compose run --rm duely-dev npx playwright test` — browsers pre-installed, see §8 |
 
 ---
 
@@ -269,11 +269,11 @@ AppointmentsService, 1 CreatorComponent, 1 ElectronStorageService, 2 WebStorageS
 
 ---
 
-## 8. Playwright-in-Docker screenshot capture (the validated visual recipe)
+## 8. Playwright-in-Docker e2e suite and screenshot capture
 
-This is the mechanism behind the migration's visual pass and the working path for browser
-screenshots **today**. Documenting it is what closes the "add a Playwright Docker service" backlog
-item: the user's decision was that **the recipe is the answer**, not a dedicated compose service.
+This is the mechanism behind the migration's visual pass and the working path for browser-based
+testing **today**. Chromium and its OS-level dependencies are **baked into the `duely-dev` image**
+at build time (Phase 10); no manual install step is required.
 
 ### `playwright.config.ts` — REPAIRED in Phase 9
 
@@ -311,38 +311,48 @@ wait never resolved, so `npm run test:e2e` hung indefinitely.
   auto-serves on 4200.
 - **Port 8000** = the Express static server (`server/app.ts`, `const port = process.env.PORT || 8000`,
   serving `dist/server/static`) — the built-app path Phase 9's second project will target.
-- The `duely-dev` image ships Playwright (`@playwright/test ^1.49.0`; the migration used 1.59.1) but
-  **no browser cache**, so the Chromium binary must be installed into the container first.
+- The `duely-dev` image ships Playwright (`@playwright/test ^1.49.0`; resolved to 1.59.1 by the
+  lockfile) **with Chromium and all OS-level dependencies baked in at build time** (Dockerfile
+  `development` stage). No manual browser installation step is needed.
 
 ### The recipe
 
+**Running the full e2e suite** (16 tests, both projects):
+
+```bash
+# Single command — browsers are pre-installed in the image, both web servers
+# are started automatically by playwright.config.ts webServer entries.
+docker compose run --rm duely-dev npx playwright test
+```
+
+No `-T` flag is required when invoking from a standard interactive terminal. The `-T`
+(no pseudo-TTY) flag is only needed when the calling environment lacks a TTY — for example,
+piping stdout, running from certain CI harnesses, or invoking through a subprocess without
+`stdin` attached. If you see `the input device is not a TTY`, add `-T`.
+
+**Screenshot capture workflow** (for visual regression passes):
+
 ```bash
 # 1. Start a long-running dev server on 4200, named so it can be exec'd into.
-#    (The migration used the name `duely-phase8-serve`; any stable name works.)
 docker compose run --rm --name duely-serve -d duely-dev \
   npx ng serve --host 0.0.0.0 --port 4200
 
-# 2. Install system libraries required by headless Chromium (MANDATORY — without
-#    this step `playwright install chromium` downloads the binary but launch fails
-#    on missing libnss3, libnspr4, libatk1.0-0, libgbm1, libasound2, libatspi2.0-0, …).
-docker exec -w /app duely-serve npx playwright install-deps chromium
-
-# 3. Install the Chromium headless shell into the container (image ships no browser cache).
-docker exec -w /app duely-serve npx playwright install chromium --only-shell
-
-# 4. Run the capture script inside the same container (it targets localhost:4200).
+# 2. Run the capture script inside the same container (it targets localhost:4200).
 #    --output-dir is MANDATORY; omitting it aborts to protect the reference baseline.
 docker exec -w /app duely-serve node e2e/capture-after-shots.cjs \
   --output-dir docs/migration-shots/phase9-after
 
-# 5. Stop the container when done (never `docker compose down`).
+# 3. Stop the container when done (never `docker compose down`).
 docker stop duely-serve
 ```
 
-> **Step 2 is the most commonly omitted and causes silent failure.** Without
-> `install-deps`, `chromium.launch()` throws `browserType.launch: Executable doesn't exist`
-> or `host validation failed` depending on the Playwright version, and **no screenshot can be
-> taken at all**. The container runs as root on Debian bookworm, so `apt-get` works directly.
+> **Historical note (pre-Phase 10):** Steps 2 and 3 of the old recipe required manual
+> `npx playwright install-deps chromium` and `npx playwright install chromium --only-shell`
+> inside the running container. These are now **obsolete** — the Dockerfile's `development`
+> stage provisions Chromium and all OS-level libraries (libnss3, libatk, libgbm, libasound2,
+> libatspi2.0, …) at build time, pinned to the exact `@playwright/test` version from
+> `package-lock.json`. A build-time assertion hard-fails if the driver and browser versions
+> diverge.
 
 Because `.:/app` is bind-mounted, the PNGs land directly on the host under
 `docs/migration-shots/` (git-excluded), no copy step needed.
@@ -420,9 +430,10 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
 - **`npm run test:e2e` cannot start / hangs.** Verify the port alignment: `playwright.config.ts`
   `webServer[0].url` must match the dev server's actual port (4200), and `webServer[1].url` must
   match Express (8000). If `reuseExistingServer: true` and something else occupies the port, kill it.
-- **Playwright: "browser not found".** The image ships no browser cache — run
-  `npx playwright install-deps chromium` **then** `npx playwright install chromium --only-shell`
-  inside the container first (§8). The `install-deps` step is mandatory on Debian bookworm.
+- **Playwright: "browser not found".** Should not occur — Chromium is baked into the `duely-dev`
+  image at build time. If you see this, the image is stale: run `docker compose build duely-dev`
+  to re-provision. Verify with `docker compose run --rm duely-dev npx playwright --version`
+  (expect 1.59.1) and `docker compose run --rm duely-dev ls /root/.cache/ms-playwright/`.
 - **A container is still listed by `docker ps` after a run.** `docker stop <id>` it; never
   `docker compose down`.
 
