@@ -102,8 +102,10 @@
  * blocks: `typescript-eslint/eslint-recommended` switches `no-undef` off,
  * because the compiler already reports undefined identifiers.
  *
- * Nothing in this file disables a rule to hide a finding. Every rule tier is
- * enabled as published; the measured violations are the deliverable.
+ * One rule is explicitly disabled by user decision (not to hide a finding):
+ * `@angular-eslint/prefer-inject` is OFF per decision 9 extension, 2026-10-30.
+ * Every other rule tier is enabled as published; the measured violations are the
+ * deliverable.
  */
 
 const js = require('@eslint/js');
@@ -237,6 +239,9 @@ module.exports = tseslint.config(
       // Successor to the ESLint-8-only `eslint-plugin-deprecation`. See the
       // DEPRECATION LINTING note in the header.
       '@typescript-eslint/no-deprecated': 'warn',
+      // DECLINED by user decision 2026-10-30 (decision 9 extension): the
+      // constructor-injection to inject() modernisation is not adopted.
+      '@angular-eslint/prefer-inject': 'off',
     },
   },
 

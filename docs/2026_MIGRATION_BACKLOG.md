@@ -293,7 +293,12 @@ the new `standalone` and `@for` conventions during the migration.
 > suppression; (2) the predicted `console.warn` / `console.info` findings **cannot occur** because
 > `no-console` is in no enabled tier.
 >
-> **One item is OPEN and needs a user decision before Phase 10 can reach exit 0:** **34** of the 611
+> **~~One item is OPEN and needs a user decision before Phase 10 can reach exit 0:~~** ✅ **RESOLVED
+> by user decision 2026-10-30 — DECLINED.** The rule is turned OFF in `eslint.config.js` (task #53).
+> Decision 9's declined-modernisation list is extended from five to **six** items. The 34 errors are
+> eliminated; baseline moves 607 → **573 errors / 8 warnings**. Original text preserved for provenance:
+>
+> **34** of the 611
 > errors are `@angular-eslint/prefer-inject` across 13 files — the constructor-injection → `inject()`
 > DI modernisation. Decision 9 was checked verbatim and its declined-modernisation list is **closed and
 > exhaustive** (class-based `CanActivate` guard, redundant `standalone: true`, signals,
