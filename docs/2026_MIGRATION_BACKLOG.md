@@ -255,10 +255,58 @@ itself (the JIT → AOT / `ts-loader transpileOnly` → esbuild rework) is post-
 > (g) and Phase 7. The breakage recorded here is a **separate, later** issue caused by Phase 5's
 > `bootstrapApplication` switch — not a regression of that Webpack 2→5 rewrite.
 
-### (f) `npm run lint` cannot run
+### (f) `npm run lint` cannot run — **CLOSED by backlog-emptying Phase 8 (task #33)**
 
 `package.json:44` passes `--ext`, which ESLint 9 removed. There is consequently no automated guard on
 the new `standalone` and `@for` conventions during the migration.
+
+> **✅ CLOSED by backlog-emptying Phase 8 (task #33) — the lint CAPABILITY is restored; the exit-0 gate
+> is DEFERRED to Phase 10 (task #35) by explicit user decision.**
+>
+> **What was fixed.** A real flat `eslint.config.js` was authored (decision 6) and the script corrected
+> to `"lint": "eslint ."`. `--ext` was dropped because ESLint 9 removed it — in flat config the `files`
+> globs are the *only* scope mechanism. **Correction to the line citation above:** the script was at
+> `package.json:43`, not `:44`. `npm run lint` now runs to completion over **74 files** with **0 fatal
+> parse errors**, and the automated guard on the `standalone` / `@for` conventions that this item says
+> was missing now exists.
+>
+> **⚠️ THE `npm run lint` EXIT-0 GATE IS SUPERSEDED FOR PHASE 8 AND DEFERRED TO PHASE 10.** Task #33's
+> gate line demanded **exit 0**, and its step 4 demanded source edits to reach it (fix the mechanical
+> findings, add scoped inline disables). The measured reality is **exit 1 — 611 errors / 8 warnings**,
+> and Phase 8's scope is to *restore the capability*, not to fix violations (Phase 10 / task #35 owns
+> source fixes). **The user decided (2026-09-18) that Phase 8 delivers the working `npm run lint`, the
+> flat config, the corrected script and the fully measured baseline, with NO source file edited, NO
+> inline disable comment added, the production bundle byte-identical, and a purely additive commit that
+> can be reverted without touching source.** This uses exactly the superseded-criterion mechanism Phase 7
+> applied to §2(d)'s "unused-file warnings 5 → 4". **Phase 10 fixes findings properly instead of
+> silencing them.** The full per-rule and per-directory baseline is recorded in
+> `docs/2026_MIGRATION_STATE.md` §11.17 so Phase 10 plans from measurements, not estimates.
+>
+> **99.2% of the baseline is `client/` TypeScript** (606 of 611 errors) — already Phase 10's declared
+> territory. `server/`, `electron/`, `scripts/`, the repo root and all **11** HTML templates are linted
+> and report **ZERO** findings. Phase 9 inherits exactly **5 errors in 3 `e2e/` files** (linted, never
+> edited).
+>
+> **Two of task #33's step-4 predictions proved MOOT and are recorded so no future phase chases them:**
+> (1) the load-bearing `as unknown as moment.unitOfTime.DurationConstructor` casts are **not flagged by
+> any enabled rule**, so the "suppress with a reason, never fix them" instruction required no
+> suppression; (2) the predicted `console.warn` / `console.info` findings **cannot occur** because
+> `no-console` is in no enabled tier.
+>
+> **One item is OPEN and needs a user decision before Phase 10 can reach exit 0:** **34** of the 611
+> errors are `@angular-eslint/prefer-inject` across 13 files — the constructor-injection → `inject()`
+> DI modernisation. Decision 9 was checked verbatim and its declined-modernisation list is **closed and
+> exhaustive** (class-based `CanActivate` guard, redundant `standalone: true`, signals,
+> `storage.factory.ts:22,25` instantiating services with `new`, the two missed `import type`
+> opportunities) and **does not cover `prefer-inject`**; `storage.factory.ts` is **not** among the 13
+> flagged files. The rule was therefore left **ON** and the 34 errors are recorded as an explicit open
+> policy item. **Phase 10 cannot discharge them without a user decision** — either accept the
+> modernisation, or decline it explicitly and turn the rule off as a config decision.
+>
+> **Known coverage gap (deliberate, not a clean bill of health):** `@angular-eslint/template/accessibility`
+> (11 rules) is **not** enabled because task #33's spec never named it, so template linting currently
+> runs only **3** rules. The **0** findings across 11 templates therefore say nothing about template
+> accessibility. Candidate future decision.
 
 ### (g) Remaining open list (unowned)
 
