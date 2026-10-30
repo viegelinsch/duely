@@ -9,7 +9,7 @@
 -->
 <div class="field-row" (click)="hideSettings=!hideSettings">
   <label class="label-{{storage.getColor()}}">{{"OTHER" | translate}}</label>
-  <button mat-icon-button type="button" class="section-toggle" aria-label="Left Align">
+  <button mat-icon-button type="button" class="section-toggle" [attr.aria-label]="'TOGGLE ADVANCED SETTINGS' | translate">
     <mat-icon class="label-{{storage.getColor()}}"
               [svgIcon]="hideSettings ? 'duely:chevron_right' : 'duely:expand_more'"
               aria-hidden="true"></mat-icon>

@@ -160,7 +160,7 @@
         <div class="field-row">
           <label>{{'EXCLUSIONS' | translate}}</label>
           <button mat-icon-button (click)="addExclusion()" type="button" class="section-toggle"
-                  aria-label="Left Align" id="reminderAdd" data-identifier="add-exclusion-button">
+                  [attr.aria-label]="'ADD EXCLUSION' | translate" id="reminderAdd" data-identifier="add-exclusion-button">
             <mat-icon class="label-{{storage.getColor()}}" svgIcon="duely:add" aria-hidden="true"></mat-icon>
           </button>
         </div>
@@ -221,7 +221,7 @@
               }
 
               <button mat-icon-button (click)="removeExclusion(exclusion)" type="button"
-                      aria-label="Left Align" data-identifier="remove-exclusion-button">
+                      [attr.aria-label]="'REMOVE EXCLUSION' | translate" data-identifier="remove-exclusion-button">
                 <mat-icon svgIcon="duely:remove" aria-hidden="true"></mat-icon>
               </button>
             </div>

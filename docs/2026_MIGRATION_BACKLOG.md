@@ -350,11 +350,28 @@ the new `standalone` and `@for` conventions during the migration.
   `e2e/tsconfig.e2e.json` was deliberately **KEPT** (it becomes orphaned once protractor.conf.js goes,
   but the PLAN says *check* it, not delete it, and **Phase 9 owns `e2e/`**).
 - An en/de key-parity test.
-- The 7 unused ngx-bootstrap i18n keys.
-- The 4 copy-pasted `aria-label="Left Align"`.
-- The phantom service-worker registration at `client/main.ts:21-23`.
-- `legal.component.ts:32-34` building HTML via `translate.instant()` in the constructor, so it ignores
-  language changes (related to PLAN Correction 11 — `/legal` renders raw i18n keys).
+- ~~The 7 unused ngx-bootstrap i18n keys.~~ **CLOSED by backlog-emptying Phase 10, commit 10.3
+  (task #35)** — full enumeration proved **14** orphaned keys (D1–D12 from §3(a) plus `LIGHT` and
+  `DARK`, which the old theme-mode selector used before it became a slide toggle). All 14 deleted from
+  both locales; 3 new aria-label keys added. Parity 127/127. The "7 ngx-bootstrap keys" of §2(g)-8
+  are confirmed to be D6–D12 (`MO TU WE TH FR SA SU`); §3(c)-1's attribution to `ng2-datepicker` is
+  academic — both libraries are removed, and the keys were provably unreferenced as translate keys
+  (their only source-code occurrences are iCal `byDay` constants, not `| translate` or
+  `translate.instant()` calls).
+- ~~The 4 copy-pasted `aria-label="Left Align"`.~~ **CLOSED by backlog-emptying Phase 10, commit 10.3
+  (task #35)** — **3 fixed, not 4**: the 4th was at `app.component.html:11` and was removed by commit
+  `0f22483` during the Material migration. The 3 remaining (advanced-settings toggle, add-exclusion
+  button, remove-exclusion button) now use `[attr.aria-label]="'KEY' | translate"` with dedicated
+  i18n keys in both locales.
+- ~~The phantom service-worker registration at `client/main.ts:21-23`.~~ **CLOSED by backlog-emptying
+  Phase 10, commit 10.3 (task #35)** — registration removed (was at `:22-24`). No
+  `@angular/service-worker` dependency, no `ngsw-config.json`, no `/service-worker.js` in `dist/` — the
+  call always 404'd silently.
+- ~~`legal.component.ts:32-34` building HTML via `translate.instant()` in the constructor, so it
+  ignores language changes (related to PLAN Correction 11 — `/legal` renders raw i18n keys).~~
+  **CLOSED by backlog-emptying Phase 10, commit 10.3 (task #35)** — content assembly extracted to
+  `buildContent()`, called from the constructor and re-called on `translate.onLangChange` via a
+  Subscription that is torn down in `ngOnDestroy`. The unused `StorageService` import was also removed.
 - The mixed Moment/Date/string representation of `untilDate`.
 - The pre-existing `as any` at `appointment-form.component.spec.ts:108-109`.
 - **Model-band anomaly (promoted from the handoff per the impact review):** during a reverse end-date
@@ -460,7 +477,7 @@ equivalent config is `client/app/app.config.ts:25-37,51`, with `translate.setDef
 > Measured at task #49: **138 keys in each file, empty symmetric difference.** Task #49 does **not**
 > change Phase 12's scope; these are notes for whoever executes it.
 
-### 3(a) OPEN — the 12 orphaned locale keys (source "Section D", deliberately untouched)
+### 3(a) CLOSED — the 12 orphaned locale keys (source "Section D", deliberately untouched) — **CLOSED by backlog-emptying Phase 10 (task #35)**
 
 The source's status was "**DELIBERATELY UNTOUCHED** … content unchanged … Removing them is optional
 future cleanup, out of scope for this task." They were never removed and are **still open**.
@@ -495,6 +512,16 @@ about. **[Phase 12]** deleting them preserves parity only if they go from **both
 > decide it explicitly: if the sets are identical, D6–D12 close there and only **D1–D5** (`TIME`,
 > `UNTIL YEAR`, `TODAY`, `CLEAR`, `SELECT YEAR`) stay unowned here; if they are not, the two deletions
 > must not race. No phase owns D1–D5.
+
+> **✅ CLOSED by backlog-emptying Phase 10, commit 10.3 (task #35).** Full enumeration of all 138
+> keys in `client/assets/i18n/en.json` against every `client/**/*.{ts,html}` source proved **14**
+> keys unreferenced: D1–D12 plus `LIGHT` and `DARK` (the old theme-mode selector's labels, unused
+> since `themeMode` became a `mat-slide-toggle`). All 14 deleted from both locales; 3 new aria-label
+> keys added (`TOGGLE ADVANCED SETTINGS`, `ADD EXCLUSION`, `REMOVE EXCLUSION`). Final parity:
+> **127 EN / 127 DE** — correct, not a failure. The §2(g)-8 "7 ngx-bootstrap keys" are confirmed
+> identical to D6–D12; §3(c)-1's `ng2-datepicker` attribution is academic (both libraries removed).
+> D1–D5 (`TIME`, `UNTIL YEAR`, `TODAY`, `CLEAR`, `SELECT YEAR`) are closed here alongside D6–D12 —
+> **all 12 D-keys are closed**.
 
 ### 3(b) OPEN — three Settings labels whose wording was agent-proposed and never confirmed
 

@@ -19,9 +19,6 @@ import { environment } from './environments/environment';
  */
 if (environment.production) {
   enableProdMode();
-  if (!environment.isElectron && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js');
-  }
 }
 
 bootstrapApplication(AppComponent, appConfig)
