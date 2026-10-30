@@ -84,7 +84,7 @@ Two independent defects in one spec:
 
 Fixing the loop will likely expose more failures, so this needs a budget decision, not a drive-by fix.
 
-### (c) RecurrencePattern holiday-date aliasing — product hazard, zero test coverage (Q3: BACKLOG behind Q2)
+### (c) RecurrencePattern holiday-date aliasing — product hazard, zero test coverage (Q3: BACKLOG behind Q2) — **CLOSED by backlog-emptying Phase 10 (task #35)**
 
 `RecurrencePattern.ts:83` does `const pushDate: Date = holiday.start` — it aliases rather than
 clones, so the following `setHours` mutates the object `date-holidays` returned. The
@@ -94,6 +94,14 @@ returns false where it should return true — on exactly the multi-location path
 reading, not demonstrated live; the index-0 loop bug in (b) guarantees that no existing test could
 ever catch it. Same aliasing defect class as the recorded `alarms ?? []` regression this project
 already hit once. Fix when doing (b).
+
+> **✅ CLOSED by backlog-emptying Phase 10, commit 10.1 (task #35).** `const pushDate: Date =
+> holiday.start` replaced with `const pushDate: Date = new Date(holiday.start)` — a single-token
+> change that clones the Date before `setHours` mutates it. The `date-holidays` object is no longer
+> aliased, and the duplicate-suppression guard at `:91` now compares like with like. G4 baseline
+> unchanged (24 failed / 47 passed, md5 `172d78996b50c84e38211b529d76ab0b`); the CollisionDetector
+> spec still fails (its index-0 loop bug §1(b) is test work, not this commit's scope). The fix was
+> landed independently of §1(b) per the task #35 spec, which decoupled them.
 
 ### (d) creator.component.spec, saveText test — decided option C, deferred to the coverage review
 

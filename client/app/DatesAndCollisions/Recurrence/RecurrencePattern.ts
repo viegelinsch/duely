@@ -80,7 +80,7 @@ export abstract class RecurrencePattern {
                             const isMatchResult = this.isMatch(eventData, d);
 
                             if (isMatchResult.match === true) {
-                                const pushDate: Date = holiday.start;
+                                const pushDate: Date = new Date(holiday.start);
                                 const h = eventData.start.getHours();
                                 const m = eventData.start.getMinutes();
                                 const s = eventData.start.getSeconds();
