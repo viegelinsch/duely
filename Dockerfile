@@ -2,7 +2,7 @@
 # Multi-stage build for optimized production image
 
 # Stage 1: Build environment
-FROM node:24-bookworm AS builder
+FROM node:lts-slim AS builder
 
 LABEL maintainer="Duely Developer Team"
 LABEL description="Modern build environment for Duely v2.0"
@@ -24,7 +24,7 @@ COPY . .
 RUN npm run build:prod
 
 # Stage 2: Production runtime (server only)
-FROM node:24-bookworm-slim AS production-server
+FROM node:lts-slim AS production-server
 
 LABEL maintainer="Duely Developer Team"
 LABEL description="Production runtime for Duely Server v2.0"
@@ -45,7 +45,7 @@ USER node
 CMD ["node", "./dist/server/app.js"]
 
 # Stage 3: Development environment
-FROM node:24-bookworm AS development
+FROM node:lts-slim AS development
 
 LABEL maintainer="Duely Developer Team"
 LABEL description="Development environment for Duely v2.0"
