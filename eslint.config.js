@@ -258,6 +258,7 @@ module.exports = tseslint.config(
       'electron/**/*.ts',
       'e2e/**/*.ts',
       'playwright.config.ts',
+      'vitest.setup.ts',
     ],
     languageOptions: {
       parser: tseslint.parser,
