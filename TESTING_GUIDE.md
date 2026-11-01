@@ -228,13 +228,16 @@ to `git status --porcelain`).
 
 ### The validated capture command (use this identical command every time)
 
-The `NODE_OPTIONS` env is mandatory on Node ≥ 26 (the current `node:lts-slim` base): without
-`--localstorage-file`, Node defines `localStorage` as an `undefined` getter and Vitest's jsdom
-environment never installs its own, breaking every spec that touches `StorageService` (§9).
+Bare `npm test` reproduces the baseline on **any** Node major; no environment variable is required.
+Node ≥ 26 (the current `node:lts-slim` base) defines `localStorage` as an `undefined` getter, which
+used to break every spec that touches `StorageService`. That is now repaired in the harness by
+**`vitest.setup.ts`**, wired in through the `setupFiles` option of the `test` target in
+`angular.json`; it restores jsdom's own `localStorage`/`sessionStorage` onto `globalThis` before the
+specs run (§9 has the mechanism). **Do not** pass `-e NODE_OPTIONS="--localstorage-file=…"`: it is
+obsolete, and using it would mask a broken or missing setup file instead of exposing it.
 
 ```bash
-docker compose run --rm -e NODE_OPTIONS="--localstorage-file=/tmp/duely-ls.json" \
-  duely-dev npm test 2>&1 \
+docker compose run --rm duely-dev npm test 2>&1 \
   | grep -E '^[[:space:]]*FAIL[[:space:]]' \
   | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' \
   | sort > .git/duely-failing-names-baseline.txt
@@ -243,8 +246,7 @@ docker compose run --rm -e NODE_OPTIONS="--localstorage-file=/tmp/duely-ls.json"
 ### The diff command (must be empty)
 
 ```bash
-docker compose run --rm -e NODE_OPTIONS="--localstorage-file=/tmp/duely-ls.json" \
-  duely-dev npm test 2>&1 \
+docker compose run --rm duely-dev npm test 2>&1 \
   | grep -E '^[[:space:]]*FAIL[[:space:]]' \
   | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' \
   | sort > .git/duely-failing-names.txt
@@ -444,14 +446,27 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
   to re-provision. Verify with `docker compose run --rm duely-dev npx playwright --version`
   (expect 1.64.1) and `docker compose run --rm duely-dev ls /root/.cache/ms-playwright/`.
 - **`npm test` suddenly fails ~37 extra specs with `TypeError: Cannot read properties of undefined
-  (reading 'getItem')` in `StorageService.loadSettings`.** Node ≥ 26 defines an experimental
-  `localStorage` getter on `globalThis` that returns `undefined` unless `--localstorage-file` is
-  passed. Vitest 3.2.4's jsdom `populateGlobal` copies a window key only when it is absent from the
-  Node global or allowlisted, and `localStorage` is neither — so jsdom's working localStorage is
-  never installed. This is a Node-major artifact of the floating `node:lts-slim` base, **not** a
-  suite regression. Remedy: run the tests with
-  `-e NODE_OPTIONS="--localstorage-file=/tmp/duely-ls.json"` on the `docker compose run` (the §7
-  capture commands include it); with it, the 24F/47P baseline reproduces exactly on Node 26.
+  (reading 'getItem')` in `StorageService.loadSettings`.** **FIXED 2026-11-01 — this should no longer
+  happen.** Cause, for the record: Node ≥ 26 defines an experimental `localStorage` getter on
+  `globalThis` that returns `undefined` unless `--localstorage-file` is passed, and Vitest 3.2.4's
+  jsdom `populateGlobal` copies a window key only when it is absent from the Node global or
+  allowlisted (`LIVING_KEYS`/`OTHER_KEYS`); `localStorage` and `sessionStorage` are neither, so
+  jsdom's working implementations were never installed. It was a Node-major artefact of the floating
+  `node:lts-slim` base, never a suite regression. The permanent repair is **`vitest.setup.ts`**,
+  registered under `setupFiles` in the `test` target of `angular.json`, which reads the real jsdom
+  window Vitest already created (`globalThis.jsdom.window` — *not* `window`, which `populateGlobal`
+  aliases back onto `globalThis`) and re-installs both storage globals with a
+  `populateGlobal`-shaped accessor. If the symptom returns, check in this order: (1) the `setupFiles`
+  entry still points at `vitest.setup.ts`; (2) `vitest.setup.ts` still exists at the repo root;
+  (3) Vitest is still 3.2.4 and still exposes `globalThis.jsdom`. Do **not** reach for
+  `-e NODE_OPTIONS="--localstorage-file=…"` — that workaround was rejected because it breaks the
+  project's zero-manual-steps property.
+- **~32 lines of `ExperimentalWarning: localStorage is not available because --localstorage-file was
+  not provided` on stderr, in one block right after the `RUN v3.2.4 /app` banner.** Expected and
+  harmless. `vitest.setup.ts` reads Node's broken getter once per forked worker to detect the
+  shadowing, and Node prints the warning each time. It is a warning, not an error: it does not affect
+  the 24F/47P counts, the 44 icon messages or the failing-name diff, and it does **not** mean the
+  flag is required.
 - **A container is still listed by `docker ps` after a run.** `docker stop <id>` it; never
   `docker compose down`.
 

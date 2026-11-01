@@ -86,7 +86,10 @@
           "options": {
             "buildTarget": "duely:build:development",
             "tsConfig": "client/tsconfig.spec.json",
-            "runner": "vitest"
+            "runner": "vitest",
+            "setupFiles": [
+              "vitest.setup.ts"
+            ]
           }
         }
       }
