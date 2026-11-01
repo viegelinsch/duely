@@ -5,12 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Component, Input, OnInit, AfterViewChecked, OnChanges, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, AfterViewChecked, OnChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { Appointment } from '../../appointment';
 import { Exclusion } from '../../exclusion';
 import { RecurringSettings } from '../../recurring-settings';
-import type { frequency } from '../../recurring-settings';
 import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -23,7 +22,6 @@ import { StorageService } from '../../../storage/storage.service';
 import Holidays from 'date-holidays';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import moment from 'moment-timezone';
-import { CollisionDetector } from '../../../DatesAndCollisions/CollisionDetector';
 
 
 /**
@@ -47,7 +45,7 @@ import { CollisionDetector } from '../../../DatesAndCollisions/CollisionDetector
   templateUrl: './recurring-settings.component.html',
   styleUrls: ['./recurring-settings.component.scss']
 })
-export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewChecked, OnChanges, OnDestroy {
+export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewChecked, OnChanges {
   @Input() appointment!: Appointment;
   public recurringSettings!: RecurringSettings;
   public exclusions!: Exclusion[];
@@ -133,17 +131,13 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
     this.recurringSettings = this.appointment.recurringSettings;
     this.subscription[0] = this.recurringForm.controls['ends'].valueChanges.subscribe((end: string) => {
       if (end === 'COUNT') {
-        this.recurringForm.controls['count'].setValidators([Validators.min(1), Validators.required]);
+        this.recurringForm.controls['count'].setValidators([Validators.min(1), Validators.required.bind(Validators)]);
       } else {
         this.recurringForm.controls['count'].setValidators([]);
       }
       this.recurringForm.controls['count'].updateValueAndValidity();
     });
-    this.subscription[1] = (this.recurringForm.valueChanges.subscribe(data => this.endValidation(data)));
-  }
-
-  /**  */
-  ngOnDestroy() {
+    this.subscription[1] = (this.recurringForm.valueChanges.subscribe(() => this.endValidation()));
   }
 
   /** updates the repeats  */
@@ -152,7 +146,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   }
 
   /** get the data, checks the validaton of the reccuringsettings */
-  public endValidation(_data: unknown) {
+  public endValidation() {
     this.appointment.valid![1] = this.recurringForm.valid;
   }
 
@@ -178,8 +172,8 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
 
   /** Checks if there is an object recurringSetttings in the array, if not, adds it. */
   ngOnChanges(): void {
-    if (this.appointment.hasOwnProperty('recurringSettings')) {
-      if (!this.appointment.recurringSettings!.hasOwnProperty('exclusions')) {
+    if (Object.prototype.hasOwnProperty.call(this.appointment, 'recurringSettings')) {
+      if (!Object.prototype.hasOwnProperty.call(this.appointment.recurringSettings!, 'exclusions')) {
         this.appointment.recurringSettings!.exclusions = [];
       }
 
@@ -290,7 +284,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
       frequency: 'NEVER',
       interval: [
         1, [
-          Validators.required,
+          Validators.required.bind(Validators),
           Validators.min(1),
         ]
       ],
@@ -383,7 +377,6 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
      const start = new Date(this.appointment.start);
      const currentDate = new Date(start.getTime());
      const day: number = start.getDay();
-     let i: number;
      const weekday: string[] = new Array<string>(7);
      const month: string[] = new Array<string>(12);
      weekday[0] = this.translate.instant('SUNDAY') as string;
@@ -428,7 +421,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
      this.week = this.week + weekday[day] + ' ' + this.translate.instant('OF THE MONTH');
 
      // repeat by x-th weekday of month (count from end)
-     i = this.getDaysInMonth(start.getMonth(), start.getFullYear());
+     const i = this.getDaysInMonth(start.getMonth(), start.getFullYear());
      currentDate.setDate(i);
      while (day !== currentDate.getDay()) {
        currentDate.setDate(currentDate.getDate() - 1);

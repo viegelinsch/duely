@@ -8,7 +8,7 @@
 
 import { TestBed, inject, ComponentFixture } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
 import { AppComponent } from './app.component';
@@ -21,8 +21,8 @@ describe('AppComponent', () => {
     let component: AppComponent;
     let settings: SettingsComponent;
     let fixture: ComponentFixture<SettingsComponent>;
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             imports: [
                 RouterTestingModule,
                 TranslateModule.forRoot(),
@@ -44,15 +44,15 @@ describe('AppComponent', () => {
         component = TestBed.createComponent(AppComponent).debugElement.componentInstance as AppComponent;
     });
 
-    it('should create the app', inject([TranslateService, Router], (translate: TranslateService, router: Router) => {
+    it('should create the app', inject([TranslateService, Router], () => {
         expect(component).toBeTruthy();
     }));
 
     /* TODO: Test routes */
     it('should go home', inject([TranslateService, Router], (translate: TranslateService, router: Router) => {
-        vi.spyOn(router, 'navigate');
+        const navigateSpy = vi.spyOn(router, 'navigate');
         settings.goHome();
-        expect(router.navigate).toHaveBeenCalledWith(['/']);
+        expect(navigateSpy).toHaveBeenCalledWith(['/']);
     }));
 
 });

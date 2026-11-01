@@ -12,8 +12,8 @@ describe('RecurringSettingsComponent', () => {
     let component: RecurringSettingsComponent;
     let fixture: ComponentFixture<RecurringSettingsComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             imports: [TranslateModule.forRoot(), ReactiveFormsModule, RecurringSettingsComponent],
             providers: [AppointmentsService, StorageService]
         })
@@ -27,7 +27,7 @@ describe('RecurringSettingsComponent', () => {
         fixture.detectChanges();
     }));
 
-    it('should be created', inject([TranslateService], (translate: TranslateService) => {
+    it('should be created', inject([TranslateService], () => {
         expect(component).toBeTruthy();
     }));
 

@@ -16,8 +16,8 @@ describe('CustomValidators', () => {
   it('should return functions', () => {
     const max: ValidatorFn = CustomValidators.max(testValue);
     const min: ValidatorFn = CustomValidators.min(testValue);
-    expect(CustomValidators.max).not.toThrow();
-    expect(CustomValidators.min).not.toThrow();
+    expect(CustomValidators.max.bind(CustomValidators)).not.toThrow();
+    expect(CustomValidators.min.bind(CustomValidators)).not.toThrow();
     expect(typeof max).toEqual('function');
     expect(typeof min).toEqual('function');
   });

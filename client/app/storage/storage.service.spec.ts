@@ -17,18 +17,18 @@ describe('StorageService', () => {
 
     it('should load the settings or set default values', inject([StorageService], (service: StorageService) => {
         service.loadSettings();
-        expect(service.settings.hasOwnProperty('color')).toBeTruthy();
-        expect(service.settings.hasOwnProperty('language')).toBeTruthy();
-        expect(service.settings.hasOwnProperty('timeZone')).toBeTruthy();
-        expect(service.settings.hasOwnProperty('country')).toBeTruthy();
-        expect(service.settings.hasOwnProperty('region')).toBeTruthy();
-        expect(service.settings.hasOwnProperty('state')).toBeTruthy();
-        expect(service.settings.hasOwnProperty('debug')).toBeTruthy();
+        expect(Object.prototype.hasOwnProperty.call(service.settings, 'color')).toBeTruthy();
+        expect(Object.prototype.hasOwnProperty.call(service.settings, 'language')).toBeTruthy();
+        expect(Object.prototype.hasOwnProperty.call(service.settings, 'timeZone')).toBeTruthy();
+        expect(Object.prototype.hasOwnProperty.call(service.settings, 'country')).toBeTruthy();
+        expect(Object.prototype.hasOwnProperty.call(service.settings, 'region')).toBeTruthy();
+        expect(Object.prototype.hasOwnProperty.call(service.settings, 'state')).toBeTruthy();
+        expect(Object.prototype.hasOwnProperty.call(service.settings, 'debug')).toBeTruthy();
     }));
 
     it('should save the settings with correct content', inject([StorageService], (service: StorageService) => {
         service.loadSettings();
-        const spy = vi.spyOn(localStorage, 'setItem');
+        vi.spyOn(localStorage, 'setItem');
         service.saveSettings(service.settings);
         // expect(spy).toHaveBeenCalledWith('settings', JSON.stringify(service.settings));
     }));

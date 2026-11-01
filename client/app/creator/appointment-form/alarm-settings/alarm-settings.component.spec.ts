@@ -12,8 +12,8 @@ describe('AlarmSettingsComponent', () => {
     let component: AlarmSettingsComponent;
     let fixture: ComponentFixture<AlarmSettingsComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             imports: [TranslateModule.forRoot(), ReactiveFormsModule, AlarmSettingsComponent],
             providers: [StorageService, AppointmentsService]
         })
@@ -28,21 +28,21 @@ describe('AlarmSettingsComponent', () => {
         fixture.detectChanges();
     }));
 
-    it('should be created', inject([TranslateService], (translate: TranslateService) => {
+    it('should be created', inject([TranslateService], () => {
         expect(component).toBeTruthy();
     }));
 
-    it('should create a form', inject([TranslateService], (translate: TranslateService) => {
+    it('should create a form', inject([TranslateService], () => {
         component.createForm();
         expect(component.alarmsForm).toBeDefined();
     }));
 
-    it('should send validator information to appointment', inject([TranslateService], (translate: TranslateService) => {
-        component.endValidation(null);
+    it('should send validator information to appointment', inject([TranslateService], () => {
+        component.endValidation();
         expect(component.appointment.valid![2]).toEqual(component.alarmsForm.valid);
     }));
 
-    it('should add an alarm', inject([TranslateService], (translate: TranslateService) => {
+    it('should add an alarm', inject([TranslateService], () => {
         const numAlarms = component.alarms.length;
         const defaultAlarm = <AlarmData>{
             type: 'display',
@@ -54,14 +54,14 @@ describe('AlarmSettingsComponent', () => {
             interval: 5 * 60
         };
         vi.spyOn(component.alarms, 'push');
-        vi.spyOn(component, 'setAlarms');
+        const setAlarmsSpy = vi.spyOn(component, 'setAlarms');
         component.addAlarm();
         expect(component.alarms.length).toEqual(numAlarms + 1);
         expect(component.alarms.push).toHaveBeenCalledWith(defaultAlarm);
-        expect(component.setAlarms).toHaveBeenCalledWith(component.alarms);
+        expect(setAlarmsSpy).toHaveBeenCalledWith(component.alarms);
     }));
 
-    it('should remove an alarm', inject([TranslateService], (translate: TranslateService) => {
+    it('should remove an alarm', inject([TranslateService], () => {
         const defaultAlarm = <AlarmData>{
             type: 'display',
             triggerDelay: 10,
@@ -79,25 +79,15 @@ describe('AlarmSettingsComponent', () => {
 
     }));
 
-    it('should update the alarmforms', inject([TranslateService], (translate: TranslateService) => {
-        const defaultAlarm = <AlarmData>{
-            type: 'display',
-            triggerDelay: 10,
-            triggerUnit: 'MINUTES',
-            repeat: 1,
-            intervalMinutes: 5,
-            trigger: moment(component.appointment.start).subtract(10, 'MINUTES' as unknown as moment.unitOfTime.DurationConstructor).toDate(),
-            interval: 5 * 60
-        };
-
+    it('should update the alarmforms', inject([TranslateService], () => {
         component.addAlarm();
-        vi.spyOn(component.alarmsForm, 'setControl');
+        const setControlSpy = vi.spyOn(component.alarmsForm, 'setControl');
         component.setAlarms(component.alarms);
-        expect(component.alarmsForm.setControl).toHaveBeenCalled();
+        expect(setControlSpy).toHaveBeenCalled();
 
     }));
 
-    it('should recalculate the trigger correctly', inject([TranslateService], (translate: TranslateService) => {
+    it('should recalculate the trigger correctly', inject([TranslateService], () => {
         const defaultAlarm = <AlarmData>{
             type: 'display',
             triggerDelay: 10,
@@ -111,7 +101,7 @@ describe('AlarmSettingsComponent', () => {
 
     }));
 
-    it('should recalculate the interval correctly', inject([TranslateService], (translate: TranslateService) => {
+    it('should recalculate the interval correctly', inject([TranslateService], () => {
         const defaultAlarm = <AlarmData>{
             type: 'display',
             triggerDelay: 10,

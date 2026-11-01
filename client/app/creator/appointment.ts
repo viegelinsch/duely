@@ -2,8 +2,6 @@
  * sets the types for the form
  */
 
-import { Moment } from 'moment-timezone';
-
 import { RecurringSettings } from './recurring-settings';
 import { AlarmData } from './alarmData';
 

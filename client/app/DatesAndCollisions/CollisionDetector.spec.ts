@@ -1,5 +1,3 @@
-import ical from 'ical-generator';
-import Holidays from 'date-holidays';
 type HolidaysCountry = { country: string; state?: string; region?: string };
 import { CollisionDetector, Collision} from '../DatesAndCollisions/CollisionDetector';
 import { EventCollisionData, RepeatingCollisionData } from '../DatesAndCollisions/EventCollisionData';

@@ -9,8 +9,8 @@ describe('AdvancedSettingsComponent', () => {
   let component: AdvancedSettingsComponent;
   let fixture: ComponentFixture<AdvancedSettingsComponent>;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       imports: [ AdvancedSettingsComponent, TranslateModule.forRoot(), ReactiveFormsModule ],
       providers: [ StorageService, AppointmentsService ]
     })
@@ -25,18 +25,18 @@ describe('AdvancedSettingsComponent', () => {
   }));
 
   it('should be created', inject([TranslateService],
-      (translate: TranslateService) => {
+      () => {
     expect(component).toBeTruthy();
   }));
 
   it('should set the validation correctly', inject([TranslateService],
-      (translate: TranslateService) => {
-    component.endValidation(null);
+      () => {
+    component.endValidation();
     expect(component.appointment.valid![3]).toEqual(component.advancedForm.valid);
   }));
 
   it('should update the appointment', inject([TranslateService],
-      (translate: TranslateService) => {
+      () => {
     component.updateAppointment();
     expect(component.appointment.status).toEqual(component.status);
     expect(component.appointment.floating).toEqual(component.timezone === 'floating');
@@ -45,7 +45,7 @@ describe('AdvancedSettingsComponent', () => {
   }));
 
   it('should be created', inject([TranslateService],
-      (translate: TranslateService) => {
+      () => {
     expect(component).toBeTruthy();
   }));
 

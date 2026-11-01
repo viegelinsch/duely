@@ -8,8 +8,8 @@ describe('LegalComponent', () => {
   let component: LegalComponent;
   let fixture: ComponentFixture<LegalComponent>;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       imports: [ LegalComponent, TranslateModule.forRoot() ]
     })
     .compileComponents();

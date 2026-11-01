@@ -49,7 +49,7 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
   }
  /** when alram values changes it validates it */
   ngOnInit(): void {
-    this.subscription[0] = (this.alarmsForm.valueChanges.subscribe(data => this.endValidation(data)));
+    this.subscription[0] = (this.alarmsForm.valueChanges.subscribe(() => this.endValidation()));
   }
 
  /** checks if alarm is in the object, and if not adds it */
@@ -82,7 +82,7 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /** gets alarm data and validates it */
-  endValidation(_data: unknown) {
+  endValidation() {
     this.appointment.valid![2] = this.alarmsForm.valid;
   }
 
@@ -115,13 +115,13 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
         type: alarm.type,
         triggerDelay: [
           alarm.triggerDelay, [
-            Validators.required
+            Validators.required.bind(Validators)
           ]
         ],
         triggerUnit: alarm.triggerUnit,
         repeat: [
           alarm.repeat, [
-            Validators.required
+            Validators.required.bind(Validators)
           ]
         ],
         intervalMinutes: alarm.interval ? alarm.interval / 60 : 1,
@@ -132,7 +132,7 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
       const xy = alarmFormArray.controls[i] as FormGroup;
       this.subscription[i + 1] = (xy.controls['repeat'].valueChanges.subscribe(() => {
         if (xy.controls['repeat'].value > 1) {
-          xy.controls['intervalMinutes'].setValidators([Validators.required, Validators.min(1)]);
+          xy.controls['intervalMinutes'].setValidators([Validators.required.bind(Validators), Validators.min(1)]);
         } else {
           xy.controls['intervalMinutes'].setValidators([]);
         }

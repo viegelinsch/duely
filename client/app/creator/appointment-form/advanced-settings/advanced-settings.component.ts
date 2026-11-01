@@ -58,7 +58,7 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
     this.timezone = this.storage.settings.timeZone;
     this.appointment.timezone = this.timezone === 'floating' ? undefined : this.timezone;
     this.appointment.floating = this.timezone === 'floating' ? true : undefined;
-    this.subscription.add(this.advancedForm.valueChanges.subscribe(data => this.endValidation(data)));
+    this.subscription.add(this.advancedForm.valueChanges.subscribe(() => this.endValidation()));
   }
 
   /** checks is timezone is changend if not its set floating, gets status change */
@@ -68,7 +68,7 @@ export class AdvancedSettingsComponent implements OnInit, OnChanges {
   }
 
   /** gets the data, checks if the form is valid */
-  endValidation(_data: unknown) {
+  endValidation() {
     this.appointment.valid![3] = this.advancedForm.valid;
   }
 

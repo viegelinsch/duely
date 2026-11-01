@@ -10,8 +10,8 @@ describe('SettingsComponent', () => {
   let component: SettingsComponent;
   let fixture: ComponentFixture<SettingsComponent>;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       imports: [ SettingsComponent, TranslateModule.forRoot(), ReactiveFormsModule, RouterTestingModule ],
       providers: [ { provide: StorageService, useFactory: selectStorageService } ]
     })
@@ -25,7 +25,7 @@ describe('SettingsComponent', () => {
   });
 
   it('should be created', inject([TranslateService],
-      (translate: TranslateService) => {
+      () => {
     expect(component).toBeTruthy();
   }));
 });

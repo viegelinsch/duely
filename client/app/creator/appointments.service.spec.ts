@@ -1,4 +1,3 @@
-import moment from 'moment-timezone';
 import { TestBed, inject } from '@angular/core/testing';
 import ical from 'ical-generator';
 import type { ICalEventJSONRepeatingData } from 'ical-generator';

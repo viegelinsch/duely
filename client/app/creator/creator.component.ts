@@ -9,13 +9,11 @@
 import { Component, OnInit } from '@angular/core';
 import { AppointmentsService } from './appointments.service';
 import { Appointment } from './appointment';
-import { FormArray, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { Collision } from '../DatesAndCollisions/CollisionDetector';
 
 import moment from 'moment-timezone';
-import Holidays from 'date-holidays';
 
-import { CustomValidators } from '../validation/custom-validators';
 import { StorageService } from '../storage/storage.service';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
@@ -61,7 +59,7 @@ export class CreatorComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.getAppointments();
+    void this.getAppointments();
   }
   /** generates and saves a iCal file */
   generateAndSaveICAL() {

@@ -7,7 +7,7 @@
  */
 import { Component, OnInit } from '@angular/core';
 import Holidays from 'date-holidays';
-import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import moment from 'moment-timezone';
 import { MatButtonModule } from '@angular/material/button';
@@ -235,7 +235,7 @@ export class SettingsComponent implements OnInit {
    * this method sets the router-navigation to the basepage
    */
   public goHome(): void {
-    this.router.navigate(['/']);
+    void this.router.navigate(['/']);
   }
 
 }

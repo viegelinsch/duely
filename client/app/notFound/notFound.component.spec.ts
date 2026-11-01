@@ -8,8 +8,8 @@ describe('AboutComponent', () => {
   let component: NotFoundComponent;
   let fixture: ComponentFixture<NotFoundComponent>;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       imports: [ NotFoundComponent, TranslateModule.forRoot(), RouterTestingModule ]
     })
     .compileComponents();
@@ -22,7 +22,7 @@ describe('AboutComponent', () => {
   });
 
   it('should create', inject([TranslateService],
-      (translate: TranslateService) => {
+      () => {
     expect(component).toBeTruthy();
   }));
 });

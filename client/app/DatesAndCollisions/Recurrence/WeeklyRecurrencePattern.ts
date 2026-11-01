@@ -9,8 +9,6 @@ import { EventCollisionData } from '../EventCollisionData';
 export class WeeklyRecurrencePattern extends RecurrencePattern {
 
     public isMatch(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
-        const weekdays: string[] = eventData.repeating!.byDay!;
-
         if (this.isIn(eventData.repeating!.byDay!, date) === true) {
             const diff = this.weeksBetween(eventData.start, date);
 

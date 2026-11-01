@@ -13,7 +13,7 @@ export class AutoRedirectGuard implements CanActivate {
  */
   canActivate(): boolean {
     if (!this.storage.settingsLoaded) {
-      this.router.navigateByUrl('settings');
+      void this.router.navigateByUrl('settings');
       return false;
     } else {
       return true;

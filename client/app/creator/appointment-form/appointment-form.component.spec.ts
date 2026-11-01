@@ -10,7 +10,6 @@ import { AlarmSettingsComponent } from './alarm-settings/alarm-settings.componen
 import { AdvancedSettingsComponent } from './advanced-settings/advanced-settings.component';
 import { AppointmentsService } from '../appointments.service';
 import { StorageService } from '../../storage/storage.service';
-import { Appointment } from '../appointment';
 
 
 
@@ -18,8 +17,8 @@ describe('AppointmentFormComponent', () => {
     let component: AppointmentFormComponent;
     let fixture: ComponentFixture<AppointmentFormComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             imports: [TranslateModule.forRoot(), ReactiveFormsModule, AppointmentFormComponent,
                 RecurringSettingsComponent, AlarmSettingsComponent, AdvancedSettingsComponent],
             providers: [AppointmentsService, StorageService, provideNativeDateAdapter()]
@@ -34,21 +33,21 @@ describe('AppointmentFormComponent', () => {
         fixture.detectChanges();
     }));
 
-    it('should be created', inject([TranslateService], (translate: TranslateService) => {
+    it('should be created', inject([TranslateService], () => {
         expect(component).toBeTruthy();
     }));
 
-    it('should set the validation correct', inject([TranslateService], (translate: TranslateService) => {
-        component.endValidation(null);
+    it('should set the validation correct', inject([TranslateService], () => {
+        component.endValidation();
         expect(component.appointment.valid![0]).toEqual(component.appointmentForm.valid);
     }));
 
-    it('should create an appointmentForm', inject([TranslateService], (translate: TranslateService) => {
+    it('should create an appointmentForm', inject([TranslateService], () => {
         component.createForm();
         expect(component.appointmentForm).toBeDefined();
     }));
 
-    it('should give correct daysInMonth', inject([TranslateService], (translate: TranslateService) => {
+    it('should give correct daysInMonth', inject([TranslateService], () => {
         expect(component.getDaysInMonth(4, 2010)).toEqual(30);
         expect(component.getDaysInMonth(2, 2004)).toEqual(29);
         expect(component.getDaysInMonth(2, 2100)).toEqual(28);
@@ -56,7 +55,7 @@ describe('AppointmentFormComponent', () => {
 
     }));
 
-    it('should keep the duration when changing the start date', inject([TranslateService], (translate: TranslateService) => {
+    it('should keep the duration when changing the start date', inject([TranslateService], () => {
         const testDate = moment.utc('2017-07-13', 'YYYY-MM-DD');
         const oldEndTime = moment.utc(component.appointment.end);
         const duration = oldEndTime.diff(component.appointment.start);

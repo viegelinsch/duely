@@ -246,8 +246,6 @@ export abstract class RecurrencePattern {
      * @return          false
      */
     protected isIn(weekdays: string[], date: Date): boolean {
-        const isoWeekdays: number[] = new Array<number>();
-
         for (const weekday of weekdays) {
             if (this.getIsoWeekday(weekday) === moment(date).isoWeekday()) {
                 return true;

@@ -1,10 +1,8 @@
 import { ComponentFixture, TestBed, inject } from '@angular/core/testing';
-import * as fs from 'fs';
 import { CreatorComponent } from './creator.component';
 import { StorageService } from '../storage/storage.service';
 import { selectStorageService } from '../storage/storage.factory';
 import { AppointmentsService } from './appointments.service';
-import { Appointment } from './appointment';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { AppointmentFormComponent } from './appointment-form/appointment-form.component';
 import { RecurringSettingsComponent } from './appointment-form/recurring-settings/recurring-settings.component';
@@ -18,8 +16,8 @@ describe('CreatorComponent', () => {
     let component: CreatorComponent;
     let fixture: ComponentFixture<CreatorComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             imports: [TranslateModule.forRoot(), ReactiveFormsModule, CreatorComponent,
                 AppointmentFormComponent, AdvancedSettingsComponent, AlarmSettingsComponent,
                 RecurringSettingsComponent],
@@ -34,40 +32,38 @@ describe('CreatorComponent', () => {
         fixture.detectChanges();
     });
 
-    it('should be created', inject([AppointmentsService, StorageService, TranslateService], (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
+    it('should be created', inject([AppointmentsService, StorageService, TranslateService], () => {
         expect(component).toBeTruthy();
     }));
 
-    it('should start with 1 appointment', inject([AppointmentsService, StorageService, TranslateService], async (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
+    it('should start with 1 appointment', inject([AppointmentsService, StorageService, TranslateService], async () => {
         await component.getAppointments();
         expect(component.appointments).not.toBeUndefined();
         expect(component.appointments.length).toEqual(1);
     }));
 
-    it('should call saveText and getICalString if input is valid', inject([AppointmentsService, StorageService, TranslateService], async (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
-        const filename = 'duely.ics';
+    it('should call saveText and getICalString if input is valid', inject([AppointmentsService, StorageService, TranslateService], async (service: AppointmentsService, storage: StorageService) => {
         await component.getAppointments();
         expect(component.appointments).not.toBeNull();
         expect(component.appointments.length).toEqual(1);
         component.appointments[0].summary = 'test'; // now it's a valid input
-        vi.spyOn(storage, 'saveText');
-        vi.spyOn(service, 'getICalString');
+        const saveTextSpy = vi.spyOn(storage, 'saveText');
+        const getICalSpy = vi.spyOn(service, 'getICalString');
         component.generateAndSaveICAL();
-        expect(storage.saveText).toHaveBeenCalled();
-        expect(service.getICalString).toHaveBeenCalled();
+        expect(saveTextSpy).toHaveBeenCalled();
+        expect(getICalSpy).toHaveBeenCalled();
     }));
 
 
-    it('shouldn\'t call saveText and getICalString if input is invalid', inject([AppointmentsService, StorageService, TranslateService], async (service: AppointmentsService, storage: StorageService, translate: TranslateService) => {
-        const filename = 'duely.ics';
+    it('shouldn\'t call saveText and getICalString if input is invalid', inject([AppointmentsService, StorageService, TranslateService], async (service: AppointmentsService, storage: StorageService) => {
         await component.getAppointments();
         expect(component.appointments).not.toBeNull();
         expect(component.appointments.length).toEqual(1);
         component.appointments[0].summary = ''; // now it's an invalid input
-        vi.spyOn(storage, 'saveText');
-        vi.spyOn(service, 'getICalString');
+        const saveTextSpy = vi.spyOn(storage, 'saveText');
+        const getICalSpy = vi.spyOn(service, 'getICalString');
         component.generateAndSaveICAL();
-        expect(storage.saveText).not.toHaveBeenCalled();
-        expect(service.getICalString).not.toHaveBeenCalled();
+        expect(saveTextSpy).not.toHaveBeenCalled();
+        expect(getICalSpy).not.toHaveBeenCalled();
     }));
 });

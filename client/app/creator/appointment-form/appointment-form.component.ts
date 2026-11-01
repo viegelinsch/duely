@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import moment from 'moment-timezone';
-import { Component, Input, OnChanges, ViewChild, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnChanges, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RecurringSettingsComponent } from './recurring-settings/recurring-settings.component';
 import { AlarmSettingsComponent } from './alarm-settings/alarm-settings.component';
@@ -77,7 +77,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     this.startdate = this.appointment.start ? new Date(this.appointment.start) : null;
     this.enddate = this.appointment.end ? new Date(this.appointment.end) : null;
     
-    this.subscription.add(this.appointmentForm.valueChanges.subscribe(data => this.endValidation(data)));
+    this.subscription.add(this.appointmentForm.valueChanges.subscribe(() => this.endValidation()));
   }
 /**
  * destroys subcribtion
@@ -88,29 +88,25 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
 /**
  * gets typed data, validats it with form properties
  */
-  endValidation(_data: unknown) {
+  endValidation() {
     this.appointment.valid![0] = this.appointmentForm.valid;
   }
   validateStartTime(): void {
-     const start = this.appointmentForm.controls['start'] as FormGroup;
     // if (!start.controls['time'].valid) {
     //  this.appointmentForm.get('start.time').setValue(moment.utc(this.appointment.start).format('HH:mm'));
     // }
   }
   validateStartDate(): void {
-     const start = this.appointmentForm.controls['start'] as FormGroup;
     // if (!start.controls['date'].valid) {
     //  this.appointmentForm.get('start.date').setValue(moment.utc(this.appointment.start).format('YYYY-MM-DD'));
     // }
   }
   validateEndTime(): void {
-    const end = this.appointmentForm.controls['end'] as FormGroup;
     // if (!end.controls['time'].valid) {
     //  this.appointmentForm.get('end.time').setValue(moment.utc(this.appointment.end).format('HH:mm'));
     // }
   }
   validateEndDate(): void {
-     const end = this.appointmentForm.controls['end'] as FormGroup;
     // if (!end.controls['date'].valid) {
     //  this.appointmentForm.get('end.date').setValue(moment.utc(this.appointment.end).format('YYYY-MM-DD'));
     // }
@@ -120,7 +116,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     this.appointmentForm = this.fb.group({
       summary: [
         null, [
-          Validators.required,
+          Validators.required.bind(Validators),
           Validators.maxLength(25)
         ]
       ],
@@ -138,7 +134,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
         ],
         time: [
           null, [
-            Validators.required,
+            Validators.required.bind(Validators),
             Validators.pattern(this.timePattern)
           ]
         ]
@@ -149,7 +145,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
         ],
         time: [
           null, [
-            Validators.required,
+            Validators.required.bind(Validators),
             Validators.pattern(this.timePattern)
           ]
         ]
@@ -222,7 +218,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
         this.appointment.start = startTime.toDate();
         this.appointmentForm.get('start.time')!.setValue(startTime.format('HH:mm'));
       }
-      if (this.appointment.hasOwnProperty('recurringSettings')) {
+      if (Object.prototype.hasOwnProperty.call(this.appointment, 'recurringSettings')) {
         if (moment.utc(this.appointment.end).isAfter(moment.utc(this.appointment.recurringSettings!.untilDate), 'day')) {
           this.appointment.recurringSettings!.untilDate = moment.utc(this.appointment.end).format('YYYY-MM-DD'); // make a copy; producer stays a 'YYYY-MM-DD' string
           const d = moment.utc(this.appointment.end);
@@ -233,7 +229,6 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   }
   /** if startdate changes updates recurring date */
   onStartDateChange(): void {
-    const startDateControl = this.appointmentForm.get('start.date');
     this.recurring.updateRepeatsBy();
   }
   /** if starttime changes updates redcurring time */
@@ -248,7 +243,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     let newDate: moment.Moment;
     try {
       newDate = moment.utc(value, 'HH:mm');
-    } catch (e) {
+    } catch {
       newDate = moment.utc(this.appointment.start);
     }
     if (!newDate.isValid()) {
@@ -269,7 +264,6 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   }
   /** changes nothing  */
   onEndDateChange(): void {
-    const endDateControl = this.appointmentForm.get('end.date');
     // dummy function, lost it's meaning
   }
   /** get end time , changes it if invalid */
@@ -281,7 +275,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     let newDate: moment.Moment;
     try {
       newDate = moment.utc(value, 'HH:mm');
-    } catch (e) {
+    } catch {
       newDate = this.appointment.end ? moment.utc(this.appointment.end) : moment.utc(this.appointment.start);
     }
     if (!newDate.isValid()) {
