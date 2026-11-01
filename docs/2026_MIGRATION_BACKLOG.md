@@ -323,7 +323,15 @@ the new `standalone` and `@for` conventions during the migration.
 
 ### (g) Remaining open list (unowned)
 
-- Route-level lazy loading (`app-routing.module.ts:18-46` is fully eager).
+- ~~Route-level lazy loading (`app-routing.module.ts:18-46` is fully eager).~~ **CLOSED by
+  backlog-emptying Phase 11.1 (task #62)** — `client/app/app.routes.ts` converted: `about`, `legal`
+  and `settings` routes now use `loadComponent: () => import(…).then(m => m.XComponent)`; the root
+  `''` route (CreatorComponent + AutoRedirectGuard) and the `404`/wildcard error routes are kept
+  EAGER so error behaviour cannot regress. The cited file `app-routing.module.ts` was deleted in
+  Phase 5; the live route table is `app.routes.ts`. `angular.json` budget re-tightened from 2.6mb
+  to 2.55mb (new measured initial 2.31 MB × 1.10). Main entry-point shrunk 87% (2,156,807 B →
+  278,488 B); initial payload 2.37 MB → 2.31 MB; three new lazy chunks emitted (settings 57.55 kB,
+  about 2.18 kB, legal 1.51 kB).
 - A shared `HolidayCatalogService`.
 - `OnPush` change detection — deliberately deferred for `appointment-form` at Phase 3.4 (the
   `@ViewChild(RecurringSettingsComponent)` imperative calls plus the `ngOnChanges` patching make it
