@@ -228,8 +228,13 @@ to `git status --porcelain`).
 
 ### The validated capture command (use this identical command every time)
 
+The `NODE_OPTIONS` env is mandatory on Node ≥ 26 (the current `node:lts-slim` base): without
+`--localstorage-file`, Node defines `localStorage` as an `undefined` getter and Vitest's jsdom
+environment never installs its own, breaking every spec that touches `StorageService` (§9).
+
 ```bash
-docker compose run --rm duely-dev npm test 2>&1 \
+docker compose run --rm -e NODE_OPTIONS="--localstorage-file=/tmp/duely-ls.json" \
+  duely-dev npm test 2>&1 \
   | grep -E '^[[:space:]]*FAIL[[:space:]]' \
   | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' \
   | sort > .git/duely-failing-names-baseline.txt
@@ -238,7 +243,8 @@ docker compose run --rm duely-dev npm test 2>&1 \
 ### The diff command (must be empty)
 
 ```bash
-docker compose run --rm duely-dev npm test 2>&1 \
+docker compose run --rm -e NODE_OPTIONS="--localstorage-file=/tmp/duely-ls.json" \
+  duely-dev npm test 2>&1 \
   | grep -E '^[[:space:]]*FAIL[[:space:]]' \
   | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' \
   | sort > .git/duely-failing-names.txt
@@ -299,7 +305,9 @@ wait never resolved, so `npm run test:e2e` hung indefinitely.
 
 ### How the container and ports work
 
-- The `duely-dev` service (`docker-compose.yml`) is `node:24-bookworm`, bind-mounts `.:/app`, keeps
+- The `duely-dev` service (`docker-compose.yml`) is `node:lts-slim` (a **floating tag** — it
+  resolved to Node 26.13.0/trixie as of the task-#60 rebuild; it silently crossed the Node 24 → 26
+  major when `node:lts` moved to Lithium), bind-mounts `.:/app`, keeps
   `node_modules` as an anonymous volume, and **publishes ports `8000`, `4200` and `49152`**.
 - **Port 4200** = the Angular dev server (`ng serve`) — this is what the capture scripts shoot
   (`BASE_URL = 'http://localhost:4200'`, resolved *inside* the container).
@@ -311,8 +319,9 @@ wait never resolved, so `npm run test:e2e` hung indefinitely.
   auto-serves on 4200.
 - **Port 8000** = the Express static server (`server/app.ts`, `const port = process.env.PORT || 8000`,
   serving `dist/server/static`) — the built-app path Phase 9's second project will target.
-- The `duely-dev` image ships Playwright (`@playwright/test ^1.49.0`; resolved to 1.59.1 by the
-  lockfile) **with Chromium and all OS-level dependencies baked in at build time** (Dockerfile
+- The `duely-dev` image ships Playwright (`@playwright/test ^1.64.1`; resolved to 1.64.1 by the
+  lockfile, Chromium revision **v1248** = Chrome for Testing 156.0.8078.4) **with Chromium and all
+  OS-level dependencies baked in at build time** (Dockerfile
   `development` stage). No manual browser installation step is needed.
 
 ### The recipe
@@ -433,7 +442,16 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
 - **Playwright: "browser not found".** Should not occur — Chromium is baked into the `duely-dev`
   image at build time. If you see this, the image is stale: run `docker compose build duely-dev`
   to re-provision. Verify with `docker compose run --rm duely-dev npx playwright --version`
-  (expect 1.59.1) and `docker compose run --rm duely-dev ls /root/.cache/ms-playwright/`.
+  (expect 1.64.1) and `docker compose run --rm duely-dev ls /root/.cache/ms-playwright/`.
+- **`npm test` suddenly fails ~37 extra specs with `TypeError: Cannot read properties of undefined
+  (reading 'getItem')` in `StorageService.loadSettings`.** Node ≥ 26 defines an experimental
+  `localStorage` getter on `globalThis` that returns `undefined` unless `--localstorage-file` is
+  passed. Vitest 3.2.4's jsdom `populateGlobal` copies a window key only when it is absent from the
+  Node global or allowlisted, and `localStorage` is neither — so jsdom's working localStorage is
+  never installed. This is a Node-major artifact of the floating `node:lts-slim` base, **not** a
+  suite regression. Remedy: run the tests with
+  `-e NODE_OPTIONS="--localstorage-file=/tmp/duely-ls.json"` on the `docker compose run` (the §7
+  capture commands include it); with it, the 24F/47P baseline reproduces exactly on Node 26.
 - **A container is still listed by `docker ps` after a run.** `docker stop <id>` it; never
   `docker compose down`.
 
