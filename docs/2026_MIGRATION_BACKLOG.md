@@ -363,7 +363,19 @@ the new `standalone` and `@for` conventions during the migration.
 - `OnPush` change detection — deliberately deferred for `appointment-form` at Phase 3.4 (the
   `@ViewChild(RecurringSettingsComponent)` imperative calls plus the `ngOnChanges` patching make it
   unsafe in the same pass); remains an unowned post-migration item.
-- The trimmed `moment-timezone` build (−25 KB gzip).
+- ~~The trimmed `moment-timezone` build (−25 KB gzip).~~ **CLOSED WITH RATIONALE (task #64, Phase 11.3)** —
+  DECLINED: the trimmed `builds/moment-timezone-with-data-10-year-range.js` (55,259 B) carries correct
+  Europe/Berlin DST data only for **2020–2030**; outside that window it silently returns UTC offset 60 instead
+  of the correct 120 for every summer date. The wider `builds/moment-timezone-with-data-1970-2030.js` variant
+  (147,623 B) does not help — it fixes 1980 but still returns 60 from 2031 onward. Duely's default UNTIL is
+  `moment(new Date()).add(100,'y')` = **2126** (`recurring-settings.component.ts:127,302`), the datepicker has
+  no `min`/`max`/`dateFilter`, and `untilDate` has zero validators — summer recurrences from 2031 onward are
+  reachable in the DEFAULT flow and would be silently corrupted by one hour. The app currently uses the full
+  dataset (`require('moment-timezone')` → `index.js`), verified correct against OS tzdata via
+  `Intl.DateTimeFormat` continuously from 1980 to 2200 — **no latent defect today**. The saving is unavailable
+  without first bounding the UNTIL date (itself an unauthorised behaviour change).
+  `docs/2026_KNOWN_LIMITATIONS.md` does not exist yet; **Phase 13 owns that file** and will transcribe this
+  declined saving into it. Full measurement record: TASKBOARD §33, STATE §11.31.
 - ~~A Playwright Docker service (the validated capture recipe now lives in
   `docs/2026_MIGRATION_PLAN.md`'s Verification strategy).~~ **CLOSED by backlog-emptying Phase 9
   (task #34)** — `playwright.config.ts` rewritten with **two projects** (`dev` → Angular dev-server on
