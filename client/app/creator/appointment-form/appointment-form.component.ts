@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import moment from 'moment-timezone';
-import { Component, Input, OnChanges, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnChanges, ViewChild, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RecurringSettingsComponent } from './recurring-settings/recurring-settings.component';
 import { AlarmSettingsComponent } from './alarm-settings/alarm-settings.component';
@@ -26,6 +26,7 @@ import { AppointmentsService } from '../appointments.service';
 @Component({
   selector: 'rac-appointment-form',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ReactiveFormsModule,
@@ -185,6 +186,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
       this.appointmentForm.get('end.date')!.setValue(new Date(d.year(), d.month(), d.date()));
       this.appointmentForm.get('end.time')!.setValue(moment.utc(this.appointment.end).format('HH:mm'));
       this.recurring.updateRepeatsBy();
+      this.recurring.markForCheck();
     }
   }
   /** gets enddate of of day, month , year and updates it, if it is befoe the start date */
@@ -230,6 +232,7 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   /** if startdate changes updates recurring date */
   onStartDateChange(): void {
     this.recurring.updateRepeatsBy();
+    this.recurring.markForCheck();
   }
   /** if starttime changes updates redcurring time */
   onStartTimeChange(value: string): void {

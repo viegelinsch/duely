@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Component, Input, OnChanges, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators  } from '@angular/forms';
 import { AlarmData } from '../../alarmData';
 import moment from 'moment-timezone';
@@ -24,6 +24,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'rac-alarm-settings',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ReactiveFormsModule,

@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Component, Input, OnInit, AfterViewChecked, OnChanges } from '@angular/core';
+import { Component, Input, OnInit, AfterViewChecked, OnChanges, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { Appointment } from '../../appointment';
 import { Exclusion } from '../../exclusion';
@@ -30,6 +30,7 @@ import moment from 'moment-timezone';
 @Component({
   selector: 'rac-recurring-settings',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ReactiveFormsModule,
@@ -93,7 +94,8 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
   constructor(
     private fb: FormBuilder, 
     public storage: StorageService, 
-    public translate: TranslateService
+    public translate: TranslateService,
+    private cdr: ChangeDetectorRef
   ) {
     this.hd = new Holidays();
     this.enddate = null;
@@ -138,6 +140,11 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
       this.recurringForm.controls['count'].updateValueAndValidity();
     });
     this.subscription[1] = (this.recurringForm.valueChanges.subscribe(() => this.endValidation()));
+  }
+
+  /** Marks this view dirty so OnPush refreshes after an imperative parent call. */
+  public markForCheck(): void {
+    this.cdr.markForCheck();
   }
 
   /** updates the repeats  */

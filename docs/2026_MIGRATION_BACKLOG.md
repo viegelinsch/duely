@@ -360,9 +360,14 @@ the new `standalone` and `@for` conventions during the migration.
   > channel that does not exist today. **Candidate for `docs/2026_KNOWN_LIMITATIONS.md` at Phase 13.** A
   > three-site consolidation was briefly chosen, then reverted to this single-site scope **before any code
   > was written** (HEAD stayed `33a038e`, tree clean throughout).
-- `OnPush` change detection — deliberately deferred for `appointment-form` at Phase 3.4 (the
+- ~~`OnPush` change detection — deliberately deferred for `appointment-form` at Phase 3.4 (the
   `@ViewChild(RecurringSettingsComponent)` imperative calls plus the `ngOnChanges` patching make it
-  unsafe in the same pass); remains an unowned post-migration item.
+  unsafe in the same pass); remains an unowned post-migration item.~~ **FIXED by Phase 11.4 (task #65)** —
+  `ChangeDetectionStrategy.OnPush` added to all four form components (`appointment-form`,
+  `recurring-settings`, `alarm-settings`, `advanced-settings`). The two imperative `updateRepeatsBy()`
+  calls are paired with explicit `markForCheck()` on the child; the `setValue()` on the child's form
+  control needs none (Angular's reactive-form directives handle it internally). Full measurement:
+  TASKBOARD §37, STATE §11.35.
 - ~~The trimmed `moment-timezone` build (−25 KB gzip).~~ **CLOSED WITH RATIONALE (task #64, Phase 11.3)** —
   DECLINED: the trimmed `builds/moment-timezone-with-data-10-year-range.js` (55,259 B) carries correct
   Europe/Berlin DST data only for **2020–2030**; outside that window it silently returns UTC offset 60 instead
