@@ -332,7 +332,34 @@ the new `standalone` and `@for` conventions during the migration.
   to 2.55mb (new measured initial 2.31 MB × 1.10). Main entry-point shrunk 87% (2,156,807 B →
   278,488 B); initial payload 2.37 MB → 2.31 MB; three new lazy chunks emitted (settings 57.55 kB,
   about 2.18 kB, legal 1.51 kB).
-- A shared `HolidayCatalogService`.
+- ~~A shared `HolidayCatalogService`.~~ **CLOSED by backlog-emptying Phase 11.2 (task #63)** —
+  a **single-site extraction, NOT a deduplication.** The plan and the dispatching brief framed this as
+  removing a `date-holidays` catalogue construction *duplicated* between `CollisionDetector.ts` and
+  `RecurrencePattern.ts`; that premise is **false**. `git log -S'new Holidays()' --
+  client/app/DatesAndCollisions/CollisionDetector.ts` returns **nothing** — that file has never
+  constructed a holiday catalogue. At the initial commit `1e425f2` it imported `date-holidays` purely as
+  a **type** (`Holidays.Country`), and commit `36bb13f` removed the by-then-unused value import as a
+  legitimate `no-unused-vars` lint fix (not a deleted duplicate). The only collision-path construction is
+  the one inline in the `RecurrencePattern.getCollisions()` base method (inherited by
+  Daily/Weekly/Monthly/Yearly). That single site is now owned by
+  `client/app/DatesAndCollisions/HolidayCatalogService.ts` — `@Injectable({ providedIn: 'root' })` **and**
+  no-args-constructible — with **zero constructor-signature changes** and **zero `.spec.ts` edits**, so
+  `CollisionDetector`'s `new DailyRecurrencePattern(…)` calls compile untouched. The item closes because a
+  shared, injectable, named service now owns the construction and is available to future DI consumers,
+  **not** because duplicated code was removed. `CollisionDetector.ts` was left **completely untouched**
+  (wiring the service through it would be invented indirection). Behaviour is preserved byte-for-byte
+  (proven via a throwaway iCal + collision capture harness under `.git/`): **no caching, no memoisation,
+  no reordering, no batching**; the exact per-location/per-year `init()` → `setLanguages()` →
+  `getHolidays()` sequence and the single reused `date-holidays` instance are verbatim.
+  > **DEFERRAL NOTE (task #63).** The other two `new Holidays()` sites —
+  > `settings.component.ts:61` and `recurring-settings.component.ts:98` — were **deliberately not** folded
+  > in and stay exactly as they are. They use a different API surface (`getCountries()/getStates()/
+  > getRegions()` for dropdown population, with **no `init()` at all**). `date-holidays` instances are
+  > **stateful**: the collision path re-initialises one instance inside nested loops while the dropdown
+  > path never inits, so sharing ONE instance across both purposes would create a cross-contamination
+  > channel that does not exist today. **Candidate for `docs/2026_KNOWN_LIMITATIONS.md` at Phase 13.** A
+  > three-site consolidation was briefly chosen, then reverted to this single-site scope **before any code
+  > was written** (HEAD stayed `33a038e`, tree clean throughout).
 - `OnPush` change detection — deliberately deferred for `appointment-form` at Phase 3.4 (the
   `@ViewChild(RecurringSettingsComponent)` imperative calls plus the `ngOnChanges` patching make it
   unsafe in the same pass); remains an unowned post-migration item.

@@ -1,9 +1,9 @@
-import Holidays from 'date-holidays';
 type HolidaysCountry = { country: string; state?: string; region?: string };
 type HolidaysHoliday = { date: string; start: Date; end: Date; name: string; type: string; rule: string };
 import moment from 'moment-timezone';
 import { Collision } from '../CollisionDetector';
 import { EventCollisionData } from '../EventCollisionData';
+import { HolidayCatalogService } from '../HolidayCatalogService';
 
 
 export abstract class RecurrencePattern {
@@ -42,7 +42,7 @@ export abstract class RecurrencePattern {
 
         // check public holidays
         if (this.locations !== undefined) {
-            const hd = new Holidays();
+            const holidayCatalog = new HolidayCatalogService();
 
             let year: number = moment(eventData.start).year();
             const until = (eventData.repeating!.until === undefined)
@@ -50,19 +50,7 @@ export abstract class RecurrencePattern {
             const untilYear = moment(until).year();
 
             while (year <= untilYear) {
-                let holidays: HolidaysHoliday[] = [];
-
-                for (const location of this.locations) {
-                    hd.init(location.country, location.state, location.region);
-                    hd.setLanguages([this.language]);
-                    const holidaysOfYear: HolidaysHoliday[] = hd.getHolidays(year);
-
-                    for (const hol of holidaysOfYear) {
-                        if (hol.type === 'public') {
-                            holidays.push(hol);
-                        }
-                    }
-                }
+                let holidays: HolidaysHoliday[] = holidayCatalog.getPublicHolidays(this.locations, this.language, year);
 
                 if (this.locations.length > 1) {
                     holidays.sort((holiday1: HolidaysHoliday, holiday2: HolidaysHoliday) => {return holiday1.start.getTime() - holiday2.start.getTime(); });
