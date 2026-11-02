@@ -8,8 +8,8 @@
  * Phase 11.1: route-level lazy loading via `loadComponent`. The root route
  * (Creator + AutoRedirectGuard) and the wildcard/404 error routes are kept
  * EAGER so that error behaviour cannot regress and the guard's synchronous
- * redirect stays in the initial chunk. The four secondary routes (about,
- * legal, settings, 404) use dynamic `import()` for code-splitting.
+ * redirect stays in the initial chunk. The three secondary routes (about,
+ * legal, settings) use dynamic `import()` for code-splitting.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
