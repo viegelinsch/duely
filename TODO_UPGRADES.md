@@ -243,7 +243,7 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 
 **Risk:** HIGH — 18 source files, touches the appointment model, ICS generation, collision detection, recurrence engine, and datepicker bindings. Largest single refactor in the upgrade cycle.
 **Action:**
-- **PREREQUISITE:** User must choose the replacement library (see PENDING DECISION above)
+- **PREREQUISITE:** ~~User must choose the replacement library~~ **DECIDED: Luxon** (see decision below)
 - Remove `moment-timezone` (and implicitly `moment`) from `package.json`
 - Add the chosen replacement library
 - Rewrite all 18 source files that import moment/moment-timezone:
@@ -397,21 +397,28 @@ graph TD
 | 5 | esbuild: keep exact pin at 0.25.9 or bump? | **Bump to latest (0.28.2)** | Accept the risk; test thoroughly. Change from exact pin to caret (`^0.28.2`) or keep exact at the new version. |
 | 6 | moment-timezone: bump or replace? | **Full replacement in this cycle** | Replace moment-timezone across all 18 source files. This is the largest single refactor in the upgrade cycle. |
 
-### PENDING DECISION — moment-timezone replacement library
+### DECIDED — moment-timezone replacement library: **Luxon**
 
-**Status: AWAITING USER DECISION.** Must be resolved before Track D's moment-replacement task can execute.
+**Status: CONFIRMED 2026-11-09.**
 
-Options under consideration:
-- **Luxon** — https://moment.github.io/luxon/ (moment team's recommended successor; full IANA tz support; immutable API; ~72 kB gzipped with tz data)
-- **dayjs + timezone plugin** — https://day.js.org/ (lightweight ~2 kB core; moment-like mutable API; timezone via plugin)
-- **date-fns + @date-fns/tz** — https://date-fns.org/ and https://github.com/date-fns/tz (functional, modular, tree-shakeable; newer tz support)
-- **Temporal API (polyfilled)** — https://tc39.es/proposal-temporal/ (TC39 Stage 3; not in shipping engines without polyfill; too early for production as of 2026-11)
+Choice: **Luxon** (https://moment.github.io/luxon/)
+- Official successor by the moment team
+- Listed `ical-generator` peer — no workaround needed for VTIMEZONE generation
+- Full IANA timezone support built-in (no plugin)
+- Immutable `DateTime`/`Duration`/`Interval` API
+- Handles 100-year projections and DST-boundary arithmetic natively (verified critical by task #64: UNTIL = 2126)
+- ~72 kB gzipped with tz data (vs moment-timezone's 745 kB raw)
+
+Rejected alternatives:
+- **date-fns + @date-fns/tz** — NOT a listed ical-generator peer; would require `@touch4it/ical-timezones` workaround
+- **dayjs** — less robust for complex 100-year DST projections; plugin-based timezone support is less integrated
+- **Temporal API** — still Stage 3, not production-ready
 
 ---
 
 ## Relationship to the Migration Backlog
 
-This task board is **SEPARATE** from the Bootstrap-to-Material migration record. That migration's deferred-work backlog (`docs/2026_MIGRATION_BACKLOG.md`) was **retired into `docs/2026_KNOWN_LIMITATIONS.md` by Phase 13**, which closed the migration. This upgrade cycle should begin AFTER Phase 13 closes, or in parallel if the user authorises it.
+This task board is **SEPARATE** from the Bootstrap-to-Material migration record. That migration's deferred-work backlog (`docs/2026_MIGRATION_BACKLOG.md`) was **retired into `docs/2026_KNOWN_LIMITATIONS.md` by Phase 13** (commit `9ba8d62`, 2026-11-09), which formally closed the migration. **This upgrade cycle is now the active next phase of work.**
 
 Task #58 (Electron launch verification, cancelled/out-of-cycle) is **revived by B1+B2** in this board.
 
