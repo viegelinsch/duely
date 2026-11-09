@@ -5,18 +5,20 @@
 Bootstrap-to-Material migration.
 
 This file is the durable home for everything the migration deliberately did **not** fix. It was
-created when `docs/2026_MIGRATION_BACKLOG.md` was retired: every backlog item that was still open, or
-that was closed *by decision rather than by repair*, was transcribed here so the rationale survives
-the deletion. Items that were genuinely **FIXED** are *not* repeated here — they live in the commit
-history and in `docs/2026_MATERIAL_MIGRATION.md`.
+created when `docs/2026_MIGRATION_BACKLOG.md` was retired, then expanded on 2026-11-09 when the
+completed execution plan and Material migration reference were consolidated and retired. Unresolved
+work and items closed *by decision rather than by repair* remain here; completed history stays in Git.
+Current developer guidance is in `README.md`, setup/build guidance in `INSTALL.md`, and recorded
+verification results in `docs/TESTING_GUIDE.md` §4.
 
 **Every entry states four things:** WHAT the limitation is · WHY it is accepted · WHAT the risk is ·
 WHAT WOULD CHANGE THE DECISION.
 
-Sections **(a)–(g)** are the prescribed spine. Sections **(h)–(j)** carry the entries mandated by the
-Phase 11 / decision-D20 / i18n-carry-forward metadata: (h) the Phase 11 architectural deferrals, (i)
-the pre-existing UI defects logged by decision D20, (j) the i18n backlog carried forward from the
-deleted `docs/TODO-untranslated-strings.md`.
+Sections **(a)–(g)** are the prescribed spine. Sections **(h)–(k)** carry (h) architectural deferrals,
+(i) accepted UI defects and user-gated follow-ups, (j) the i18n backlog from the deleted
+`docs/TODO-untranslated-strings.md`, and (k) remaining visual and functional verification gaps.
+The retirement additions were checked against source at `f527f26` and existing verification records;
+this documentation review did not rerun tests or browser checks.
 
 > **Line-number note.** Citations were re-verified against the working tree at `1f6fd97`. A handful
 > drifted from the figures recorded during Phases 11–12; the current verified numbers are used here
@@ -117,6 +119,87 @@ until the deferred phase owns it.
 - **WHAT WOULD CHANGE THE DECISION.** The appointment-form rework re-reading the post-branch-A start
   inside branch B's guard, with a model-level (not view-level) regression test.
 
+### (a.6) Nineteen deferred `appointments.service.spec` failures (Phase 6)
+
+- **WHAT.** Phase 6 commit `201f166` unmasked 19 failures in this spec file, all still part of the
+  24-failure baseline. Together with the five tests in (a.1)–(a.3), these account for all 24:
+
+  | Group | Tests | Current failure |
+  |---|---|---|
+  | Recurring-event JSON expectations | 10 | `ical-generator` serializes `start`/`end` as ISO strings rather than `Date` objects; event-level timezone is `null` rather than inherited from the calendar. |
+  | Ordinal-weekday recurrence | 7 | Source constructs `byDay` values such as `'-3WE'`, which the current library rejects. The inverse branches also pass day-of-month, not month, to `getDaysInMonth()`. |
+  | ICS-string and simple-event expectations | 2 | Expected UTC `Z` suffix is absent; expected event-level `Europe/Berlin` timezone is `null`. The null-repeating crash that originally masked these assertions was **fixed** by `be16352`. |
+
+  Source sites: `client/app/creator/appointments.service.ts:273,296,405,451` (ordinal strings) and
+  `:294,449` (month argument). Representative assertions are in
+  `client/app/creator/appointments.service.spec.ts:170,233,252-254,294-296`.
+- **WHY ACCEPTED.** Tests and recurrence-behaviour changes are deferred under decisions 3 and 9.
+  The original Phase 6 classification survives in `201f166`; the two null-guard failures are
+  reclassified here from the recorded post-repair test output, not counted as an unresolved crash.
+- **RISK.** Ordinal-weekday recurring events can fail in production. Blindly changing JSON or ICS
+  expectations to match library output could hide timezone or recurrence regressions; the ten
+  serialization assertions also expose the production boundary issue in (a.7).
+- **WHAT WOULD CHANGE THE DECISION.** A user-initiated test-and-date phase that fixes ordinal
+  encoding/calculation and reviews date/timezone expectations against intended exported ICS
+  semantics, with non-vacuous regression coverage.
+
+### (a.7) Serialized event dates passed to Date-based collision code
+
+- **WHAT.** `client/app/creator/appointments.service.ts:577` casts `ev.toJSON()` to
+  `EventCollisionData` without converting serialized dates back to `Date`. Collision code calls
+  `eventData.start.getHours()` and other Date methods in
+  `client/app/DatesAndCollisions/Recurrence/RecurrencePattern.ts:72-75,108-111`. Task #63 recorded
+  `TypeError: eventData.start.getHours is not a function` for recurring events carrying exclusions
+  (`docs/2026_MIGRATION_TASKBOARD.md` §32.10). This is a production defect, **not only stale tests**.
+- **WHY ACCEPTED.** Pre-existing serialization drift, unchanged by the holiday-catalogue extraction;
+  its repair belongs to the deferred test-and-date phase. The type cast is not runtime conversion.
+- **RISK.** Affected recurring/exclusion exports can throw instead of producing ICS. Tests using
+  manually constructed Date-valued collision inputs do not cover this serialization boundary.
+- **WHAT WOULD CHANGE THE DECISION.** Normalize the event-to-collision boundary and verify real
+  `getICalString()` calls with recurring events, holiday exclusions and explicit excluded dates.
+
+### (a.8) UNTIL picker initially empty instead of restoring the model
+
+- **WHAT.** `RecurringSettingsComponent` initializes `enddate` to `null` and later assigns
+  `appointment.recurringSettings` without hydrating the picker from `untilDate`
+  (`client/app/creator/appointment-form/recurring-settings/recurring-settings.component.ts:101,133`).
+  The template binds both `formControlName="untilDate"` and `[(ngModel)]="enddate"` to the input
+  (`recurring-settings.component.html:145-149`). The first reveal can therefore be empty despite a
+  seeded or saved model date. This initialization defect is separate from the mixed types in (a.4).
+- **WHY ACCEPTED.** The original Phase 3.4 obligation was explicitly deferred by the recurrence
+  conversion (`8b1d40a`); date-model synchronization remains outside the completed migration.
+- **RISK.** The displayed UNTIL date does not reliably reflect the recurrence model; opening the
+  control can disturb the value through the retained dual binding.
+- **WHAT WOULD CHANGE THE DECISION.** Restore the picker from the model with calendar-day-safe
+  conversion, and test first reveal and reopening a saved appointment without changing its UNTIL.
+
+### (a.9) Load-bearing reactive-form / `ngModel` dual bindings
+
+- **WHAT.** The creator-family forms still combine `formControlName` and `[(ngModel)]` across
+  advanced, alarm, appointment and recurrence settings. For example,
+  `client/app/creator/appointment-form/appointment-form.component.html:6` binds the summary through
+  both mechanisms. This synchronization keeps the `Appointment` model used for ICS generation in
+  step with form edits. The retired plan's historical "53 bindings" is not a current inventory.
+- **WHY ACCEPTED.** Consolidating into explicit model/form synchronization is a separate behavioural
+  refactor, not a mechanical Material migration. The UNTIL issue in (a.8) is one symptom, not the
+  whole scope. The Phase 13 browser pass recorded the Angular dual-binding deprecation warning.
+- **RISK.** Deprecated binding behaviour and divergent model/form state if the bindings are removed
+  without replacing their synchronization; a view-only check can miss broken exported values.
+- **WHAT WOULD CHANGE THE DECISION.** A dedicated refactor with regression coverage for model values,
+  form validation, imperative date updates, alarms, recurrence settings and generated ICS.
+
+### (a.10) `initializeCalendar()` remains public solely for a test spy (deviation D5)
+
+- **WHAT.** `client/app/creator/appointments.service.ts:63` exposes `initializeCalendar()` so
+  `vi.spyOn(service, 'initializeCalendar')` type-checks in `appointments.service.spec.ts:157`.
+  The planned Phase 6 private-method revert was explicitly deferred in commit `201f166`.
+- **WHY ACCEPTED.** Restoring privacy now would break spec compilation without repairing the
+  deferred-red consuming test; unsafe casts were rejected.
+- **RISK.** An implementation detail remains in the public service API. There is no demonstrated
+  runtime defect from its visibility.
+- **WHAT WOULD CHANGE THE DECISION.** Rewrite the spec through storage configuration and the public
+  `getICalString()` API during the test-and-date phase, then restore `private initializeCalendar()`.
+
 ---
 
 ## (b) ACCEPTED RISKS
@@ -202,11 +285,41 @@ until the deferred phase owns it.
 - **WHY ACCEPTED.** Pre-existing behaviour, not introduced by the migration; deep links work in both
   servers (the Angular router renders `notFound` for unknown routes). Only genuine missing-asset
   detection differs, and nothing in the app fetches a bare asset URL expecting a 404.
-- **RISK.** It defeats any production 404 assertion (the `3rdpartylicenses.txt` reachability probe in
-  `docs/2026_MATERIAL_MIGRATION.md` §6 returns `index.html`, not the licence text). A monitoring or
-  SEO check that expects a real 404 will be fooled.
+- **RISK.** It defeats any production 404 assertion. A monitoring or SEO check that expects a real
+  404 will be fooled. The recorded `/3rdpartylicenses.txt` probe returned `index.html`, not licence
+  text: production `extractLicenses` writes the file at `static/3rdpartylicenses.txt`, one level above
+  the served `static/browser/` root (recorded size 52,007 B). Packaging only `browser/` can omit
+  notices. The current Docker image copies **all** of `dist/server`, including the licence file;
+  no compliance violation is established by this review.
 - **WHAT WOULD CHANGE THE DECISION.** Adding an `Accept`/extension test to the catch-all so genuine
-  asset 404s pass through — a server behaviour change outside the migration's scope.
+  asset 404s pass through — a server behaviour change outside the migration's scope. A release must
+  explicitly retain/distribute the parent-root licence artefact; changing its HTTP exposure is a
+  separate packaging/server decision. Output paths are documented in `INSTALL.md`.
+
+### (b.6) No tracked explicit browser-target policy
+
+- **WHAT.** The retired `postcss.config.js` contained the only explicit browser-target declaration:
+  `['last 2 versions', '> 1%', 'not dead']`. There is no `.browserslistrc` on disk (the filename is
+  ignored by `.gitignore`) and no `browserslist` key in `package.json`. The declaration was already
+  inactive when the Angular esbuild builder replaced the Webpack CSS pipeline.
+- **WHY ACCEPTED.** Deleting that inactive config did not change the recorded production CSS bytes.
+  Restoring browser support intent would require a tracked configuration and a user policy decision,
+  not a documentation-only migration closure.
+- **RISK.** The repository does not state its supported-browser intent. Generic Browserslist defaults
+  must not be presented as verified Angular build targets or as a tested support matrix.
+- **WHAT WOULD CHANGE THE DECISION.** Agree supported browsers, add a tracked target configuration,
+  and verify the builder's effective targets and application behaviour on those browsers.
+
+### (b.7) Invalid-input feedback remains a native blocking alert
+
+- **WHAT.** `client/app/creator/creator.component.ts:70` still calls
+  `alert(this.translate.instant('INVALID INPUTS'))` rather than a Material snackbar.
+- **WHY ACCEPTED.** The creator conversion (`0d53dfb`) deliberately retained native feedback;
+  replacing it was not required for the structural migration.
+- **RISK.** The alert blocks interaction and uses browser/OS presentation rather than the app theme;
+  no new validation defect is demonstrated.
+- **WHAT WOULD CHANGE THE DECISION.** A user-authorized feedback/UI change with invalid-form and
+  accessibility verification; do not introduce `MatSnackBar` merely to close this record.
 
 ---
 
@@ -311,7 +424,7 @@ as *not deprecated* or *not worth the churn*; none is a defect.
   direct upgrade path.
 - **RISK.** A deprecation warning at install; no runtime surface (it is dev/optional).
 - **WHAT WOULD CHANGE IT.** An upstream `global-agent`/`@electron/get` release that drops it — the
-  dependency-upgrade cycle's territory (`TODO_UPGRADES.md`).
+  dependency-upgrade cycle's territory (`docs/TODO_UPGRADES.md`).
 
 ### (d.3) `@angular/animations` npm-deprecated but a MANDATORY peer on v20
 
@@ -354,16 +467,16 @@ as *not deprecated* or *not worth the churn*; none is a defect.
 - **`zone.js ~0.15.0 || ~0.16.0`** and **`rxjs ^6.5.3 || ^7.4.0`** survive both hops unchanged; the
   repo's `zone.js ~0.15.0` and `rxjs ~7.8.1` need no change.
 - **`@angular-devkit/build-angular` becomes npm-deprecated at 22.0.0.** This obligation is **already
-  discharged**: task #52 removed it and the repo builds exclusively on the esbuild
-  `@angular/build:application` / `:dev-server` / `:unit-test` builders (`docs/2026_MATERIAL_MIGRATION.md`
-  §7 deviation 11).
+  discharged**: task #52 removed it (`aed844b`); `angular.json` uses only the esbuild
+  `@angular/build:application` / `:dev-server` / `:unit-test` builders. Current pipeline/output
+  guidance is in `INSTALL.md`.
 - **The `mat.theme()` / `mat.theme-overrides()` M3 token API survives unchanged to 22.1.6**, so
   `client/styles/_theme.scss` needs **no rewrite** across both hops.
 - **`engines.node`** must be tightened at 22 (see (d.4)).
 
 **Companion cycle.** Dependency upgrades (the `boolean`/`@angular/animations` deprecations in (d),
 the Electron revival in (f), and the trimmed-timezone prerequisite in (h.3)) are tracked separately
-in `TODO_UPGRADES.md`; that cycle should begin **after** this migration closes.
+in `docs/TODO_UPGRADES.md`; that cycle should begin **after** this migration closes.
 
 ---
 
@@ -416,9 +529,8 @@ second Node runtime.
 ## (g) REJECTED ALTERNATIVES
 
 Preserved **verbatim** from the retired `docs/2026_MIGRATION_BACKLOG.md` §2(h) so the rationale
-survives the deletion. Do not re-litigate without new evidence. `docs/2026_MIGRATION_PLAN.md` also
-carries a summary bullet list of the same rationale (its "Full table also in …" pointer is repointed
-here).
+survives the deletion. This table also preserves the completed execution plan's rejected-alternative
+summary; that duplicate plan has now been retired. Do not re-litigate without new evidence.
 
 | Alternative | Rationale |
 |---|---|
@@ -508,9 +620,27 @@ repair.
   `tz.zone(...).untils` (throws "Invalid time value"). Full record: TASKBOARD §33 (Ivo) and §34
   (leader verification); STATE §11.31 and §11.32.
 
+### (h.4) `date-holidays` and its catalogue remain eagerly loaded
+
+- **WHAT.** Secondary-route lazy loading is complete, but holiday-data lazy loading is not.
+  `app.routes.ts:21,40-44` keeps Creator eager; its recurrence component statically imports
+  `date-holidays` and constructs `Holidays` (`recurring-settings.component.ts:22,100`).
+  `HolidayCatalogService.ts:2,38` also imports/constructs it synchronously. The recorded production
+  initial graph includes the catalogue; the retired reference's lazy "holiday catalogue" chunk label
+  was misleading.
+- **WHY ACCEPTED.** Phase 11.1 scoped lazy loading to route components. Service extraction in Phase
+  11.2 changed construction ownership, not data loading. Making synchronous holiday consumers
+  asynchronous is a separate behavioural/architectural change.
+- **RISK.** Catalogue download/parse cost remains in the initial payload despite the smaller entry
+  chunk; no new functional defect or measured runtime slowdown is established here. This differs
+  from the instance-sharing decision in (h.1).
+- **WHAT WOULD CHANGE THE DECISION.** A user-authorized asynchronous loading design with initial
+  payload measurements and location/recurrence/collision regression coverage. The declined trimmed
+  timezone build in (h.3) is not a substitute.
+
 ---
 
-## (i) PRE-EXISTING UI DEFECTS (decision D20)
+## (i) PRE-EXISTING UI DEFECTS AND USER-GATED FOLLOW-UPS
 
 Logged by the Phase 5 Playwright browser pass and **accepted as pre-existing and out of scope** by
 user decision D20 (2026-09-14). Every colour/contrast/visibility claim derives from `getComputedStyle`
@@ -565,6 +695,20 @@ fixed by Phase 10 commit 10.3(a). Source detail: TASKBOARD §14.6, §14.7, §14.
   build to `HashLocationStrategy` (which needs no `<base>`) once `isElectron` can actually be turned
   on (see (f)), or a build-time `<base>` injection that differs per target.
 
+### (i.10) Native time controls remain; `ngx-mat-timepicker` follow-up is parked
+
+- **WHAT.** Appointment start/end controls remain `<input matInput type="time">`
+  (`client/app/creator/appointment-form/appointment-form.component.html:51,72`). The user selected
+  `ngx-mat-timepicker` for a future replacement, but the dependency is not installed and the parked
+  task was not implemented (`docs/2026_MIGRATION_STATE.md` §6). Alarm controls may be considered in
+  that user-initiated follow-up; its scope is not decided by this consolidation.
+- **WHY ACCEPTED.** Native controls completed the Material form conversion. The timepicker task was
+  deliberately parked pending a user request, not silently folded into migration closure.
+- **RISK.** Time-entry presentation/interaction varies by browser; native dark-mode mismatch is
+  separately recorded in (i.4). This is an unimplemented UI choice, not proof of broken time values.
+- **WHAT WOULD CHANGE THE DECISION.** The user opens the follow-up; then add the dependency and
+  standalone imports, rebuild the Docker image, and verify keyboard/time-entry and exported values.
+
 ---
 
 ## (j) i18n CARRY-FORWARD
@@ -573,24 +717,28 @@ Carried forward from `docs/2026_MIGRATION_BACKLOG.md` §3, which was itself the 
 of the deleted `docs/TODO-untranslated-strings.md`. Losing an OPEN item here would be the worst
 outcome of the consolidation, so all are preserved.
 
-### (j.1) Three Settings labels whose wording was agent-proposed and never confirmed (§3(b), OPEN)
+### (j.1) Three Settings labels with conflicting confirmation records (§3(b), OPEN)
 
 - **WHAT.** The iCal-metadata pass (source U6, commit `dd11df7`) added three UI labels with
-  **agent-proposed** values that the user never confirmed. They render at
-  `settings.component.html` (~`:101/:105/:109`):
+  agent-proposed values, still present in `client/assets/i18n/en.json:86-88` and `de.json:86-88`:
 
-  | Key | EN | DE | Attribution |
-  |---|---|---|---|
-  | `CALENDAR NAME` | Calendar name | Kalendername | agent-proposed — please confirm |
-  | `CALENDAR PRODUCT ID` | Product ID | Produkt-ID | agent-proposed — please confirm |
-  | `CALENDAR URL` | Calendar URL | Kalender-URL | agent-proposed — please confirm |
+  | Key | EN | DE |
+  |---|---|---|
+  | `CALENDAR NAME` | Calendar name | Kalendername |
+  | `CALENDAR PRODUCT ID` | Product ID | Produkt-ID |
+  | `CALENDAR URL` | Calendar URL | Kalender-URL |
 
-- **WHY ACCEPTED.** No confirmation is recorded anywhere in the repo and the values are byte-identical
-  to `dd11df7`. The migration did not invent wording for the user.
-- **RISK.** User-facing labels may not match the intended terminology.
-- **WHAT WOULD CHANGE THE DECISION.** The user confirms the six values as-is or supplies replacements
-  (edit both locales together to preserve parity — the en/de key-parity spec now enforces the key
-  set, though not the wording).
+  The retired execution plan's step 1.11 and assumption 9 explicitly called this wording
+  **confirmed**, contradicting the carried-forward backlog's "never confirmed" claim. Step 1.11
+  also prescribed lowercase EN initials (`calendar name`, `product ID`, `calendar URL`), unlike
+  the unchanged current values. The plan's claim is preserved here, not treated as direct user
+  confirmation or permission to change capitalization.
+- **WHY ACCEPTED.** The documentation conflicts; matching source values or agent-authored plan prose
+  alone cannot establish the user's intended wording. No locale values were changed by this review.
+- **RISK.** Labels or capitalization may not match the intended terminology; either blanket
+  "confirmed" or "never confirmed" wording would hide the conflicting provenance.
+- **WHAT WOULD CHANGE THE DECISION.** The user confirms the six current values as-is or supplies
+  replacements, including capitalization (edit both locales together to preserve key parity).
 
 ### (j.2) The i18n pass was never fully verified at runtime (§3(c), partly OPEN)
 
@@ -640,13 +788,55 @@ outcome of the consolidation, so all are preserved.
 - **WHAT WOULD CHANGE THE DECISION.** A copy edit of the two `LEGAL EDIT HINT` values to reference
   the current build output (or, better, to describe editing the legal notice through the app).
 
-### (j.5) PLAN Correction 11 — preserved answer (§3(e))
+### (j.5) Legal-key provenance — preserved answer (§3(e), former plan Correction 11)
 
-`docs/2026_MIGRATION_PLAN.md` Correction 11 asks whether `LEGAL DEFAULT MESSAGE` and `LEGAL EDIT HINT`
-were inside `docs/TODO-untranslated-strings.md`'s recorded scope before assuming they are a new
-defect. **Answer — confirmed yes.** Both keys were introduced by that document's Section C, items C4
-and C5, in commit `dd11df7`; the EN values are verbatim the previously-hardcoded strings. They are
-therefore **not** a new defect and not a translation gap: the raw-key rendering on `/legal` was the
-documented consequence of the C3–C5 `.instant()`-in-the-constructor decision, already tracked as
-§2(g)-11 and **fixed by Phase 10.3** (rebuilt on `translate.onLangChange`). This answer is preserved
-here because the source file is deleted and `docs/2026_MIGRATION_PLAN.md` references it.
+`LEGAL DEFAULT MESSAGE` and `LEGAL EDIT HINT` were inside the deleted untranslated-strings
+inventory: Section C, items C4/C5, commit `dd11df7`. Their EN values were the previously-hardcoded
+strings, so the raw-key rendering was **not** a new translation gap. It resulted from the
+`.instant()`-in-the-constructor decision and was **fixed by Phase 10.3** (rebuilt on
+`translate.onLangChange`). The stale hint wording remains separately open in (j.4); this provenance
+answer survives retirement of both the inventory and execution plan.
+
+---
+
+## (k) REMAINING VISUAL AND FUNCTIONAL VERIFICATION GAPS
+
+### (k.1) Screenshot counts do not establish the full interaction / density matrix
+
+- **WHAT.** The original Phase 2.7/8 contract covered six route states at 375/800/1440 px, light/dark,
+  at least two accents, and density evaluation at Electron's **800×600** window size. Pilot sign-off
+  was recorded as approved, 72 after-shots were captured, and Phase 13 explicitly used a reduced
+  10-shot pass at 1440×900. None of those records should be rewritten as "never attempted".
+  However, `e2e/capture-after-shots.cjs:51` fixes height at **900**, and its empty-storage redirect
+  branch (`:104-129`) never applies the named theme/accent: those filenames label the same default
+  Settings state, not four different theme states. Static captures do not demonstrate dropdown,
+  expanded-form or save/cancel interactions at 800×600.
+- **WHY ACCEPTED.** The migration closed with recorded pilot approval and the user-approved reduced
+  final pass. This is a remaining coverage gap, not a revoked sign-off or proof of a new UI defect.
+- **RISK.** Compact-window usability and interactions may be missed even when every PNG exists;
+  filename/count-based claims can overstate theme coverage. Accepted appearance defects remain in
+  (i), and actual Electron launch / `file://` chunk loading remain unverified in (f).
+- **WHAT WOULD CHANGE THE DECISION.** A dedicated browser pass covering the six route states and
+  requested widths, light/dark and two accents where settings exist, plus actual 800×600
+  interactions with expanded creator forms, dropdowns, persistence and cancel. Check the
+  empty-storage redirect as the default state, not as falsely labelled theme/accent variants.
+
+### (k.2) Green E2E counts do not prove date/timezone/recurrence/collision semantics
+
+- **WHAT.** The recorded 16 Playwright passes execute eight tests against two server projects, but
+  `e2e/app.e2e.spec.ts` contains coverage gaps:
+  - `:101-113` looks for nonexistent `select[name="timeZone"]` and conditionally skips selection/
+    assertions when none exists; the actual Settings control is named `timezone` via `formControlName`.
+  - `:144-148` is a collision placeholder with only logging, no setup or assertion.
+  - `:40-65` checks a download filename and saves the file, but never reads/asserts ICS contents.
+  - `:119-139` checks the daily-recurrence selector/panel, not recurring export semantics.
+  Thus neither the green E2E count nor static screenshots close all historical date/exclusion/
+  holiday, timezone, recurrence-pattern, collision and locale verification obligations.
+- **WHY ACCEPTED.** Migration verification restored executable tests and checked routing/rendering;
+  substantive test/date and coverage work remains user-gated. This review records the gap without
+  altering tests or their reported partition.
+- **RISK.** Vacuous tests and view-only checks give false confidence about settings persistence and
+  exported calendar values; known production issues in (a.6)–(a.8) can coexist with green E2E output.
+- **WHAT WOULD CHANGE THE DECISION.** A user-initiated coverage/test-and-date phase with unconditional
+  control assertions, saved/reloaded timezone checks, actual collision fixtures and ICS-content
+  assertions for recurring and excluded dates, plus locale checks from (j.2).

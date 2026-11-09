@@ -1,19 +1,21 @@
 # Duely — Testing Guide
 
-**Stack:** Vitest 3.1 unit tests run through the Angular `@angular/build:unit-test` builder ·
-Playwright for the visual/E2E pass · Angular 20.3.18 · TypeScript 5.9.3 · Node 24.
-**Last rewritten:** 2026-09-14, at commit `ced1dc8`, for the post-migration stack.
+**Stack:** Vitest through Angular's `@angular/build:unit-test` builder · Playwright for visual/E2E
+checks · Angular 20 · TypeScript 5.9 · Docker `node:lts-slim` (floating runtime, not pinned Node 24).
+`package.json` / `package-lock.json` are authoritative for declared / resolved versions.
+**Documentation consolidated:** 2026-11-09, against source at `f527f26` and existing migration records.
 
-> This guide was rewritten from scratch. The previous version documented a stack that **no longer
-> exists** (Jasmine 5.4.0 + Karma 6.4.4 + `karma.conf.js` + `client/test.ts` on Angular 19). Every
-> claim below is verified against the repository at `ced1dc8`.
+The former Karma/Jasmine stack and `client/test.ts` are gone. This guide preserves the latest
+recorded migration-closure verification snapshot (§4), not a new test/build/browser run. The
+separate Material migration reference has been retired; completed history remains in Git.
 
 ---
 
 ## 1. What the unit-test stack actually is
 
-Duely's unit tests run on **Vitest 3.1** (`package.json` declares `"vitest": "^3.1.0"`), driven by
-the official Angular builder. The `test` target in `angular.json` (lines 90–97) is:
+Duely's unit tests run on **Vitest** (`package.json` declares `"vitest": "^3.1.0"`; the recorded
+resolved version is 3.2.4), driven by the official Angular builder. The `test` target in
+`angular.json` is:
 
 ```jsonc
 "test": {
@@ -21,7 +23,8 @@ the official Angular builder. The `test` target in `angular.json` (lines 90–97
   "options": {
     "buildTarget": "duely:build:development",
     "tsConfig": "client/tsconfig.spec.json",
-    "runner": "vitest"
+    "runner": "vitest",
+    "setupFiles": ["vitest.setup.ts"]
   }
 }
 ```
@@ -68,16 +71,16 @@ global too; you will see `vi.spyOn(...)`, `vi.fn()` used bare.)
 docker compose run --rm duely-dev <cmd>
 ```
 
-The host `node_modules` is **empty** — dependencies live in an anonymous volume baked into the
-`duely-dev` image (`node:24-bookworm`). Running `npm test`, `ng build` or `tsc` on the host will fail
-or, worse, silently use a different toolchain. There is no supported host path.
+Dependencies are installed in the `duely-dev` image and live in an anonymous `/app/node_modules`
+volume. `Dockerfile` uses the floating `node:lts-slim` tag. Host execution can fail or silently use
+another toolchain; there is no supported host verification path.
 
 - If the Docker daemon is unavailable, **STOP** — do not fall back to the host.
 - `docker compose run --rm` discards the container's `/tmp` on exit, but the repo is bind-mounted
-  (`.:/app`), so anything written under the repo (including under `.git/`) survives on the host and
-  is invisible to `git status --porcelain`. The failing-name baseline (§7) relies on this.
-- Always re-check `docker ps` at the end of a session; if a container survived `--rm`, remove it with
-  `docker stop <id>` (never `docker compose down`).
+  (`.:/app`), so files written under the repo survive. Files under `.git/` are invisible to
+  `git status --porcelain`; the failing-name baseline (§7) relies on this.
+- Re-check `docker ps` at session end. Stop only containers created for your verification, using
+  `docker stop <id>` (not `docker compose down`); do not stop unrelated containers.
 
 The npm scripts (from `package.json`) and their Docker form:
 
@@ -159,23 +162,63 @@ rendering — those are symmetric across locales (backlog §3).
 
 ## 4. The gate set
 
-Every phase of the backlog-emptying work asserts the same gates, in this order, all in Docker. This
-is the set recorded in `docs/2026_MIGRATION_STATE.md` §11.
+Run every execution gate in Docker. Source/spec and server/Electron type-checks are separate:
+Node-side bundling does not substitute for TypeScript checking.
 
-| Gate | Command | Expected |
+| Gate | Command | Recorded baseline |
 |---|---|---|
-| **G1** — app type-check | `docker compose run --rm duely-dev npx tsc --noEmit -p client/tsconfig.app.json` | **0 errors** |
-| **G2** — spec type-check | `docker compose run --rm duely-dev npx tsc --noEmit -p client/tsconfig.spec.json` | **0 errors** (authoritative count) |
-| **G3** — strict-null invariant | pipe G1/G2 output to `grep -cE 'error (TS2322\|TS2531)'` | literally **0** on both |
-| **G4** — unit tests | `docker compose run --rm duely-dev npm test` | **24 failed / 49 passed (73)**, **5 failed / 12 passed files**, **44** icon messages, **0** NG8xxx, **0** NG0xxx — then the failing-name diff (§7) **must be empty** |
-| **G5** — production build | `docker compose run --rm duely-dev npx ng build --configuration production --output-path /tmp/probe-dist` | **exit 0** (budget *warning* is expected, not an error) |
-| **G6** — clean tree + no stray containers | `git status --porcelain && docker ps` | both empty after the commit |
+| **G1** — app type-check | `docker compose run --rm duely-dev npx tsc --noEmit -p client/tsconfig.app.json` | **0 errors**, exit 0 |
+| **G1b** — server type-check | `docker compose run --rm duely-dev npx tsc --noEmit -p server/tsconfig.json` | **0 errors**, exit 0 |
+| **G1c** — Electron type-check | `docker compose run --rm duely-dev npx tsc --noEmit -p electron/tsconfig.json` | **0 errors**, exit 0 |
+| **G2** — spec type-check | `docker compose run --rm duely-dev npx tsc --noEmit -p client/tsconfig.spec.json` | **0 errors**, exit 0 |
+| **G3** — strict-null invariant | count `error (TS2322\|TS2531)` matches in G1/G2 output | literally **0** on both |
+| Dev probe build | `docker compose run --rm duely-dev npx ng build --configuration development --output-path /tmp/probe-dist-dev` | exit 0 |
+| **G4** — unit tests | `docker compose run --rm duely-dev npm test` | **24 failed / 49 passed (73)**, **5 failed / 12 passed files**, **44** icon messages, **0** NG8xxx/NG0xxx; failing-name diff (§7) empty |
+| **G5** — production probe | `docker compose run --rm duely-dev npx ng build --configuration production --output-path /tmp/probe-dist` | exit 0, **0** budget warnings |
+| Lint | `docker compose run --rm duely-dev npm run lint` | exit 0, **0 errors / 8 warnings** |
+| E2E | `docker compose run --rm duely-dev npx playwright test` | **16 passed / 0 failed**, with coverage gaps below |
 
-> **Never build into the configured `outputPath`.** Probe builds always pass
-> `--output-path /tmp/probe-dist` (or `/tmp/probe-dist-dev`) so the real `dist/` is never touched.
+Probe builds must override `outputPath` to `/tmp/probe-dist` or `/tmp/probe-dist-dev` so they do not
+touch real `dist/`. A deliberate distribution build uses
+`docker compose run --rm duely-dev npm run build:prod`; it writes both output trees (INSTALL.md).
+Inspect `git status --porcelain` and `docker ps` afterward, preserving existing user work and
+stopping only containers created for the verification. No commit is implied by running gates.
 
-G1/G2 also exist in server/electron variants in later phases (G1b/G1c, added by backlog-emptying
-Phase 6); they are not part of the core set today.
+### Latest recorded closure snapshot (2026-11-09)
+
+Transferred from the completed Material migration reference's Phase 13 closure record (task #38;
+closure commit `9ba8d62`). **These are existing results, not rerun during this consolidation.**
+App/server/Electron/spec type-checks and the dev/production builds exited 0. Lint reported 0 errors /
+8 warnings, Playwright reported 16 passed, and locale keys were identical at **127 EN / 127 DE**.
+Units remained **24 failed / 49 passed**, not fully green; 24 failing names matched the baseline,
+md5 `172d78996b50c84e38211b529d76ab0b`. Strict-null TS2322/TS2531 and NG8xxx/NG0xxx counts were 0.
+
+The production distribution build recorded these initial assets:
+
+| Asset | Raw bytes |
+|---|---|
+| `chunk-JZJ2L7GC.js` | 1,619,140 |
+| `main-UADZYEJY.js` | 279,047 |
+| `chunk-QBUSXI3J.js` | 190,283 |
+| `chunk-MY5TLO44.js` | 157,016 |
+| `polyfills-5CFQRCPP.js` | 34,585 |
+| `styles-DRBU42VC.css` | 20,951 |
+| `chunk-Z7MHJMDT.js` | 11,150 |
+| **Initial total** | **2,312,172 (2.31 MB), 371.55 kB estimated transfer** |
+
+`index.html` was 10,840 B. Budgets were **2.55mb warning / 5mb error** for initial raw size and
+**6kb / 10kb** for component styles, with 0 budget warnings. Compare new measurements against this
+snapshot, not superseded Webpack figures. Three secondary routes are lazy, but the holiday catalogue
+remains in the eager graph (Known Limitations (h.4)); a smaller app-entry file is not a comparable
+reduction of the whole initial payload. CommonJS warnings are identified by dependency, not a
+stable count (Known Limitations (b.3)).
+
+The user-approved reduced final visual pass captured **10 full-page PNGs** (five routes × two themes
+at **1440×900**) under `.git/duely-p13-shots/`. Every route had 0 console/page errors; Creator had
+one dual-binding deprecation warning. Body background remained `rgb(221, 221, 221)` in both themes,
+confirming the accepted hardcoded-shell defect. This was not a full 72-state interaction check or
+an Electron launch. Coverage gaps are recorded in Known Limitations (k.1)–(k.2), with desktop runtime
+separately in (f).
 
 ---
 
@@ -197,36 +240,37 @@ Until the deferred failures are addressed in a future test-and-date phase, `npm 
 
 The **44 icon messages** are cosmetic: `provideDuelyIcons()` runs from `app.config.ts`, which spec
 TestBeds do not load, so each `<mat-icon svgIcon="duely:...">` logs a lookup warning per render.
-Every affected spec still passes. This is a documented limitation (locked decision 12), not a bug to
-silence.
+Every affected spec still passes. **D19 supersedes decision 12:** this is test-harness-only, not
+user-facing (Known Limitations (b.2)); browser registration uses bundled literal SVGs.
 
-The baseline must **neither improve nor regress** (locked decision 3: *no test work in the
-backlog-emptying phases*). A phase whose failing-name diff is non-empty is **reverted, never patched
-forward**.
+The deferred failing-name partition must **neither improve nor regress** without the user-initiated
+test/date or coverage phase. Do not silently fix, drop, skip or rebaseline a deferred test. If the
+partition changes unexpectedly, stop and investigate while preserving unrelated working-tree edits.
 
 ---
 
 ## 6. The 24 deferred failures — partition
 
-All 24 are loud, classified and deferred. None is a migration regression; the 19 in groups 4–6 were
-masked until migration Phase 6 fixed the `TranslateStore` NG0201 that aborted those specs. Copied
-from `docs/2026_MIGRATION_STATE.md` §3:
+All 24 are loud, classified and deferred. Phase 6's `TranslateStore` repair unmasked the 19
+appointments-service failures. Later commit `be16352` fixed the null-repeating crash, exposing
+residual assertions in two of the same tests; their names and the partition stayed unchanged.
+Known Limitations (a.1)–(a.3), (a.6)–(a.7) are the current diagnosis/disposition.
 
-| Owner | Count | Groups |
+| Group | Count | Current failure |
 |---|---|---|
-| **Backlog — Q1 (`saveAs`)** | 3 | `web-storage.service.spec` ×2, `electron-storage.service.spec` ×1 |
-| **Backlog — Q2 (CollisionDetector)** | 1 | `CollisionDetector.spec` stale `date-holidays` expectation |
-| **Backlog — option C (`saveText`)** | 1 | `creator.component.spec` stale valid-array expectation |
-| **Backlog — CollisionDetector null-guard (source bug)** | 2 | `appointments.service.spec` — `repeating: null` crashes `CollisionDetector.ts:61` |
-| **Backlog — ical-generator `toJSON()` drift (stale assertions)** | 10 | `appointments.service.spec` — start/end now ISO strings (were `Date`), event timezone now `null` |
-| **Backlog — nth-weekday `byDay` format (source bug)** | 7 | `appointments.service.spec` — ical-generator rejects `'-3WE'`; bare codes still accepted |
+| `saveAs` | 3 | `web-storage.service.spec` ×2, `electron-storage.service.spec` ×1; non-configurable CJS namespace |
+| CollisionDetector | 1 | Stale holiday expectation plus index-0 assertion loop |
+| `saveText`, option C | 1 | `creator.component.spec` stale valid-array expectation; removal deferred to coverage review |
+| ICS-string / simple-event expectations | 2 | Missing expected UTC `Z` suffix; event timezone `null` instead of `Europe/Berlin`, **not** an unresolved null crash |
+| `ical-generator toJSON()` drift | 10 | Start/end ISO strings rather than Date objects; event timezone `null`; separate production collision-boundary defect in (a.7) |
+| Ordinal-weekday `byDay` | 7 | Source passes rejected `'-3WE'`-style codes; inverse calculation also passes day-of-month as month |
 
 **Per-file totals (the 5 failed files):**
 
 | File | Failures |
 |---|---|
 | `CollisionDetector.spec` | **1** |
-| `appointments.service.spec` | **19** (toJSON drift 10 + nth-weekday byDay 7 + null-guard 2) |
+| `appointments.service.spec` | **19** (toJSON drift 10 + ordinal-weekday 7 + residual ICS/timezone expectations 2) |
 | `creator.component.spec` | **1** |
 | `electron-storage.service.spec` | **1** |
 | `web-storage.service.spec` | **2** |
@@ -234,50 +278,57 @@ from `docs/2026_MIGRATION_STATE.md` §3:
 
 ### Why they are still red
 
-The 24 failures are **deferred by user decision to a separate future test-and-date phase.** They are
-*not* fixed, dropped or skipped in the backlog-emptying work, and the baseline must stay frozen until
-that phase runs. Their full diagnosis and disposition will be recorded in
-**`docs/2026_KNOWN_LIMITATIONS.md`**, which backlog-emptying **Phase 13 will create** (the file does
-not exist yet — this forward reference is intentional).
+The failures are **deferred by user decision** to a future test-and-date phase or, for the positive
+`saveText` test, a user-initiated coverage review. Do not fix, drop or skip them under unrelated work.
+`docs/2026_KNOWN_LIMITATIONS.md` (a) holds the full diagnosis and disposition, including production
+recurrence/collision defects that test-only expectation changes would not repair.
 
 ---
 
 ## 7. The reproducible failing-name capture (and the trap that broke the naive version)
 
 The strongest form of the baseline contract is a sorted list of the failing test **names**, diffed
-against a committed baseline. The baseline lives at
-**`.git/duely-failing-names-baseline.txt`** (durable on the host via the `.:/app` bind mount, invisible
-to `git status --porcelain`).
+against the saved baseline at **`.git/duely-failing-names-baseline.txt`**. It is durable via the
+`.:/app` bind mount but **not committed** or portable to another checkout. The recorded md5 is
+`172d78996b50c84e38211b529d76ab0b`; preserve an existing baseline instead of overwriting it.
 
-### The validated capture command (use this identical command every time)
+### Initial capture (only when no baseline exists)
 
-Bare `npm test` reproduces the baseline on **any** Node major; no environment variable is required.
-Node ≥ 26 (the current `node:lts-slim` base) defines `localStorage` as an `undefined` getter, which
-used to break every spec that touches `StorageService`. That is now repaired in the harness by
-**`vitest.setup.ts`**, wired in through the `setupFiles` option of the `test` target in
-`angular.json`; it restores jsdom's own `localStorage`/`sessionStorage` onto `globalThis` before the
-specs run (§9 has the mechanism). **Do not** pass `-e NODE_OPTIONS="--localstorage-file=…"`: it is
-obsolete, and using it would mask a broken or missing setup file instead of exposing it.
+Bare `npm test` reproduces the recorded baseline in the Docker image without a manual environment
+variable. Node 26's `localStorage` getter previously broke storage specs; **`vitest.setup.ts`**,
+registered under `setupFiles` in `angular.json`, restores jsdom's storage globals before specs run
+(§9). This is not a guarantee for arbitrary future Node majors. Do not pass
+`-e NODE_OPTIONS="--localstorage-file=…"`: it would mask a broken or missing setup file.
+
+After confirming that no baseline file exists, capture it once:
 
 ```bash
-docker compose run --rm duely-dev npm test 2>&1 \
-  | grep -E '^[[:space:]]*FAIL[[:space:]]' \
-  | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' \
-  | sort > .git/duely-failing-names-baseline.txt
+(
+  set -C
+  docker compose run --rm duely-dev npm test 2>&1 \
+    | grep -aE '^[[:space:]]*FAIL[[:space:]]' \
+    | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' \
+    | sort > .git/duely-failing-names-baseline.txt
+)
 ```
+
+`set -C` prevents overwriting an existing baseline. Check the full test result, the **24-line**
+count and recorded md5 before accepting the file; an empty/truncated capture is not a valid baseline.
+`grep -a` preserves textual extraction if captured output contains NUL bytes.
 
 ### The diff command (must be empty)
 
 ```bash
 docker compose run --rm duely-dev npm test 2>&1 \
-  | grep -E '^[[:space:]]*FAIL[[:space:]]' \
+  | grep -aE '^[[:space:]]*FAIL[[:space:]]' \
   | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//' \
   | sort > .git/duely-failing-names.txt
 diff .git/duely-failing-names-baseline.txt .git/duely-failing-names.txt   # MUST be empty
 ```
 
-If the diff is **not** empty, STOP: revert the working tree, do not commit, and report. A non-empty
-diff means the failing set moved.
+If the diff is **not** empty, stop and report the changed names. Diagnose it without resetting the
+working tree or overwriting the baseline; preserve unrelated edits. Review the full unit output
+as well, because a names-only pipeline does not verify successful compilation or all counts.
 
 ### Why the naive `grep -E '^\s*(×|✗|FAIL)'` pattern does NOT work
 
@@ -326,7 +377,7 @@ wait never resolved, so `npm run test:e2e` hung indefinitely.
 > **Express catch-all limitation.** The `server` project cannot assert on HTTP 404 status codes
 > because `server/app.ts`'s unconditional catch-all returns 200 + `index.html` for every unmatched
 > path. Client-side routing (Angular's `AutoRedirectGuard` / wildcard) still works — the limitation
-> is HTTP-level only. Changing the server routing is out of scope (§15.9(b) open decision).
+> is HTTP-level only. The accepted disposition is in Known Limitations (b.5).
 
 ### How the container and ports work
 
@@ -342,8 +393,9 @@ wait never resolved, so `npm run test:e2e` hung indefinitely.
   parent the container ran `webpack --watch` and served nothing on 4200, so host access never worked.
   The in-container capture workflow is unaffected and in fact improved: the dev container now
   auto-serves on 4200.
-- **Port 8000** = the Express static server (`server/app.ts`, `const port = process.env.PORT || 8000`,
-  serving `dist/server/static`) — the built-app path Phase 9's second project will target.
+- **Port 8000** = the Express static server (`server/app.ts`,
+  `const port: number = Number(process.env.PORT ?? 8000)`, serving `dist/server/static/browser`) —
+  the built-app path targeted by the second Playwright project.
 - The `duely-dev` image ships Playwright (`@playwright/test ^1.64.1`; resolved to 1.64.1 by the
   lockfile, Chromium revision **v1248** = Chrome for Testing 156.0.8078.4) **with Chromium and all
   OS-level dependencies baked in at build time** (Dockerfile
@@ -400,9 +452,9 @@ accents × 3 viewports = 72 PNGs** (it exits non-zero if it captures fewer than 
 run without it and refuses to target the reference baseline directory
 (`docs/migration-shots/after`). This prevents accidental overwrite of the stored 72-PNG set.
 
-- **Viewports:** widths **375 / 800 / 1440**, height 900. (800 is the exact fixed Electron window
-  width at `electron/main.ts:30-32` and is trivially forgotten.)
-- **Themes:** `light`, `dark` (`settings.themeMode`).
+- **Viewports:** widths **375 / 800 / 1440**, height **900**. Matching Electron's 800px width does
+  **not** test its actual 800×600 window or expanded-form density (Known Limitations (k.1)).
+- **Themes:** `light`, `dark` (`settings.themeMode`) for seeded settings states.
 - **Accents:** `red`, `blue` (`settings.color`).
 - **Context:** a fresh `browserContext` per route-state × width, with `locale: 'en-US'` and
   `timezoneId: 'Europe/Berlin'`.
@@ -414,13 +466,19 @@ run without it and refuses to target the reference baseline directory
 | 2 | `/settings` | timezone, language, location, colour scheme, calendar metadata |
 | 3 | `/` with settings loaded | the creator: full appointment form |
 | 4 | `/about` | licence and architecture |
-| 5 | `/legal` | renders raw i18n keys today (a known limitation) |
+| 5 | `/legal` | translated notice; cold-load/language-change rendering repaired in Phase 10.3 |
 | 6 | unknown path (`/nope`) | wildcard redirect to `/404` |
 
 For states 2–6 the script seeds `localStorage['settings']` (colour, themeMode, `Europe/Berlin`,
-`en`, calendar metadata) before navigating; state 1 deliberately uses an **empty** localStorage so
-the guard redirect fires. The 01/02 pairs are byte-identical per width by design — the guard redirect
-renders the same DOM as a direct `/settings` visit.
+`en`, calendar metadata) before navigating; state 1 uses **empty** localStorage so the redirect
+renders default Settings. Its filenames vary theme/accent, but that branch never applies them:
+those are duplicate default-state captures, not independent dark/blue coverage. A seeded Settings
+visit is not necessarily identical to the empty-storage redirect.
+
+Static images and 16 passing E2E executions do not prove the full functional matrix. The timezone
+test conditionally skips a nonexistent selector, the collision test is a logging placeholder, the
+ICS test does not read file contents, and daily recurrence checks only selector/panel state.
+Known Limitations (k.2) retains these test-coverage obligations without changing the suite.
 
 **Readiness waits (do not skip):** before each shot the script waits for `document.fonts.ready`, for
 every `<img>` to `decode()`, then an 800 ms settle. **Never** use `waitForLoadState('networkidle')` —
@@ -456,14 +514,16 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
 
 - **`npm test` on the host does nothing / fails.** Expected — host `node_modules` is empty. Use the
   Docker form (§2).
-- **Failing-name diff is non-empty.** The failing set moved. STOP and revert; do not commit (§7).
+- **Failing-name diff is non-empty.** Stop and investigate/report; preserve the baseline and unrelated
+  working-tree edits (§7).
 - **`× … 38ms` lines appear in your capture.** You used the naive pattern; switch to the
   `^[[:space:]]*FAIL[[:space:]]` command (§7).
 - **44 `Error retrieving icon duely:*` lines.** Cosmetic and expected (§5). Do not "fix" by adding
   `provideDuelyIcons()` to TestBeds.
 - **`npm run test:e2e` cannot start / hangs.** Verify the port alignment: `playwright.config.ts`
   `webServer[0].url` must match the dev server's actual port (4200), and `webServer[1].url` must
-  match Express (8000). If `reuseExistingServer: true` and something else occupies the port, kill it.
+  match Express (8000). If a port is occupied, identify its owner rather than killing an unrelated
+  process; stop only the verification server you created.
 - **Playwright: "browser not found".** Should not occur — Chromium is baked into the `duely-dev`
   image at build time. If you see this, the image is stale: run `docker compose build duely-dev`
   to re-provision. Verify with `docker compose run --rm duely-dev npx playwright --version`
@@ -497,11 +557,10 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
 
 ## 10. Related documents
 
-- `docs/2026_MIGRATION_STATE.md` §3 (failure partition) and §11 (resume tracker, baseline numbers,
-  the 18 locked decisions, the failing-name capture command) — git-excluded, the live handoff.
-- `docs/2026_MATERIAL_MIGRATION.md` §6 (final gate results + bundle measurements) and §9
-  (pre-migration infrastructure, including the historical *Test evaluation summary*).
-- `docs/2026_KNOWN_LIMITATIONS.md` — **created by backlog-emptying Phase 13** (retiring the former
-  `docs/2026_MIGRATION_BACKLOG.md` §1 deferred test work and §2 build/tooling backlog); holds the full
-  diagnosis and disposition of the 24 deferred failures ((a)), the 44 icon messages ((b.2)), and the
-  other won't-fix/deferred items ((b)–(j)).
+- [Known Limitations](2026_KNOWN_LIMITATIONS.md) — current diagnosis/disposition of deferred test/date
+  work (a), harness-only icon warnings (b.2), other accepted/deferred work (b)–(j), and verification gaps (k).
+- [README](../README.md) — current standalone, layout/theme/icon and Settings development guidance.
+- [Installation](../INSTALL.md) — Docker setup, build-output/runtime paths and licence artefact distribution.
+- `docs/2026_MIGRATION_STATE.md` / `docs/2026_MIGRATION_TASKBOARD.md` — git-excluded historical
+  session trackers. Older classifications and snapshots there may be superseded by this guide and
+  Known Limitations. Git history retains completed migration and retired documentation records.

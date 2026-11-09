@@ -5,7 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
  *   • dev    → Angular dev-server on port 4200
  *   • server → production build served by Express on port 8000
  *
- * See docs/2026_MIGRATION_TASKBOARD.md §5 #34 and TESTING_GUIDE.md §8.
+ * See docs/2026_MIGRATION_TASKBOARD.md §5 #34 and docs/TESTING_GUIDE.md §8.
  */
 export default defineConfig({
   testDir: './e2e',

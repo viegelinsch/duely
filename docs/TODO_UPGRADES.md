@@ -320,7 +320,7 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 - Remove any `overrides` entries that are no longer needed (yauzl, glob, tar — verify each)
 - Update all three `package.json` engines fields to reflect the new minimum versions
 - Regenerate `package-lock.json` cleanly in Docker
-- Update documentation: README, INSTALL.md, TESTING_GUIDE.md, STATE §1 runtime facts
+- Update documentation: README, INSTALL.md, docs/TESTING_GUIDE.md, STATE §1 runtime facts
 - Run the full gate suite one final time
 - Verify the dep-graph visualization (`scripts/dep-graph.mjs`) reflects the upgraded state
 
