@@ -115,6 +115,9 @@ The creator forms still use load-bearing reactive-form/`ngModel` dual bindings. 
 without explicit model/form synchronization and exported-ICS coverage (Known Limitations (a.9)).
 The recorded UNTIL OnPush update relies on `NgModel._updateValue()` marking the view, not on
 `FormControlName`; removing that binding also requires explicit change-detection notification.
+Keep explicit recurrence-view notifications after parent-driven `updateRepeatsBy()` calls, not
+inside that method: `ngAfterViewChecked()` also calls it, so an unconditional mark there would
+repeatedly dirty the view during change detection.
 `AlarmSettingsComponent` deliberately aliases `this.alarms` to `this.appointment.alarms`; a copy or
 fallback array can lose model updates from `addAlarm()`.
 

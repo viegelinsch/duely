@@ -6,9 +6,10 @@ Bootstrap-to-Material migration.
 
 This file is the durable home for everything the migration deliberately did **not** fix. It was
 created when `docs/2026_MIGRATION_BACKLOG.md` was retired, then expanded on 2026-11-09 when the
-completed execution plan, Material migration reference and local working-state handoff were
-consolidated and retired. Unresolved work and items closed *by decision rather than by repair* remain
-here. Tracked history stays in Git; the git-excluded task board retains local session records.
+completed execution plan, Material migration reference, local working-state handoff and migration
+task board were consolidated and retired. Unresolved work and items closed *by decision rather than
+by repair* remain here. Tracked implementation history stays in Git; the retired local handoff and
+task board were git-excluded, so their full session records are not recoverable from Git.
 Current developer guidance is in `README.md`, setup/build guidance in `INSTALL.md`, and recorded
 verification results in `docs/TESTING_GUIDE.md` §4.
 
@@ -19,12 +20,14 @@ Sections **(a)–(g)** are the prescribed spine. Sections **(h)–(k)** carry (h
 (i) accepted UI defects and user-gated follow-ups, (j) the i18n backlog from the deleted
 `docs/TODO-untranslated-strings.md`, and (k) remaining visual and functional verification gaps.
 The plan/reference retirement additions were checked against source at `f527f26`; the local handoff
-was reviewed against source at `889b3e5` and existing verification records. These documentation reviews
-did not rerun tests or browser checks.
+was reviewed against source at `889b3e5`. The complete 6,276-line local task board was reviewed at
+`74a271d`, including its terminal Phase 13 closure and later corrections to earlier OPEN records.
+Both migration cycles are complete; deferred work remains here or in `docs/TODO_UPGRADES.md`.
+These documentation reviews used existing verification records and did not rerun tests or browser checks.
 
-> **Line-number note.** Citations were re-verified against the working tree at `1f6fd97`. A handful
-> drifted from the figures recorded during Phases 11–12; the current verified numbers are used here
-> and the drift is listed in the Phase 13 closure record (`docs/2026_MIGRATION_TASKBOARD.md` §42).
+> **Line-number note.** Original closure citations were re-verified at `1f6fd97`; subsequent
+> consolidations have their own source checkpoints above. Line numbers can drift. The preserved
+> Phase 13 verification snapshot is in `docs/TESTING_GUIDE.md` §4, not a live migration task board.
 
 ---
 
@@ -32,9 +35,11 @@ did not rerun tests or browser checks.
 
 Locked decision 3 ("no test work inside the migration cycle") and locked decision 9 ("no
 modernisation") keep the following loud and red. They are deferred to a future, user-initiated
-test-and-date phase, not lost. The unit-test baseline is **24 failed / 49 passed (73 total)**,
-failing-name md5 `172d78996b50c84e38211b529d76ab0b`; that partition must neither improve nor regress
-until the deferred phase owns it.
+test-and-date phase, not lost. The recorded migration-closure baseline is **24 failed / 49 passed
+(73 total)**, failing-name md5 `172d78996b50c84e38211b529d76ab0b`; that partition must neither improve
+nor regress without separately authorized test work. Commit `74a271d` refreshed holiday fixtures to
+2032 and renamed the failing test; its focused run remained 1 failed / 2 passed. The full-suite
+partition and failing-name hash have not been remeasured since that authorized change.
 
 These restrictions describe the completed migration, not a permanent prohibition: decisions 1–2 in
 `docs/TODO_UPGRADES.md` allow test work and necessary modernisation in the separately authorized
@@ -74,12 +79,14 @@ upgrade cycle. Unrelated documentation work does not authorize fixes or baseline
      14 of the 15 expected holidays — including **Augsburger Friedensfest**, the entire reason the
      second fixture location `{ country: 'de', state: 'by', region: 'a' }` exists.
 
-  A separate parked follow-up proposes refreshing the German-holiday fixtures from **2017 to 2037**.
-  The current seed and expected dates still use 2017 (`:15-20,55-71`). Changing the year alone fixes
-  neither defect above; expected holidays and timezone offsets need independent verification.
+  The separate fixture refresh is **COMPLETE**: the user requested **2017 → 2032**, superseding the
+  parked 2037 proposal, and commit `74a271d` updated the seeds and all 15 holiday dates (`:15-20,55-71`).
+  Dates and Berlin-midnight offsets were independently checked against `date-holidays`, statutory/
+  calendar sources, Gregorian Easter calculation and `Intl.DateTimeFormat`. Spec type-checks passed;
+  the focused run retained the existing 1 failed / 2 passed partition. Neither defect above was fixed.
 - **WHY ACCEPTED.** Test work (decision 3). Fixing the index-0 loop will likely expose *more*
-  failures, so it needs a budget decision, not a drive-by fix. The fixture refresh was recorded in
-  the retired local handoff, not authorized for this documentation review.
+  failures, so it needs a budget decision, not a drive-by fix. The authorized fixture refresh did not
+  authorize a collision-behaviour repair or assertion-loop changes.
 - **RISK.** The loop bug means 14 of 15 holiday assertions have never actually executed; the spec
   gives false confidence about multi-location collision coverage. Blind year replacement can also
   preserve invalid holiday dates or offsets.
@@ -162,8 +169,9 @@ upgrade cycle. Unrelated documentation work does not authorize fixes or baseline
   `EventCollisionData` without converting serialized dates back to `Date`. Collision code calls
   `eventData.start.getHours()` and other Date methods in
   `client/app/DatesAndCollisions/Recurrence/RecurrencePattern.ts:72-75,108-111`. Task #63 recorded
-  `TypeError: eventData.start.getHours is not a function` for recurring events carrying exclusions
-  (`docs/2026_MIGRATION_TASKBOARD.md` §32.10). This is a production defect, **not only stale tests**.
+  `TypeError: eventData.start.getHours is not a function` for recurring events carrying exclusions.
+  This is a production defect, **not only stale tests**; that observation is preserved here from the
+  retired task board.
 - **WHY ACCEPTED.** Pre-existing serialization drift, unchanged by the holiday-catalogue extraction;
   its repair belongs to the deferred test-and-date phase. The type cast is not runtime conversion.
 - **RISK.** Affected recurring/exclusion exports can throw instead of producing ICS. Tests using
@@ -196,7 +204,11 @@ upgrade cycle. Unrelated documentation work does not authorize fixes or baseline
   The recorded UNTIL update at `appointment-form.component.ts:227` also relies on the paired
   `ngModel` binding's `NgModel._updateValue()` calling `markForCheck()` under OnPush;
   `FormControlName` supplies no such notification. The Phase 11 review corrected that attribution
-  in `c24818c` after inspecting Angular 20.3.18.
+  in `c24818c` after inspecting Angular 20.3.18. Parent-driven `updateRepeatsBy()` calls at
+  `appointment-form.component.ts:188-189,234-235` explicitly mark the recurrence view afterward.
+  Keep that notification outside `updateRepeatsBy()`: `recurring-settings.component.ts:155-156`
+  also calls it from `ngAfterViewChecked()`, so an unconditional mark inside it would repeatedly
+  dirty the view during change detection. This placement safeguard survives the retired task board.
 - **WHY ACCEPTED.** Consolidating into explicit model/form synchronization is a separate behavioural
   refactor, not a mechanical Material migration. The UNTIL issue in (a.8) is one symptom, not the
   whole scope. The Phase 13 browser pass recorded the Angular dual-binding deprecation warning.
@@ -474,12 +486,14 @@ as *not deprecated* or *not worth the churn*; none is a defect.
 
 ### (d.1) `moment` / `moment-timezone` in maintenance mode, never replaced
 
-- **WHAT.** `moment-timezone ^0.5.47` is live in **18** client source files (13 literally
-  `from 'moment-timezone'`, 5 bare `'moment'`). Moment is officially in maintenance mode.
-- **WHY ACCEPTED.** Replacing it is a large date-handling refactor barred by decision 9 and coupled
-  to the deferred test-and-date phase (see (a.4), (a.5)).
-- **RISK.** No new features or DST-data updates upstream; a slowly-growing bundle. No correctness
-  defect today (see (h.3) — the full timezone dataset is verified correct 1980–2200).
+- **WHAT.** At `74a271d`, **15** client TypeScript files import Moment: 10 from `moment-timezone`
+  and 5 from `moment` (12 non-spec files and 3 specs). Moment is officially in maintenance mode.
+- **WHY ACCEPTED.** Replacement was excluded from the completed migration under decision 9. The
+  separately authorized upgrade cycle selected Luxon (`docs/TODO_UPGRADES.md` D2); implementation
+  is still pending and coupled to the deferred date work in (a.4), (a.5).
+- **RISK.** Maintenance mode limits new feature development and leaves a large dependency footprint;
+  it does not establish that timezone-data updates have stopped. No Europe/Berlin offset mismatch
+  was found in the historical probes in (h.3), not an exhaustive correctness guarantee.
 - **WHAT WOULD CHANGE IT.** The date-handling phase migrating to a maintained library.
 
 ### (d.2) Deprecated `boolean@3.2.0` in the lock tree (`rimraf@2.6.3` REMOVED)
@@ -579,19 +593,33 @@ in `docs/TODO_UPGRADES.md`; that cycle should begin **after** this migration clo
    including the 176 MB `v34.5.8` binary.
 2. **The `libnss3.so` attribution carried for months was WRONG.** `libnss3` **is** present at
    `/lib/aarch64-linux-gnu/libnss3.so`; the real missing library is **`libgtk-3.so.0`**.
-3. **The extraction failure is NOT a trixie/OS problem.** It is the
-   `extract-zip@2.0.1 → yauzl@2.x → fd-slicer` **deadlock on Node ≥ 24.16 / 26.x**
-   (`docs/2026_MIGRATION_TASKBOARD.md` §25.9).
+3. **The extraction failure is NOT a trixie/OS problem.** The retired task board recorded the
+   `extract-zip@2.0.1 → yauzl@2.x → fd-slicer` **deadlock on Node ≥ 24.16 / 26.x**.
 
 **Electron `file://` dynamic-import risk (Phase 11.1 lazy loading).** Lazy loading introduced
 **THREE new route chunks** (`about`, `legal`, `settings`) plus **ONE pre-existing animations vendor
-chunk** — **not** "four new chunks" (corrected figure, TASKBOARD §35.3 / task #69). Under Electron's
-`file://` origin, dynamic `import()` of these chunks is a theoretical load risk that has never been
-exercised because the desktop build has never launched.
+chunk** — **not** "four new chunks" (corrected by task #69). Under Electron's `file://` origin,
+dynamic `import()` of these chunks is a theoretical load risk that has never been exercised because
+the desktop build has never launched.
 
 **Note for the revival.** The deadlock affects only the **installer**; manual `unzip -o` already
 works. A future attempt may therefore need only `libgtk-3-0` plus manual extraction — **not** a
 second Node runtime.
+
+### Conditional Windows-packaging prerequisite
+
+- **WHAT.** Linux lockfile regeneration pruned 13 Windows-only optional electron-builder nodes
+  (recorded in commit `48989b0`); the current lockfile still names the Squirrel Windows peer without
+  its package entry. The attempted npm 11.20.0 multi-platform flags produced a byte-identical lockfile,
+  not proof that Windows dependencies were restored.
+- **WHY ACCEPTED.** Docker execution is Linux; the existing desktop packaging configuration targets
+  Linux/macOS, and no Windows packaging verification is recorded. This is a future prerequisite,
+  not a demonstrated Windows build failure.
+- **RISK.** Trusting this lockfile unchanged for future Windows packaging could omit required optional
+  tooling. Existing electron-builder configuration does not establish verified platform support.
+- **WHAT WOULD CHANGE THE DECISION.** If Windows packaging is authorized, re-resolve the lockfile in
+  an authorized Windows environment or with empirically effective platform handling, audit the restored
+  optional nodes and verify actual packaging. Do not hand-craft entries or assume the old flags worked.
 
 ---
 
@@ -673,9 +701,11 @@ repair.
   `moment(new Date()).add(100, 'y')` = **2126** (`recurring-settings.component.ts:129` and `:313`),
   and there is **zero** validator/`max`/`min`/cap on `untilDate` anywhere in the client, so post-2030
   summer recurrences are reachable in the **DEFAULT** flow and would be silently shifted one hour.
-- **RISK OF THE STATUS QUO: none.** `require('moment-timezone')` resolves to `index.js` carrying the
-  **FULL** data, verified correct against OS tzdata via `Intl.DateTimeFormat` continuously **1980 to
-  2200**. There is **no latent defect today**.
+- **RISK OF THE STATUS QUO.** No offset mismatch was found in the recorded Europe/Berlin probes:
+  `require('moment-timezone')` resolves to `index.js` carrying the **FULL** data, matching independent
+  `Intl.DateTimeFormat` results at the 13 timestamps spanning **1980–2200** preserved in
+  `docs/TODO_UPGRADES.md` D2. These sampled results do not establish every instant/zone or guarantee
+  future timezone legislation.
 - **WHAT WOULD CHANGE THE DECISION.** Bounding the UNTIL date first (a datepicker `max` plus a
   validator) — itself an unauthorised behaviour change under locked decision 9.
 - **METHODOLOGY WARNING (transcribed alongside it).** All `moment-timezone` data builds wrap the
@@ -684,10 +714,11 @@ repair.
   offsets**. The symptom is "the builds agree everywhere", which **hides** the real difference and can
   manufacture a false alarm about a pre-existing defect — this session produced three such false
   probes before the isolation was replicated. **Correct method:** one build per process, specifier via
-  argv, cross-validated against `Intl.DateTimeFormat` (OS tzdata, no moment involved). **Unreliable
-  load probes — do not use:** `tz.zoneExists()` (deprecated, warns), `tz.names.length` (returns 0),
-  `tz.zone(...).untils` (throws "Invalid time value"). Full local record:
-  `docs/2026_MIGRATION_TASKBOARD.md` §33 (Ivo) and §34 (leader verification).
+  argv, cross-validated against `Intl.DateTimeFormat` (runtime timezone data, no moment involved).
+  **Unreliable load probes — do not use:** `tz.zoneExists()` (deprecated, warns), `tz.names.length`
+  (returns 0), `tz.zone(...).untils` (throws "Invalid time value"). The reusable 13-timestamp table
+  and expected offsets from the retired local measurement record are preserved in
+  `docs/TODO_UPGRADES.md` D2.
 
 ### (h.4) `date-holidays` and its catalogue remain eagerly loaded
 
@@ -716,7 +747,8 @@ user decision D20 (2026-09-14). Every colour/contrast/visibility claim derives f
 and SVG source, **not** from pixels — that pass produced zero screenshots because `visibilityState`
 stayed `hidden` (decision D21 accepted the computed-style evidence and left the visual claims
 labelled unconfirmed-by-pixels). **`/legal`'s raw-i18n-keys-on-cold-load defect is NOT here** — it was
-fixed by Phase 10 commit 10.3(a). Source detail: TASKBOARD §14.6, §14.7, §14.9.
+fixed by Phase 10.3. The observations below survive the retired task board; the later reduced
+Phase 13 visual pass is preserved separately in `docs/TESTING_GUIDE.md` §4.
 
 - **(i.1) Dark theme only half-applies.** `body { background: #ddd }` and `.card { background:
   #ffffff }` are **hardcoded**, so the page background and cards never invert in dark mode. *Risk:*

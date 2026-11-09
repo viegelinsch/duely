@@ -88,7 +88,7 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 - Bump `jsdom` from `^26.1.0` to `^31.0.0` (Vitest 5 peer)
 - Verify `vitest.setup.ts` still works (the localStorage restoration for Node 26)
 - Verify `@angular/build`'s unit-test builder accepts Vitest 5 (Angular 20's peer is `vitest ^3.0.0`; this may require a temporary `overrides` entry or an Angular 21 bump first — **investigate before committing**)
-- Re-establish the unit-test baseline (the 24F/47P partition may shift; if it does, record the new md5)
+- Re-establish the unit-test baseline (the 24F/49P partition may shift; if it does, record the new md5)
 
 **Gates:** G4 (unit tests), G1–G3 (type-check), lint, e2e.
 **Blocks:** A3 (Angular 21 requires Vitest ^4.0.8+).
@@ -239,28 +239,54 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 
 ---
 
-#### D2. Replace moment-timezone entirely (PENDING library choice)
+#### D2. Replace moment-timezone entirely (Luxon confirmed)
 
-**Risk:** HIGH — 18 source files, touches the appointment model, ICS generation, collision detection, recurrence engine, and datepicker bindings. Largest single refactor in the upgrade cycle.
+**Risk:** HIGH — 15 importing TypeScript files at `74a271d` (12 non-spec files and 3 specs), touching the appointment model, ICS generation, collision detection, recurrence engine, and datepicker bindings. Largest single refactor in the upgrade cycle.
 **Action:**
 - **PREREQUISITE:** ~~User must choose the replacement library~~ **DECIDED: Luxon** (see decision below)
 - Remove `moment-timezone` (and implicitly `moment`) from `package.json`
-- Add the chosen replacement library
-- Rewrite all 18 source files that import moment/moment-timezone:
+- Add Luxon
+- Rewrite the client/spec files that import moment/moment-timezone; inventory actual imports before editing, including:
   - `client/app/DatesAndCollisions/Recurrence/RecurrencePattern.ts`
-  - `client/app/DatesAndCollisions/CollisionDetector.ts`
+  - `client/app/settings/settings.component.ts`
   - `client/app/creator/appointments.service.ts`
   - `client/app/creator/appointment-form/recurring-settings/recurring-settings.component.ts`
   - `client/app/creator/appointment-form/appointment-form.component.ts`
-  - (plus ~13 more — run `grep -rl 'moment' client/` for the full list)
-- Verify timezone offset arithmetic is preserved (use the leader's 13-date × Europe/Berlin probe from TASKBOARD §34 as the correctness oracle)
+- Verify timezone offset arithmetic is preserved using the historical Europe/Berlin oracle below
 - Verify ICS generation output is byte-identical or semantically equivalent
 - Update `HolidayCatalogService` if it has any moment dependency
 - Verify the trimmed-build concern (task #64's decline) is moot with the new library
 
 **Gates:** Full suite, the tz-offset probe, ICS output comparison, e2e.
-**Blocked by:** PENDING library decision. Should run AFTER Angular upgrades (A3/A4) land, since Angular's date pipes and form controls may interact with the date library choice.
+**Blocked by:** A4. Luxon is confirmed; run AFTER Angular upgrades (A3/A4) land, since Angular's date pipes and form controls may interact with the date library choice.
 **NOTE:** Task #64's decline rationale (UNTIL = 2126, no validators) remains relevant — whatever library replaces moment-timezone MUST handle dates 100+ years out correctly.
+
+**Preserved timezone oracle (retired migration task board §34).** At these UTC instants, the full
+Moment data and independent `Intl.DateTimeFormat` probe agreed on Europe/Berlin **+120 minutes**.
+Run comparisons inside Docker, isolating each Moment data build in its own process to avoid shared
+zone-registry contamination (Known Limitations (h.3)). Cross-check the replacement against
+`Intl.DateTimeFormat` with `timeZone: 'Europe/Berlin'` and `timeZoneName: 'shortOffset'`.
+
+| UTC instant | Expected offset (minutes) |
+|---|---|
+| `2020-07-15T12:00:00Z` | 120 |
+| `2026-07-15T12:00:00Z` | 120 |
+| `2030-07-15T12:00:00Z` | 120 |
+| `2031-03-30T01:30:00Z` | 120 |
+| `2031-06-01T12:00:00Z` | 120 |
+| `2031-07-15T12:00:00Z` | 120 |
+| `2035-06-15T12:00:00Z` | 120 |
+| `2035-07-15T12:00:00Z` | 120 |
+| `2035-10-28T00:30:00Z` | 120 |
+| `2080-07-15T12:00:00Z` | 120 |
+| `2126-07-15T12:00:00Z` | 120 |
+| `2200-06-15T12:00:00Z` | 120 |
+| `1980-06-15T12:00:00Z` | 120 |
+
+This is historical sampled evidence, not a new run, exhaustive zone/instant coverage or a guarantee
+against future timezone legislation. Extend verification with winter offsets, both sides of DST
+transitions and the actual user-selected zones; investigate changed timezone data rather than
+blindly updating expected values.
 
 ---
 
@@ -269,7 +295,7 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 **Risk:** LOW — minor bumps, data-only changes expected.
 **Action:**
 - Bump `date-holidays` from `^3.24.0` to `^3.39.1`
-- Update `CollisionDetector.spec.ts` German holiday dates from 2017 to 2037 (per TODO-notes-he.md)
+- Reverify `CollisionDetector.spec.ts` German holiday fixtures against the upgraded data. The user-requested **2017 → 2032** refresh is already complete (`74a271d`), superseding the parked 2037 proposal; dates and Berlin offsets were independently checked. The time-of-day and index-0 defects remain in Known Limitations (a.2).
 - Verify `HolidayCatalogService` and the two deferred `new Holidays()` sites still work
 - The five-way duplicated `type HolidaysCountry` may need updating if the package's type exports changed
 
@@ -349,7 +375,7 @@ graph TD
 
     subgraph "Track D — Libraries"
         D1[D1: ical-generator 7→11]
-        D2[D2: Replace moment-timezone — PENDING library choice]
+        D2[D2: Replace moment-timezone — Luxon confirmed]
         D3[D3: date-holidays 3.24→3.39]
         D4[D4: Minor/patch bumps + esbuild 0.28]
     end
@@ -382,7 +408,7 @@ graph TD
 | B1 → B2 (parallel with Track A from A2 onward) | B1 → B2 |
 | C1 (after A1) | A4 → D2 (moment replacement needs Angular settled) |
 | D1, D3, D4 (all independent of each other) | A5 → E1 → E2 |
-| D2 (only after A4 AND the library decision) | Everything → E2 |
+| D2 (only after A4; Luxon is confirmed) | Everything → E2 |
 
 ---
 
@@ -390,12 +416,12 @@ graph TD
 
 | # | Question | Decision | Implication |
 |---|---|---|---|
-| 1 | Does locked decision 3 ("no test work") carry over? | **NO — tests are fair game** | The 24F/47P baseline can shift during upgrades; record new baselines as they change. D1 and D3 may touch spec files. |
+| 1 | Does locked decision 3 ("no test work") carry over? | **NO — tests are fair game** | The 24F/49P baseline can shift during upgrades; record new baselines as they change. D1 and D3 may touch spec files. |
 | 2 | Does locked decision 9 ("no modernisation") carry over? | **NO — modernisation is the goal** | Angular 21/22 migrations, new compiler APIs, codemods, signals, inject(), functional guards — all in scope if the upgrade path requires them. |
 | 3 | Pin `node:lts-slim` or keep floating? | **Pin to `node:26-slim`** | Explicit major-version pin in Dockerfile. Won't float to Node 28 silently. Picks up 26.x patches automatically. |
 | 4 | Electron `file://` strategy for lazy chunks? | **Custom protocol** | Register a privileged custom scheme (e.g. `app://`) with `registerSchemesAsPrivileged({ standard: true, secure: true, supportFetchAPI: true })` so dynamic `import()` resolves correctly. |
 | 5 | esbuild: keep exact pin at 0.25.9 or bump? | **Bump to latest (0.28.2)** | Accept the risk; test thoroughly. Change from exact pin to caret (`^0.28.2`) or keep exact at the new version. |
-| 6 | moment-timezone: bump or replace? | **Full replacement in this cycle** | Replace moment-timezone across all 18 source files. This is the largest single refactor in the upgrade cycle. |
+| 6 | moment-timezone: bump or replace? | **Full replacement in this cycle** | Replace every client/spec Moment import (15 importing files at `74a271d`). This is the largest single refactor in the upgrade cycle. |
 
 ### DECIDED — moment-timezone replacement library: **Luxon**
 

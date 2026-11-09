@@ -163,7 +163,12 @@ rendering — those are symmetric across locales (backlog §3).
 ## 4. The gate set
 
 Run every execution gate in Docker. Source/spec and server/Electron type-checks are separate:
-Node-side bundling does not substitute for TypeScript checking.
+Node-side bundling does not substitute for TypeScript checking. `server/tsconfig.json` and
+`electron/tsconfig.json` explicitly pair CommonJS with `moduleResolution: "node10"`; inheriting the
+root's `bundler` resolution causes TS5095 and a nonzero exit (recorded exit 2), not a silent green.
+After changing these configs, verify G1b/G1c with a deliberate type error in an isolated temporary
+copy of the source/configuration tree inside Docker, preserving relative paths. Confirm diagnostics
+plus a nonzero exit before trusting the positive run.
 
 | Gate | Command | Recorded baseline |
 |---|---|---|
@@ -222,10 +227,15 @@ separately in (f).
 
 ---
 
-## 5. The baseline contract (must not move)
+## 5. The baseline contract (must not move without authorization)
 
-Until the deferred failures are addressed in a future test-and-date phase, `npm test` must report
-**exactly**:
+The last full-suite migration run reported the partition below. Commit `74a271d` subsequently changed
+holiday fixtures and the failing CollisionDetector test title from 2017 to 2032; its focused Docker
+run stayed **1 failed / 2 passed**, and spec type-checks passed. The full suite and failing-name hash
+were **not** remeasured after that authorized refresh. Treat §4's counts/hash as historical evidence,
+not newly verified current results; the renamed test cannot match the old failing-name list verbatim.
+
+Unless separately authorized test work changes it, preserve this recorded partition:
 
 | Metric | Value |
 |---|---|
@@ -289,13 +299,16 @@ recurrence/collision defects that test-only expectation changes would not repair
 
 The strongest form of the baseline contract is a sorted list of the failing test **names**, diffed
 against the saved baseline at **`.git/duely-failing-names-baseline.txt`**. It is durable via the
-`.:/app` bind mount but **not committed** or portable to another checkout. The recorded md5 is
+`.:/app` bind mount but **not committed** or portable to another checkout. The historical md5 is
 `172d78996b50c84e38211b529d76ab0b`; preserve an existing baseline instead of overwriting it.
+Commit `74a271d` intentionally renamed the failing holiday test to 2032 (§5), so the old names are
+not a current exact-match oracle. A separately authorized full-suite capture must document that
+known rename and any other differences before establishing a new baseline/hash.
 
 ### Initial capture (only when no baseline exists)
 
-Bare `npm test` reproduces the recorded baseline in the Docker image without a manual environment
-variable. Node 26's `localStorage` getter previously broke storage specs; **`vitest.setup.ts`**,
+Bare `npm test` uses the Docker test setup without a manual environment variable.
+Node 26's `localStorage` getter previously broke storage specs; **`vitest.setup.ts`**,
 registered under `setupFiles` in `angular.json`, restores jsdom's storage globals before specs run
 (§9). This is not a guarantee for arbitrary future Node majors. Do not pass
 `-e NODE_OPTIONS="--localstorage-file=…"`: it would mask a broken or missing setup file.
@@ -312,11 +325,13 @@ After confirming that no baseline file exists, capture it once:
 )
 ```
 
-`set -C` prevents overwriting an existing baseline. Check the full test result, the **24-line**
-count and recorded md5 before accepting the file; an empty/truncated capture is not a valid baseline.
+`set -C` prevents overwriting an existing baseline. Check the full test result, the expected name
+count and independently computed md5 before accepting the file; an empty/truncated capture is not
+valid. The historical capture had **24 lines**; account explicitly for authorized changes (§5),
+including the 2032 title, instead of requiring an obsolete hash or silently rebaselining.
 `grep -a` preserves textual extraction if captured output contains NUL bytes.
 
-### The diff command (must be empty)
+### The diff command (must be empty against an established current baseline)
 
 ```bash
 docker compose run --rm duely-dev npm test 2>&1 \
@@ -518,8 +533,21 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
   working-tree edits (§7).
 - **`× … 38ms` lines appear in your capture.** You used the naive pattern; switch to the
   `^[[:space:]]*FAIL[[:space:]]` command (§7).
-- **44 `Error retrieving icon duely:*` lines.** Cosmetic and expected (§5). Do not "fix" by adding
-  `provideDuelyIcons()` to TestBeds.
+- **44 `Error retrieving icon duely:*` lines.** Cosmetic and expected (§5). Count the error message,
+  not every line containing `icon`: stack frames doubled the historical broad-match count to 88.
+  Do not "fix" by adding `provideDuelyIcons()` to TestBeds.
+- **Watch builds appear unchanged.** Verify a temporary executable source change, not a comment-only
+  edit that emits identical bytes; restore only your own probe. `build:watch` watches Node bundles,
+  not the Angular client (README, Commands overview).
+- **Build output appears stalled.** Run one build per target with plain-progress output; a buffering
+  output pipe or Docker-client CPU usage does not establish Docker-VM progress. Inspect build logs
+  before launching a duplicate build or discarding useful cache.
+- **Type-aware `eslint --fix-dry-run` cascades.** The historical run mixed in-memory fixes with an
+  on-disk TypeScript Program. Verify the intended on-disk edits with normal lint before treating
+  dry-run-only cascades as new source defects.
+- **Custom browser harness fetch/selection differs.** Check `localhost` IPv4/IPv6 resolution against
+  the server binding (the recorded Node-fetch workaround used `127.0.0.1`). A `mat-option` property
+  binding need not appear as an HTML `value` attribute; assert the actual option selection/value.
 - **`npm run test:e2e` cannot start / hangs.** Verify the port alignment: `playwright.config.ts`
   `webServer[0].url` must match the dev server's actual port (4200), and `webServer[1].url` must
   match Express (8000). If a port is occupied, identify its owner rather than killing an unrelated
@@ -561,7 +589,8 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
   work (a), harness-only icon warnings (b.2), other accepted/deferred work (b)–(j), and verification gaps (k).
 - [README](../README.md) — current standalone, layout/theme/icon and Settings development guidance.
 - [Installation](../INSTALL.md) — Docker setup, build-output/runtime paths and licence artefact distribution.
-- `docs/2026_MIGRATION_TASKBOARD.md` — git-excluded historical session records, not a live execution
-  mandate. The local STATE handoff was consolidated and retired on 2026-11-09; its remaining issues
-  live in Known Limitations. Tracked migration history remains in Git; local-only records do not
-  survive a fresh clone.
+- [Upgrade task board](TODO_UPGRADES.md) — separate future dependency work and the preserved timezone oracle.
+
+The completed migration task board and local STATE handoff were consolidated and retired on
+2026-11-09; their remaining issues live in Known Limitations. Tracked implementation history remains
+in Git, but the git-excluded session records were never tracked and cannot be recovered from Git.
