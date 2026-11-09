@@ -12,12 +12,12 @@ beforeEach(() => {
     const repeatingData: RepeatingCollisionData = {
         freq: 'DAILY',
         interval: 1,
-        until: new Date('2017-12-31')
+        until: new Date('2032-12-31')
     };
 
     eventData = {
-        start: new Date('2017-01-01'),
-        end: new Date('2017-01-01'),
+        start: new Date('2032-01-01'),
+        end: new Date('2032-01-01'),
         repeating: repeatingData
     };
 });
@@ -33,9 +33,9 @@ beforeEach(() => {
         const userExcludedDates = new Array<Date>();
         const correctReturn = new Array<Collision>();
 
-        let newDate: Date = new Date('2017-01-01');
+        let newDate: Date = new Date('2032-01-01');
 
-        while (+newDate <= +(new Date('2017-01-02'))) {
+        while (+newDate <= +(new Date('2032-01-02'))) {
             const col: Collision = {date: newDate, reason: 'excluded by user'};
             correctReturn.push(col);
             userExcludedDates.push(newDate);
@@ -52,23 +52,23 @@ beforeEach(() => {
         }
     });
 
-    it('should return all holidays of Lower Saxony and the city of Augsburg in Bavaria of the year 2017', () => {
+    it('should return all holidays of Lower Saxony and the city of Augsburg in Bavaria of the year 2032', () => {
         const correctReturn: Collision[] = [
-            { date: new Date('2017-01-01T00:00:00+01:00'), reason: 'Neujahr' },
-            { date: new Date('2017-01-06T00:00:00+01:00'), reason: 'Heilige Drei Könige' },
-            { date: new Date('2017-04-14T00:00:00+01:00'), reason: 'Karfreitag' },
-            { date: new Date('2017-04-17T00:00:00+01:00'), reason: 'Ostermontag' },
-            { date: new Date('2017-05-01T00:00:00+01:00'), reason: 'Maifeiertag' },
-            { date: new Date('2017-05-25T00:00:00+01:00'), reason: 'Christi Himmelfahrt' },
-            { date: new Date('2017-06-05T00:00:00+01:00'), reason: 'Pfingstmontag' },
-            { date: new Date('2017-06-15T00:00:00+01:00'), reason: 'Fronleichnam' },
-            { date: new Date('2017-08-08T00:00:00+01:00'), reason: 'Augsburger Friedensfest' },
-            { date: new Date('2017-08-15T00:00:00+01:00'), reason: 'Mariä Himmelfahrt' },
-            { date: new Date('2017-10-03T00:00:00+01:00'), reason: 'Tag der Deutschen Einheit' },
-            { date: new Date('2017-10-31T00:00:00+01:00'), reason: 'Reformationstag' },
-            { date: new Date('2017-11-01T00:00:00+01:00'), reason: 'Allerheiligen' },
-            { date: new Date('2017-12-25T00:00:00+01:00'), reason: '1. Weihnachtstag' },
-            { date: new Date('2017-12-26T00:00:00+01:00'), reason: '2. Weihnachtstag' }
+            { date: new Date('2032-01-01T00:00:00+01:00'), reason: 'Neujahr' },
+            { date: new Date('2032-01-06T00:00:00+01:00'), reason: 'Heilige Drei Könige' },
+            { date: new Date('2032-03-26T00:00:00+01:00'), reason: 'Karfreitag' },
+            { date: new Date('2032-03-29T00:00:00+02:00'), reason: 'Ostermontag' },
+            { date: new Date('2032-05-01T00:00:00+02:00'), reason: 'Maifeiertag' },
+            { date: new Date('2032-05-06T00:00:00+02:00'), reason: 'Christi Himmelfahrt' },
+            { date: new Date('2032-05-17T00:00:00+02:00'), reason: 'Pfingstmontag' },
+            { date: new Date('2032-05-27T00:00:00+02:00'), reason: 'Fronleichnam' },
+            { date: new Date('2032-08-08T00:00:00+02:00'), reason: 'Augsburger Friedensfest' },
+            { date: new Date('2032-08-15T00:00:00+02:00'), reason: 'Mariä Himmelfahrt' },
+            { date: new Date('2032-10-03T00:00:00+02:00'), reason: 'Tag der Deutschen Einheit' },
+            { date: new Date('2032-10-31T00:00:00+02:00'), reason: 'Reformationstag' },
+            { date: new Date('2032-11-01T00:00:00+01:00'), reason: 'Allerheiligen' },
+            { date: new Date('2032-12-25T00:00:00+01:00'), reason: '1. Weihnachtstag' },
+            { date: new Date('2032-12-26T00:00:00+01:00'), reason: '2. Weihnachtstag' }
         ];
 
         const locations: HolidaysCountry[] = [
