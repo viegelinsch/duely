@@ -85,6 +85,8 @@ already cover. The navbar is in document flow; routed pages do not need fixed-na
   tokens; accepted hardcoded-colour/contrast defects are recorded in Known Limitations (i).
 - Styles use Sass `@use`, not `@import`. Material components supply their structural CSS; the theme
   does not call `all-component-themes()`. Fonts use the system stack, with no external font download.
+  Do not run `ng add @angular/material` over this setup: its schematic can rewrite the custom theme,
+  entry HTML and build configuration.
 - `client/app/shared/icons/duely-icons.ts` contains eight bundled SVG literals. `provideDuelyIcons()`
   registers them through `addSvgIconLiteralInNamespace`, used as `svgIcon="duely:add"`. Literal
   registration avoids HTTP/font fetches under offline or Electron `file://` origins. The sanitizer
@@ -104,8 +106,15 @@ and translation from `@ngx-translate/core`. Shared application providers belong 
 TestBed conventions are in Testing Guide §3. Template-visible members must be public or protected.
 Use `@if`, `@for` with a stable `track`, and `@switch` for control flow.
 
+Preserve strict compiler, template and injection checks. Do not suppress diagnostics with `as any`,
+`@ts-ignore`, `NO_ERRORS_SCHEMA` or `CUSTOM_ELEMENTS_SCHEMA`, replace required-value assertions with
+optional chaining, or widen fields merely to dodge initialization errors. Holiday `getStates()` /
+`getRegions()` results legitimately allow `undefined`; preserve that distinction.
+
 The creator forms still use load-bearing reactive-form/`ngModel` dual bindings. Do not remove them
 without explicit model/form synchronization and exported-ICS coverage (Known Limitations (a.9)).
+The recorded UNTIL OnPush update relies on `NgModel._updateValue()` marking the view, not on
+`FormControlName`; removing that binding also requires explicit change-detection notification.
 `AlarmSettingsComponent` deliberately aliases `this.alarms` to `this.appointment.alarms`; a copy or
 fallback array can lose model updates from `addAlarm()`.
 

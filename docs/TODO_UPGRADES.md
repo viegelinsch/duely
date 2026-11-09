@@ -306,7 +306,7 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 - B1 changes `FROM node:lts-slim` → `FROM node:26-slim` (DECISION 3: explicit major-version pin)
 - After all tracks complete, verify the container still reports Node 26.x
 - Update `engines` in all three `package.json` files if the minimum changes (currently `node >= 24.0.0`)
-- Update STATE §1 runtime facts (currently stale: says Node 24.21.0)
+- Update runtime guidance in README.md, INSTALL.md and docs/TESTING_GUIDE.md; the local STATE handoff is retired
 - Verify no upgrade introduced a Node 26 incompatibility
 
 **Blocked by:** All other tracks (verify last, after all upgrades are validated on Node 26).
@@ -320,7 +320,7 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 - Remove any `overrides` entries that are no longer needed (yauzl, glob, tar — verify each)
 - Update all three `package.json` engines fields to reflect the new minimum versions
 - Regenerate `package-lock.json` cleanly in Docker
-- Update documentation: README, INSTALL.md, docs/TESTING_GUIDE.md, STATE §1 runtime facts
+- Update documentation: README.md, INSTALL.md, docs/TESTING_GUIDE.md and docs/2026_KNOWN_LIMITATIONS.md
 - Run the full gate suite one final time
 - Verify the dep-graph visualization (`scripts/dep-graph.mjs`) reflects the upgraded state
 

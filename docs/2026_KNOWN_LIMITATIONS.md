@@ -6,8 +6,9 @@ Bootstrap-to-Material migration.
 
 This file is the durable home for everything the migration deliberately did **not** fix. It was
 created when `docs/2026_MIGRATION_BACKLOG.md` was retired, then expanded on 2026-11-09 when the
-completed execution plan and Material migration reference were consolidated and retired. Unresolved
-work and items closed *by decision rather than by repair* remain here; completed history stays in Git.
+completed execution plan, Material migration reference and local working-state handoff were
+consolidated and retired. Unresolved work and items closed *by decision rather than by repair* remain
+here. Tracked history stays in Git; the git-excluded task board retains local session records.
 Current developer guidance is in `README.md`, setup/build guidance in `INSTALL.md`, and recorded
 verification results in `docs/TESTING_GUIDE.md` §4.
 
@@ -17,8 +18,9 @@ WHAT WOULD CHANGE THE DECISION.
 Sections **(a)–(g)** are the prescribed spine. Sections **(h)–(k)** carry (h) architectural deferrals,
 (i) accepted UI defects and user-gated follow-ups, (j) the i18n backlog from the deleted
 `docs/TODO-untranslated-strings.md`, and (k) remaining visual and functional verification gaps.
-The retirement additions were checked against source at `f527f26` and existing verification records;
-this documentation review did not rerun tests or browser checks.
+The plan/reference retirement additions were checked against source at `f527f26`; the local handoff
+was reviewed against source at `889b3e5` and existing verification records. These documentation reviews
+did not rerun tests or browser checks.
 
 > **Line-number note.** Citations were re-verified against the working tree at `1f6fd97`. A handful
 > drifted from the figures recorded during Phases 11–12; the current verified numbers are used here
@@ -33,6 +35,10 @@ modernisation") keep the following loud and red. They are deferred to a future, 
 test-and-date phase, not lost. The unit-test baseline is **24 failed / 49 passed (73 total)**,
 failing-name md5 `172d78996b50c84e38211b529d76ab0b`; that partition must neither improve nor regress
 until the deferred phase owns it.
+
+These restrictions describe the completed migration, not a permanent prohibition: decisions 1–2 in
+`docs/TODO_UPGRADES.md` allow test work and necessary modernisation in the separately authorized
+upgrade cycle. Unrelated documentation work does not authorize fixes or baseline changes.
 
 ### (a.1) `saveAs` — 3 tests, `TypeError: Cannot redefine property: saveAs` (backlog §1(a), Q1)
 
@@ -62,16 +68,23 @@ until the deferred phase owns it.
      under `TZ=UTC` and `TZ=Europe/Berlin`, and `RecurrencePattern.ts` deliberately re-stamps the
      holiday date with the event's time of day, while the spec asserts the raw library date. **No
      `TZ` setting can satisfy the assertion** — it is not a timezone artefact.
-  2. **The assertion loops iterate `i` but assert on index `[0]`.** The loops at `:55-58` and
-     `:88-91` repeat one comparison 15 times and never check 14 of the 15 expected holidays —
-     including **Augsburger Friedensfest**, the entire reason the second fixture location
-     `{ country: 'de', state: 'by', region: 'a' }` exists.
+  2. **The assertion loops iterate `i` but assert on index `[0]`.** In
+     `client/app/DatesAndCollisions/CollisionDetector.spec.ts:49-52,82-85`, the user-date loop
+     checks only the first date and the holiday loop repeats one comparison 15 times, never checking
+     14 of the 15 expected holidays — including **Augsburger Friedensfest**, the entire reason the
+     second fixture location `{ country: 'de', state: 'by', region: 'a' }` exists.
+
+  A separate parked follow-up proposes refreshing the German-holiday fixtures from **2017 to 2037**.
+  The current seed and expected dates still use 2017 (`:15-20,55-71`). Changing the year alone fixes
+  neither defect above; expected holidays and timezone offsets need independent verification.
 - **WHY ACCEPTED.** Test work (decision 3). Fixing the index-0 loop will likely expose *more*
-  failures, so it needs a budget decision, not a drive-by fix.
+  failures, so it needs a budget decision, not a drive-by fix. The fixture refresh was recorded in
+  the retired local handoff, not authorized for this documentation review.
 - **RISK.** The loop bug means 14 of 15 holiday assertions have never actually executed; the spec
-  gives false confidence about multi-location collision coverage.
-- **WHAT WOULD CHANGE THE DECISION.** A user waiver of decision 3 with an agreed failure budget for
-  the newly-exposed assertions.
+  gives false confidence about multi-location collision coverage. Blind year replacement can also
+  preserve invalid holiday dates or offsets.
+- **WHAT WOULD CHANGE THE DECISION.** A user-authorized test-and-date review with an agreed failure
+  budget for the newly-exposed assertions and independently checked fixtures for the chosen year.
 
 ### (a.3) `creator.component.spec` `saveText` — decided option C (backlog §1(d))
 
@@ -180,13 +193,19 @@ until the deferred phase owns it.
   `client/app/creator/appointment-form/appointment-form.component.html:6` binds the summary through
   both mechanisms. This synchronization keeps the `Appointment` model used for ICS generation in
   step with form edits. The retired plan's historical "53 bindings" is not a current inventory.
+  The recorded UNTIL update at `appointment-form.component.ts:227` also relies on the paired
+  `ngModel` binding's `NgModel._updateValue()` calling `markForCheck()` under OnPush;
+  `FormControlName` supplies no such notification. The Phase 11 review corrected that attribution
+  in `c24818c` after inspecting Angular 20.3.18.
 - **WHY ACCEPTED.** Consolidating into explicit model/form synchronization is a separate behavioural
   refactor, not a mechanical Material migration. The UNTIL issue in (a.8) is one symptom, not the
   whole scope. The Phase 13 browser pass recorded the Angular dual-binding deprecation warning.
 - **RISK.** Deprecated binding behaviour and divergent model/form state if the bindings are removed
-  without replacing their synchronization; a view-only check can miss broken exported values.
-- **WHAT WOULD CHANGE THE DECISION.** A dedicated refactor with regression coverage for model values,
-  form validation, imperative date updates, alarms, recurrence settings and generated ICS.
+  without replacing their synchronization; removing the implicit OnPush notification can also leave
+  imperative updates visually stale. A view-only check can miss broken exported values.
+- **WHAT WOULD CHANGE THE DECISION.** A dedicated refactor supplying explicit change-detection
+  notification and regression coverage for model values, form validation, imperative date updates,
+  alarms, recurrence settings and generated ICS.
 
 ### (a.10) `initializeCalendar()` remains public solely for a test spy (deviation D5)
 
@@ -320,6 +339,56 @@ until the deferred phase owns it.
   no new validation defect is demonstrated.
 - **WHAT WOULD CHANGE THE DECISION.** A user-authorized feedback/UI change with invalid-form and
   accessibility verification; do not introduce `MatSnackBar` merely to close this record.
+
+### (b.8) Two non-blocking build-script robustness findings remain unauthorized
+
+- **WHAT.** `scripts/build.mjs:397-402` awaits context disposal in an asynchronous signal handler
+  without catching rejection (S1). Its Angular child-process close handler at `:247-253` records only
+  the exit code, dropping the signal argument (S2); a signalled exit has a null code.
+- **WHY ACCEPTED.** The Phase 6 review recorded both findings, but the user chose documentation fixes
+  explicitly instead of build-script fixes. They remain deferred, not completed by that review.
+- **RISK.** A rejected disposal can produce an unhandled rejection during watch shutdown. A signalled
+  Angular exit still rejects the build, but its diagnostic loses the termination signal. Neither is
+  evidence of a newly observed build failure or a false successful build.
+- **WHAT WOULD CHANGE THE DECISION.** Explicit authorization for build-script changes, with Docker
+  verification of watch shutdown, rejected disposal and signalled child termination.
+
+### (b.9) The global Sass header still describes removed imports
+
+- **WHAT.** `client/styles.scss:2-4` says `@use` must precede the legacy `@import`s below, although
+  the three directives at `:5-7` are all `@use`. Phase 4 assigned this wording correction to Phase 13,
+  but the current source still contains it.
+- **WHY ACCEPTED.** Comment-only wording was excluded from the functional Sass conversion and was
+  not repaired by closure. This review changes documentation, not source comments.
+- **RISK.** Misleading guidance for a future stylesheet edit; no runtime or Sass compilation impact.
+- **WHAT WOULD CHANGE THE DECISION.** A scoped comment correction retaining the actual module-order
+  requirement without referring to nonexistent imports.
+
+### (b.10) Unused palette helper families remain alongside live label classes
+
+- **WHAT.** `client/_palette.scss:26-88` retains eight bare-colour background classes and eight
+  `.border-*` classes. Current `storage.getColor()` template interpolation constructs `.label-*`
+  names, not these two families; `.label-*` definitions at `:90-120` remain actively used.
+- **WHY ACCEPTED.** Phase 7 deliberately retained the helpers under a cleanup deferral until the
+  final colour interpolation disappeared. That scope decision is not proof that unused background
+  helpers are required by the live label bindings.
+- **RISK.** Redundant emitted CSS and misleading helper names (`.border-*` sets background colour).
+  Deleting the whole palette or live label family would break current appearance.
+- **WHAT WOULD CHANGE THE DECISION.** A scoped cleanup proving each candidate has no static or
+  dynamically generated consumers, preserving the accent map, live labels and actual swatches.
+
+### (b.11) Express 4 runtime uses Express 5 type declarations
+
+- **WHAT.** `package.json:66,84` declares `express ^4.21.2` and `@types/express ^5.0.0`.
+  `server/package.json:36` also declares Express 4; its source is checked using root-installed
+  typings, with strict checking enabled in `server/tsconfig.json`.
+- **WHY ACCEPTED.** The skew was recorded as pre-existing by the Phase 6 review. Track C1 in
+  `docs/TODO_UPGRADES.md` plans to align it by upgrading Express; that change has not landed.
+- **RISK.** Type-check success does not prove that APIs described by another major behave the same
+  at runtime. The recorded server type-check passed; this review establishes no new compiler or
+  runtime failure from the mismatch.
+- **WHAT WOULD CHANGE THE DECISION.** Align the runtime and typings during the server upgrade and
+  verify static serving, fallback behaviour and error paths in Docker.
 
 ---
 
@@ -617,8 +686,8 @@ repair.
   probes before the isolation was replicated. **Correct method:** one build per process, specifier via
   argv, cross-validated against `Intl.DateTimeFormat` (OS tzdata, no moment involved). **Unreliable
   load probes — do not use:** `tz.zoneExists()` (deprecated, warns), `tz.names.length` (returns 0),
-  `tz.zone(...).untils` (throws "Invalid time value"). Full record: TASKBOARD §33 (Ivo) and §34
-  (leader verification); STATE §11.31 and §11.32.
+  `tz.zone(...).untils` (throws "Invalid time value"). Full local record:
+  `docs/2026_MIGRATION_TASKBOARD.md` §33 (Ivo) and §34 (leader verification).
 
 ### (h.4) `date-holidays` and its catalogue remain eagerly loaded
 
@@ -700,14 +769,32 @@ fixed by Phase 10 commit 10.3(a). Source detail: TASKBOARD §14.6, §14.7, §14.
 - **WHAT.** Appointment start/end controls remain `<input matInput type="time">`
   (`client/app/creator/appointment-form/appointment-form.component.html:51,72`). The user selected
   `ngx-mat-timepicker` for a future replacement, but the dependency is not installed and the parked
-  task was not implemented (`docs/2026_MIGRATION_STATE.md` §6). Alarm controls may be considered in
-  that user-initiated follow-up; its scope is not decided by this consolidation.
+  task was not implemented. That choice is preserved here from the retired local handoff. Alarm
+  controls may be considered in that user-initiated follow-up; its scope is not decided by this
+  consolidation.
 - **WHY ACCEPTED.** Native controls completed the Material form conversion. The timepicker task was
   deliberately parked pending a user request, not silently folded into migration closure.
 - **RISK.** Time-entry presentation/interaction varies by browser; native dark-mode mismatch is
   separately recorded in (i.4). This is an unimplemented UI choice, not proof of broken time values.
 - **WHAT WOULD CHANGE THE DECISION.** The user opens the follow-up; then add the dependency and
   standalone imports, rebuild the Docker image, and verify keyboard/time-entry and exported values.
+
+### (i.11) Icon-action help is deferred and accessible names are incomplete
+
+- **WHAT.** `MatTooltip` was deferred, not rejected; no tooltip binding or import exists in the client.
+  Icon-only buttons lack explicit accessible labels at `creator.component.html:14`,
+  `alarm-settings.component.html:14-16,80-82` and `recurring-settings.component.html:19-22`; the
+  latter alarm/recurrence icons are explicitly hidden from assistive technology. Other actions,
+  including Settings, advanced settings and add/remove exclusion, already have `aria-label`s.
+  The historical "six icon-only buttons" is not a verified current inventory.
+- **WHY ACCEPTED.** The migration avoided adding unused Material modules and parked tooltip/help work
+  as a separate follow-up. Removing copied "Left Align" labels did not complete an accessible-name
+  audit; the accessibility lint tier also remains disabled, as recorded in (c.8).
+- **RISK.** Some icon actions can be unclear visually and unnamed to assistive technology. Tooltips
+  alone do not establish accessible names, keyboard usability or overall accessibility.
+- **WHAT WOULD CHANGE THE DECISION.** A user-authorized accessibility/help pass that inventories all
+  icon actions, supplies meaningful translated names and appropriate help, and verifies keyboard,
+  focus and assistive-technology behaviour in a browser.
 
 ---
 
@@ -840,3 +927,17 @@ answer survives retirement of both the inventory and execution plan.
 - **WHAT WOULD CHANGE THE DECISION.** A user-initiated coverage/test-and-date phase with unconditional
   control assertions, saved/reloaded timezone checks, actual collision fixtures and ICS-content
   assertions for recurring and excluded dates, plus locale checks from (j.2).
+
+### (k.3) General test-coverage and dead-code audit remains parked
+
+- **WHAT.** The retired local handoff recorded a broader test-coverage/dead-code audit in addition to
+  the individual red tests and E2E gaps above. No completed general audit is recorded. Phase 7's
+  scoped deletion of known dead code is not evidence that the entire application has been audited.
+- **WHY ACCEPTED.** The user must initiate and scope the coverage review. The `saveText` option C
+  decision in (a.3) is one input, not authorization to delete tests or application code now; the user
+  may reconsider option A or widen the review.
+- **RISK.** Untested behaviour, vacuous assertions and unreachable code may remain outside the known
+  findings. This is an outstanding review obligation, not a claim that unspecified code is defective.
+- **WHAT WOULD CHANGE THE DECISION.** A user-authorized audit with non-vacuous behaviour coverage and
+  evidence for each dead-code candidate. Any approved test changes must explicitly update the
+  recorded baseline through Docker verification rather than silently dropping or skipping failures.

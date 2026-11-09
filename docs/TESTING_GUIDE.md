@@ -561,6 +561,7 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
   work (a), harness-only icon warnings (b.2), other accepted/deferred work (b)–(j), and verification gaps (k).
 - [README](../README.md) — current standalone, layout/theme/icon and Settings development guidance.
 - [Installation](../INSTALL.md) — Docker setup, build-output/runtime paths and licence artefact distribution.
-- `docs/2026_MIGRATION_STATE.md` / `docs/2026_MIGRATION_TASKBOARD.md` — git-excluded historical
-  session trackers. Older classifications and snapshots there may be superseded by this guide and
-  Known Limitations. Git history retains completed migration and retired documentation records.
+- `docs/2026_MIGRATION_TASKBOARD.md` — git-excluded historical session records, not a live execution
+  mandate. The local STATE handoff was consolidated and retired on 2026-11-09; its remaining issues
+  live in Known Limitations. Tracked migration history remains in Git; local-only records do not
+  survive a fresh clone.
