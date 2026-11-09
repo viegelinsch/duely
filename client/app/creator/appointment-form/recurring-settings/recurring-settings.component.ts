@@ -140,6 +140,10 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
       this.recurringForm.controls['count'].updateValueAndValidity();
     });
     this.subscription[1] = (this.recurringForm.valueChanges.subscribe(() => this.endValidation()));
+    this.subscription[2] = this.translate.onLangChange.subscribe(() => {
+      this.updateRepeatsBy();
+      this.markForCheck();
+    });
   }
 
   /** Marks this view dirty so OnPush refreshes after an imperative parent call. */
