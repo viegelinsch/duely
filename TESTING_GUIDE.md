@@ -92,7 +92,8 @@ The npm scripts (from `package.json`) and their Docker form:
 
 ## 3. Test layout
 
-- **Location:** `client/app/**/*.spec.ts` (16 spec files at `ced1dc8`).
+- **Location:** `client/app/**/*.spec.ts` (17 spec files since Phase 12 added `i18n-parity.spec.ts`;
+  16 at `ced1dc8`).
 - **Included by:** `client/tsconfig.spec.json` (`"include": ["**/*.spec.ts", "**/*.d.ts"]`).
 - **Runner:** Vitest, via the builder above. Vitest reports file/suite/test in the form
   `FAIL  |duely| <compiled-spec-file> > <suite> > <test>`.
@@ -132,6 +133,28 @@ Note the `saveAs` failures (§6): `file-saver@2.0.5` is CJS-only, and esbuild's 
 namespace is non-configurable, so `vi.spyOn` **cannot** redefine `saveAs` — that is the root cause of
 three of the deferred failures, not a test-authoring mistake.
 
+### The i18n key-parity spec (Phase 12, task #37)
+
+`client/app/i18n-parity.spec.ts` is a **data-contract test**, not a component test: it asserts that
+`client/assets/i18n/en.json` and `client/assets/i18n/de.json` define the **identical set of
+translation keys** (extracted recursively as dot-separated paths, so future nesting is handled; both
+files are flat with **127 keys** today). On failure the assertion message lists the full **symmetric
+difference** — every key present in only one locale — so drift is diagnosed directly from the test
+output. It exists because a key missing from one locale silently renders as its raw key text at
+runtime, and no build, lint or other spec gate catches that (backlog §2(g)-7, closed by this spec).
+Two authoring notes:
+
+- It **imports the JSON files directly** (`resolveJsonModule`) instead of using `node:fs`: the
+  `@angular/build:unit-test` builder bundles specs through esbuild with the **browser** platform,
+  where `node:fs` fails to resolve ("Could not resolve \"node:fs\"").
+- Its second `it()` block pins both key sets to be **non-empty**, so an accidentally truncated or
+  emptied locale file cannot pass the parity assertion trivially at 0/0.
+
+The spec adds **2 passing tests** (suite `I18nKeyParity`) and moves the baseline total from
+71 → **73**; the 24-failure partition is untouched (verified: failing-name md5 unchanged). A parity
+test deliberately cannot detect orphaned keys, wording problems or missing runtime translation
+rendering — those are symmetric across locales (backlog §3).
+
 ---
 
 ## 4. The gate set
@@ -144,7 +167,7 @@ is the set recorded in `docs/2026_MIGRATION_STATE.md` §11.
 | **G1** — app type-check | `docker compose run --rm duely-dev npx tsc --noEmit -p client/tsconfig.app.json` | **0 errors** |
 | **G2** — spec type-check | `docker compose run --rm duely-dev npx tsc --noEmit -p client/tsconfig.spec.json` | **0 errors** (authoritative count) |
 | **G3** — strict-null invariant | pipe G1/G2 output to `grep -cE 'error (TS2322\|TS2531)'` | literally **0** on both |
-| **G4** — unit tests | `docker compose run --rm duely-dev npm test` | **24 failed / 47 passed (71)**, **5 failed / 11 passed files**, **44** icon messages, **0** NG8xxx, **0** NG0xxx — then the failing-name diff (§7) **must be empty** |
+| **G4** — unit tests | `docker compose run --rm duely-dev npm test` | **24 failed / 49 passed (73)**, **5 failed / 12 passed files**, **44** icon messages, **0** NG8xxx, **0** NG0xxx — then the failing-name diff (§7) **must be empty** |
 | **G5** — production build | `docker compose run --rm duely-dev npx ng build --configuration production --output-path /tmp/probe-dist` | **exit 0** (budget *warning* is expected, not an error) |
 | **G6** — clean tree + no stray containers | `git status --porcelain && docker ps` | both empty after the commit |
 
@@ -163,14 +186,14 @@ Until the deferred failures are addressed in a future test-and-date phase, `npm 
 
 | Metric | Value |
 |---|---|
-| Tests | **24 failed / 47 passed (71 executing)** |
-| Test files | **5 failed / 11 passed (16)** |
+| Tests | **24 failed / 49 passed (73 executing)** |
+| Test files | **5 failed / 12 passed (17)** |
 | `Error retrieving icon duely:*` messages | **44** |
 | Compile-time `NG8xxx` errors | **0** |
 | Runtime `NG0xxx` errors | **0** |
 | G1 / G2 tsc | **0 / 0 errors** |
 | G3 `TS2322\|TS2531` | **0** |
-| i18n key parity | **138 EN / 138 DE** |
+| i18n key parity | **127 EN / 127 DE** |
 
 The **44 icon messages** are cosmetic: `provideDuelyIcons()` runs from `app.config.ts`, which spec
 TestBeds do not load, so each `<mat-icon svgIcon="duely:...">` logs a lookup warning per render.
@@ -465,7 +488,7 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
   not provided` on stderr, in one block right after the `RUN v3.2.4 /app` banner.** Expected and
   harmless. `vitest.setup.ts` reads Node's broken getter once per forked worker to detect the
   shadowing, and Node prints the warning each time. It is a warning, not an error: it does not affect
-  the 24F/47P counts, the 44 icon messages or the failing-name diff, and it does **not** mean the
+  the 24F/49P counts, the 44 icon messages or the failing-name diff, and it does **not** mean the
   flag is required.
 - **A container is still listed by `docker ps` after a run.** `docker stop <id>` it; never
   `docker compose down`.

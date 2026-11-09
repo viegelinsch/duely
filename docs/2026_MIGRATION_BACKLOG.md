@@ -410,7 +410,15 @@ the new `standalone` and `@for` conventions during the migration.
   `protractor.conf.js` and `tslint.json` deleted (grep-proven zero references outside prose docs).
   `e2e/tsconfig.e2e.json` was deliberately **KEPT** (it becomes orphaned once protractor.conf.js goes,
   but the PLAN says *check* it, not delete it, and **Phase 9 owns `e2e/`**).
-- An en/de key-parity test.
+- ~~An en/de key-parity test.~~ **CLOSED by backlog-emptying Phase 12 (task #37)** — new spec
+  `client/app/i18n-parity.spec.ts` imports both locale JSONs (via `resolveJsonModule`; `node:fs` is
+  unavailable in the unit-test builder's browser-platform esbuild bundle), recursively extracts all
+  dot-separated keys, asserts the key sets are identical, and reports the full symmetric difference
+  in the assertion message on failure. A second `it()` pins both sets non-empty so a truncated file
+  cannot pass trivially. Verified at 127/127, empty difference; suite adds 2 passing tests (baseline
+  71 → 73 total, 24-failure partition and failing-name md5 `172d78996b50c84e38211b529d76ab0b`
+  unchanged). `TESTING_GUIDE.md` §3 documents the spec. Boundary per §3 cross-reference: parity
+  detects none of §3(a)/(b)/(c) — those are symmetric across locales.
 - ~~The 7 unused ngx-bootstrap i18n keys.~~ **CLOSED by backlog-emptying Phase 10, commit 10.3
   (task #35)** — full enumeration proved **14** orphaned keys (D1–D12 from §3(a) plus `LIGHT` and
   `DARK`, which the old theme-mode selector used before it became a slide toggle). All 14 deleted from
