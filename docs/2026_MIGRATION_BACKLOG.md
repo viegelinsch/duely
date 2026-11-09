@@ -366,8 +366,13 @@ the new `standalone` and `@for` conventions during the migration.
   `ChangeDetectionStrategy.OnPush` added to all four form components (`appointment-form`,
   `recurring-settings`, `alarm-settings`, `advanced-settings`). The two imperative `updateRepeatsBy()`
   calls are paired with explicit `markForCheck()` on the child; the `setValue()` on the child's form
-  control needs none (Angular's reactive-form directives handle it internally). Full measurement:
-  TASKBOARD §37, STATE §11.35.
+  control (`appointment-form.component.ts:227`) needs none because the implicit `markForCheck()` is
+  emitted by `NgModel` (which injects a `ChangeDetectorRef` and marks the view in `_updateValue()`),
+  **not** by `FormControlName` (the pure reactive directive injects no `ChangeDetectorRef`) — this works
+  only because the template pairs `formControlName="untilDate"` with `[(ngModel)]="enddate"` on the same
+  control (`recurring-settings.component.html`). **Dependency:** if the deprecated `ngModel +
+  formControlName` combination is ever retired, an explicit `markForCheck()` becomes necessary at that
+  call site. Full measurement: TASKBOARD §37, STATE §11.35.
 - ~~The trimmed `moment-timezone` build (−25 KB gzip).~~ **CLOSED WITH RATIONALE (task #64, Phase 11.3)** —
   DECLINED: the trimmed `builds/moment-timezone-with-data-10-year-range.js` (55,259 B) carries correct
   Europe/Berlin DST data only for **2020–2030**; outside that window it silently returns UTC offset 60 instead
