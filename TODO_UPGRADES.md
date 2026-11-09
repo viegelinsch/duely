@@ -155,22 +155,23 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 
 ### Track B — Electron (independent of Track A, can run in parallel from B2 onward)
 
-#### B1. Dockerfile hardening for Electron
+#### B1. Dockerfile hardening for Electron + Node pinning
 
 **Risk:** LOW — additive change.
 **Action:**
+- **Pin base image:** Change `FROM node:lts-slim` → `FROM node:26-slim` in ALL THREE Dockerfile stages (DECISION: explicit major-version pin, picks up 26.x patches automatically)
 - Add `libgtk-3-0` (and any other missing GUI libs) to the Dockerfile's `apt-get install` in the development stage
-- Verify the Playwright version-pin assertion still passes
-- Optionally pin `node:lts-slim` → `node:26-slim` or `node:26.13.0-slim` to prevent future floating-tag surprises
+- Verify the Playwright version-pin assertion still passes after the base-image change
+- Rebuild the dev image: `docker compose build duely-dev`
 
-**Gates:** `docker compose build duely-dev` succeeds; Playwright e2e 16/0 still passes.
+**Gates:** `docker compose build duely-dev` succeeds; Playwright e2e 16/0 still passes; Node version inside container confirms 26.x.
 **Blocks:** B2 (Electron needs GTK3 to launch).
 **Blocked by:** Nothing (can run immediately, in parallel with A1).
-**NOTE:** This touches the Dockerfile, which the user personally hardened (security commits `3a3ce21`/`c379a4c`). Requires explicit user approval before modifying.
+**NOTE:** This touches the Dockerfile, which the user personally hardened (security commits `3a3ce21`/`c379a4c`). The pinning change is authorised by decision 3 above; the GTK3 addition is new.
 
 ---
 
-#### B2. Electron 34 → 45
+#### B2. Electron 34 → 45 + custom protocol for lazy chunks
 
 **Risk:** HIGH — 11 major versions; expect breaking changes in IPC, BrowserWindow API, preload scripts.
 **Action:**
@@ -178,10 +179,26 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 - Bump `electron-builder` to latest (^26.18.0 or newer if available for Electron 45)
 - Remove the `yauzl` override added in A1 (Electron 45 uses `@electron-internal/extract-zip`)
 - Update `electron/main.ts` for any API changes across 11 majors
-- Verify the `file://` loading strategy works with the three lazy-loaded route chunks (task #58's original concern) — if not, implement a custom protocol or local HTTP server
+- **Implement custom protocol (DECISION 4):** Replace `browserWindow.loadURL('file://...')` with a privileged custom scheme:
+  ```ts
+  import { protocol, session } from 'electron';
+  protocol.registerSchemesAsPrivileged([{
+    scheme: 'app',
+    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true }
+  }]);
+  // In app.whenReady():
+  protocol.handle('app', (request) => {
+    const url = new URL(request.url);
+    const filePath = path.join(clientFolder, url.pathname === '/' ? 'index.html' : url.pathname);
+    return net.fetch(`file://${filePath}`);
+  });
+  browserWindow.loadURL('app://./index.html');
+  ```
+  This makes dynamic `import()` work for the three lazy-loaded route chunks (about, legal, settings).
+- Verify all 5 route states render correctly in the Electron BrowserWindow
 - Verify `electron-builder` packaging succeeds on Linux arm64
 
-**Gates:** Electron launches in container (with Xvfb), navigates all 5 route states, no console errors. Production packaging succeeds.
+**Gates:** Electron launches in container (with Xvfb + GTK3), navigates all 5 route states, no console errors. Production packaging succeeds.
 **Blocked by:** B1 (GTK3 must be present).
 **Revives:** Task #58 (Electron launch verification).
 
@@ -218,21 +235,32 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 
 **Gates:** G4 (unit baseline), G1 (type-check), e2e.
 **Blocked by:** Nothing (can start immediately).
-**NOTE:** Locked decision 3 says "no test work" — but that applies to the migration backlog cycle, not to this upgrade cycle. The user should confirm whether the same constraint applies here.
+**NOTE:** Decision 1 confirms tests are fair game — spec files may be updated as needed during this upgrade.
 
 ---
 
-#### D2. moment-timezone 0.5 → 0.6
+#### D2. Replace moment-timezone entirely (PENDING library choice)
 
-**Risk:** LOW — minor version bump, same API surface.
+**Risk:** HIGH — 18 source files, touches the appointment model, ICS generation, collision detection, recurrence engine, and datepicker bindings. Largest single refactor in the upgrade cycle.
 **Action:**
-- Bump `moment-timezone` from `^0.5.47` to `^0.6.6`
-- Verify the full dataset still loads correctly (task #64's measurement showed the default `require('moment-timezone')` path uses `index.js` with full data)
-- Verify offsets remain correct for Europe/Berlin 1980–2200
-- Check if 0.6.x changes the trimmed-build behaviour (task #64's decline was specific to 0.5.48's builds)
+- **PREREQUISITE:** User must choose the replacement library (see PENDING DECISION above)
+- Remove `moment-timezone` (and implicitly `moment`) from `package.json`
+- Add the chosen replacement library
+- Rewrite all 18 source files that import moment/moment-timezone:
+  - `client/app/DatesAndCollisions/Recurrence/RecurrencePattern.ts`
+  - `client/app/DatesAndCollisions/CollisionDetector.ts`
+  - `client/app/creator/appointments.service.ts`
+  - `client/app/creator/appointment-form/recurring-settings/recurring-settings.component.ts`
+  - `client/app/creator/appointment-form/appointment-form.component.ts`
+  - (plus ~13 more — run `grep -rl 'moment' client/` for the full list)
+- Verify timezone offset arithmetic is preserved (use the leader's 13-date × Europe/Berlin probe from TASKBOARD §34 as the correctness oracle)
+- Verify ICS generation output is byte-identical or semantically equivalent
+- Update `HolidayCatalogService` if it has any moment dependency
+- Verify the trimmed-build concern (task #64's decline) is moot with the new library
 
-**Gates:** G4, G5, the leader's tz-isolated probe script.
-**Blocked by:** Nothing.
+**Gates:** Full suite, the tz-offset probe, ICS output comparison, e2e.
+**Blocked by:** PENDING library decision. Should run AFTER Angular upgrades (A3/A4) land, since Angular's date pipes and form controls may interact with the date library choice.
+**NOTE:** Task #64's decline rationale (UNTIL = 2126, no validators) remains relevant — whatever library replaces moment-timezone MUST handle dates 100+ years out correctly.
 
 ---
 
@@ -247,7 +275,7 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 
 **Gates:** G4, G1, e2e.
 **Blocked by:** Nothing.
-**NOTE:** This is the one task that TOUCHES a spec file — user should confirm whether locked decision 3 applies to the upgrade cycle.
+**NOTE:** Decision 1 confirms tests are fair game in this cycle — the CollisionDetector.spec.ts update is authorised.
 
 ---
 
@@ -260,28 +288,28 @@ Electron 34:          uses broken extract-zip@2.0.1 (deadlocks on Node >=24.16)
 - `rxjs` ~7.8.1 → ~7.8.2
 - `@playwright/test` ^1.64.1 → ^1.65.0
 - `typescript-eslint` ^8.70.0 → ^8.72.1
-- `esbuild` 0.25.9 → decide whether to unpin or bump to 0.28.2 (pinned for reproducibility)
+- `esbuild` 0.25.9 → **0.28.2** (DECISION: bump to latest; change from exact pin to caret `^0.28.2` or new exact pin — verify `scripts/build.mjs` works unchanged)
 - `file-saver` 2.0.5 — already latest; CJS-only, no upgrade path
 - `ts-node` 10.9.2 — already latest
 
-**Gates:** Full suite.
+**Gates:** Full suite. Special attention to G5 (production build) after the esbuild bump.
 **Blocked by:** Nothing (but ideally runs after the majors land to avoid churn).
 
 ---
 
 ### Track E — Node and Docker Strategy (cross-cutting, runs last)
 
-#### E1. Node pinning decision
+#### E1. Node pinning verification (decision made, verify after all upgrades)
 
-**Risk:** POLICY — no code change, but affects reproducibility.
+**Risk:** LOW — verification only; the actual pin change happens in B1.
 **Action:**
-- Decide: keep floating `node:lts-slim` (currently Node 26), or pin to `node:26-slim` / `node:26.13.0-slim`?
-- The floating tag already caused one surprise (Node 24 → 26 silently, TASKBOARD §26.1)
-- If pinning: update Dockerfile, rebuild image, re-run all gates
-- Update `engines` in all three `package.json` files if the minimum changes
+- B1 changes `FROM node:lts-slim` → `FROM node:26-slim` (DECISION 3: explicit major-version pin)
+- After all tracks complete, verify the container still reports Node 26.x
+- Update `engines` in all three `package.json` files if the minimum changes (currently `node >= 24.0.0`)
 - Update STATE §1 runtime facts (currently stale: says Node 24.21.0)
+- Verify no upgrade introduced a Node 26 incompatibility
 
-**Blocked by:** All other tracks (pin last, after all upgrades are validated on Node 26).
+**Blocked by:** All other tracks (verify last, after all upgrades are validated on Node 26).
 
 ---
 
@@ -312,7 +340,7 @@ graph TD
     end
 
     subgraph "Track B — Electron"
-        B1[B1: Dockerfile + GTK3] --> B2[B2: Electron 34→45]
+        B1[B1: Dockerfile + Node pin + GTK3] --> B2[B2: Electron 34→45 + custom protocol]
     end
 
     subgraph "Track C — Server"
@@ -321,18 +349,19 @@ graph TD
 
     subgraph "Track D — Libraries"
         D1[D1: ical-generator 7→11]
-        D2[D2: moment-timezone 0.5→0.6]
+        D2[D2: Replace moment-timezone — PENDING library choice]
         D3[D3: date-holidays 3.24→3.39]
-        D4[D4: Minor/patch bumps]
+        D4[D4: Minor/patch bumps + esbuild 0.28]
     end
 
     subgraph "Track E — Final"
-        E1[E1: Node pinning]
+        E1[E1: Node pin verification]
         E2[E2: Final audit]
     end
 
     A1 -.-> C1
     A1 -.-> D4
+    A4 --> D2
     A5 --> E1
     B2 --> E1
     C1 --> E1
@@ -349,21 +378,34 @@ graph TD
 
 | Can run in parallel | Must be sequential |
 |---|---|
-| A1 + B1 + D1 + D2 + D3 | A1 → A2 → A3 → A4 → A5 |
+| A1 + B1 + D1 + D3 + D4 | A1 → A2 → A3 → A4 → A5 |
 | B1 → B2 (parallel with Track A from A2 onward) | B1 → B2 |
-| C1 (after A1) | A5 → E1 → E2 |
-| D1, D2, D3, D4 (all independent) | Everything → E2 |
+| C1 (after A1) | A4 → D2 (moment replacement needs Angular settled) |
+| D1, D3, D4 (all independent of each other) | A5 → E1 → E2 |
+| D2 (only after A4 AND the library decision) | Everything → E2 |
 
 ---
 
-## Open Questions for the User
+## Decisions (confirmed 2026-11-09)
 
-1. **Does locked decision 3 ("no test work") apply to this upgrade cycle?** D1 and D3 both touch spec files. If yes, those tasks must be scoped differently.
-2. **Does locked decision 9 ("no modernisation") apply?** The Angular upgrades will inevitably modernise (new compiler, new builder APIs). If yes, only security-driven upgrades are in scope and Angular stays at 20.
-3. **Pin `node:lts-slim` or keep it floating?** The floating tag already caused one silent Node 24→26 transition.
-4. **esbuild: keep the exact pin at 0.25.9 or bump?** It was pinned for reproducibility of `scripts/build.mjs`.
-5. **Should the Electron `file://` strategy change?** Task #58's concern: lazy-loaded chunks may not resolve under `file://`. Options: custom protocol, local HTTP server in main process, or keep routes eager in the Electron build.
-6. **moment-timezone replacement?** Still actively maintained (0.6.6 released 11 days ago), but the ecosystem direction is Temporal/luxon/dayjs. 18 source files import moment. Is a replacement in scope for this cycle or deferred?
+| # | Question | Decision | Implication |
+|---|---|---|---|
+| 1 | Does locked decision 3 ("no test work") carry over? | **NO — tests are fair game** | The 24F/47P baseline can shift during upgrades; record new baselines as they change. D1 and D3 may touch spec files. |
+| 2 | Does locked decision 9 ("no modernisation") carry over? | **NO — modernisation is the goal** | Angular 21/22 migrations, new compiler APIs, codemods, signals, inject(), functional guards — all in scope if the upgrade path requires them. |
+| 3 | Pin `node:lts-slim` or keep floating? | **Pin to `node:26-slim`** | Explicit major-version pin in Dockerfile. Won't float to Node 28 silently. Picks up 26.x patches automatically. |
+| 4 | Electron `file://` strategy for lazy chunks? | **Custom protocol** | Register a privileged custom scheme (e.g. `app://`) with `registerSchemesAsPrivileged({ standard: true, secure: true, supportFetchAPI: true })` so dynamic `import()` resolves correctly. |
+| 5 | esbuild: keep exact pin at 0.25.9 or bump? | **Bump to latest (0.28.2)** | Accept the risk; test thoroughly. Change from exact pin to caret (`^0.28.2`) or keep exact at the new version. |
+| 6 | moment-timezone: bump or replace? | **Full replacement in this cycle** | Replace moment-timezone across all 18 source files. This is the largest single refactor in the upgrade cycle. |
+
+### PENDING DECISION — moment-timezone replacement library
+
+**Status: AWAITING USER DECISION.** Must be resolved before Track D's moment-replacement task can execute.
+
+Options under consideration:
+- **Luxon** — https://moment.github.io/luxon/ (moment team's recommended successor; full IANA tz support; immutable API; ~72 kB gzipped with tz data)
+- **dayjs + timezone plugin** — https://day.js.org/ (lightweight ~2 kB core; moment-like mutable API; timezone via plugin)
+- **date-fns + @date-fns/tz** — https://date-fns.org/ and https://github.com/date-fns/tz (functional, modular, tree-shakeable; newer tz support)
+- **Temporal API (polyfilled)** — https://tc39.es/proposal-temporal/ (TC39 Stage 3; not in shipping engines without polyfill; too early for production as of 2026-11)
 
 ---
 
