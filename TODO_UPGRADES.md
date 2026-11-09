@@ -411,7 +411,7 @@ Options under consideration:
 
 ## Relationship to the Migration Backlog
 
-This task board is **SEPARATE** from `docs/2026_MIGRATION_BACKLOG.md` (which tracks the Bootstrap-to-Material migration). The migration backlog is nearly empty (Phases 12–13 remain). This upgrade cycle should begin AFTER Phase 13 closes, or in parallel if the user authorises it.
+This task board is **SEPARATE** from the Bootstrap-to-Material migration record. That migration's deferred-work backlog (`docs/2026_MIGRATION_BACKLOG.md`) was **retired into `docs/2026_KNOWN_LIMITATIONS.md` by Phase 13**, which closed the migration. This upgrade cycle should begin AFTER Phase 13 closes, or in parallel if the user authorises it.
 
 Task #58 (Electron launch verification, cancelled/out-of-cycle) is **revived by B1+B2** in this board.
 

@@ -4,8 +4,9 @@
 
 This is the durable developer-facing reference for the finished migration. The two working
 documents that drove it are `docs/2026_MIGRATION_PLAN.md` (the execution contract, Phases 1–8
-verbatim plus corrections) and `docs/2026_MIGRATION_BACKLOG.md` (deferred work with no phase
-owner). The live session handoff was `docs/2026_MIGRATION_STATE.md` (git-excluded).
+verbatim plus corrections) and `docs/2026_KNOWN_LIMITATIONS.md` (deferred work with no phase
+owner — retired from the former `docs/2026_MIGRATION_BACKLOG.md` by Phase 13). The live session
+handoff was `docs/2026_MIGRATION_STATE.md` (git-excluded).
 
 ---
 
@@ -454,7 +455,7 @@ Unminified, so not comparable against the production budgets; `vendor.js` domina
 
 ### Tests — the 24 deferred failures
 
-All 24 are loud, classified and recorded in `docs/2026_MIGRATION_BACKLOG.md`; none is a migration
+All 24 are loud, classified and recorded in `docs/2026_KNOWN_LIMITATIONS.md` (a); none is a migration
 regression. Groups 4–6 were masked until Phase 6 fixed the TranslateStore NG0201 that aborted those
 specs.
 
@@ -467,8 +468,9 @@ specs.
 | CollisionDetector stale expectation | 1 | stale date-holidays expectation, plus an assertion loop that iterates `i` but always compares index `[0]` |
 | creator `saveText` | 1 | decided **option C** — accept reduced coverage; the drop is deferred to a user-initiated coverage review |
 
-Also standing: i18n key parity **138 EN / 138 DE**, compile-time NG8xxx **0**, ProxyZone failures
-**0**.
+Also standing: i18n key parity — **138 EN / 138 DE** at Phase 8, now **127 EN / 127 DE** after
+backlog-emptying Phase 10 deleted 14 orphaned keys and added 3 aria-label keys; compile-time NG8xxx
+**0**, ProxyZone failures **0**.
 
 ### Build pipeline after backlog-emptying Phase 6 — Webpack retired
 
@@ -556,6 +558,75 @@ unconditional Express catch-all, not the 52,007 B licence text. A repo-wide grep
 fetches it**, so the layout stays as-is. A release-packaging step that wants it must look one level
 above the served root.
 
+### Final gate results and production bundle after backlog-emptying Phase 13 (migration closure)
+
+Phase 13 (task #38) retired `docs/2026_MIGRATION_BACKLOG.md` into `docs/2026_KNOWN_LIMITATIONS.md` and
+ran the full verification battery one last time, all inside Docker via
+`docker compose run --rm duely-dev <cmd>`, batched with `;` + `echo "LABEL_EXIT=$?"`. It touched **zero**
+client, server or electron source files — the only changes are documentation and the backlog deletion —
+so this is a documentation-closure snapshot of an unchanged tree, not a code change.
+
+| Gate | Command | Result |
+|---|---|---|
+| G1 — app type-check | `npx tsc --noEmit -p client/tsconfig.app.json` | **PASS**, exit 0 |
+| G1b — server type-check | `npx tsc --noEmit -p server/tsconfig.json` | **PASS**, exit 0 |
+| G1c — electron type-check | `npx tsc --noEmit -p electron/tsconfig.json` | **PASS**, exit 0 |
+| G2 — spec type-check | `npx tsc --noEmit -p client/tsconfig.spec.json` | **PASS**, exit 0 |
+| G3a — invariant | `grep -cE 'error (TS2322\|TS2531)'` over G1/G2 | **PASS**, literally `0` |
+| G3b — dev build | `npx ng build --configuration development` | **PASS**, exit 0 |
+| G4 — unit tests | `npm test` | **24 failed / 49 passed (73 specs)**, **5 failed / 12 passed (17 files)**, **0** NG8xxx, **0** NG0xxx, **44** icon-registration stderr warnings (D19 — test-harness only, all affected specs pass). Failing-name md5 `172d78996b50c84e38211b529d76ab0b` **== baseline**, 24 names, `diff` **EMPTY** |
+| G5 — production build | `npm run build:prod` | **PASS**, exit 0, **0** budget warnings at `maximumWarning 2.55mb` / `maximumError 5mb`, **0** `anyComponentStyle` warnings; **12** CommonJS optimization-bailout occurrences (6 distinct specifiers × 2 output paths — see (b.3)) |
+| lint | `npm run lint` | **PASS**, exit 0, **0 errors / 8 warnings** |
+| e2e | `npx playwright test` | **16 passed / 0 failed** (10.0 s) |
+| i18n parity | python3 key-set diff | **127 EN / 127 DE — IDENTICAL** |
+| hygiene | — | `git ls-files dist` **0** · live Sass `@import` **0** (7 grep matches, all inside comments) · Webpack configs **0** · `docker ps -a --filter name=duely` **EMPTY** |
+
+**The 73-spec baseline.** G4 reports **73** specs across **17** files, up from the **71** specs / **16**
+files recorded through Phase 11. Phase 12 (`5bec199`) added `client/app/i18n-parity.spec.ts`
+(**+2 passing** tests, **+1 passing** file). The **24-failure partition is byte-for-byte unchanged** —
+the failing-name md5 still equals `.git/duely-failing-names-baseline.txt` and the diff is empty, so the
+two new passing specs did not disturb a single deferred failure.
+
+**Final production bundle (measured from `dist/server/static/browser/` after G5, exact bytes):**
+
+| Chunk | Raw bytes | Role |
+|---|---|---|
+| `chunk-JZJ2L7GC.js` | **1,619,140 B** | initial, shared third-party |
+| `main-UADZYEJY.js` | **279,047 B** | initial, app entry (sha256 `dad3b751…`) |
+| `chunk-QBUSXI3J.js` | 190,283 B | initial, shared |
+| `chunk-MY5TLO44.js` | 157,016 B | initial, shared |
+| `polyfills-5CFQRCPP.js` | 34,585 B | initial |
+| `styles-DRBU42VC.css` | 20,951 B | initial |
+| `chunk-Z7MHJMDT.js` | 11,150 B | initial |
+| **Initial total** | **2,312,172 B (2.31 MB)** | **371.55 kB** estimated transfer |
+| `index.html` | 10,840 B | — |
+| lazy `chunk-*.js` (animations, holiday catalogue, …) | — | route-level, Phase 11.1 |
+
+- **Budget: 0 warnings.** The rebaselined `maximumWarning: "2.55mb"` (Phase 11.1) leaves headroom over
+  the 2,312,172 B initial total; `maximumError` stays `5mb`; `anyComponentStyle` `6kb/10kb` still PASSes.
+- **Phase 11.1 restructure.** Route-level lazy loading (`33a038e`) converted three routes to
+  `loadComponent`, which split the former single 2.16 MB `main-IJN2BJGT.js` into a small ~279 kB entry
+  plus the large shared `chunk-JZJ2L7GC.js`; the initial total is essentially unchanged (2.37 MB →
+  2.31 MB) but the app entry itself shrank ~87%.
+- **`main-4YER4DET.js` → `main-UADZYEJY.js` (+109 B) re-hash — NOT a Phase 13 change.** TASKBOARD §37.6
+  recorded the post-OnPush entry as `main-4YER4DET.js` (278,938 B). The live entry is `main-UADZYEJY.js`
+  (279,047 B), **+109 B**. The delta traces to commit `6e7aa73` (the Phase 11.4 `translate.onLangChange`
+  follow-up), which landed after §37.6 was measured and was never re-baselined. **Phase 13 touched zero
+  client files, so it changed no emitted byte.** Every other chunk is byte-identical to §37.6.
+
+**Reduced visual pass (user decision — 10 screenshots, not the full 72).** Playwright headless ran
+**inside one container**: a detached `ng serve` (`docker compose run --rm --service-ports -d duely-dev`)
+plus a `docker exec` driver (`.git/duely-p13-shots.cjs`) into the same container, seeding
+`localStorage['settings']` via `context.addInitScript()` with the real geo triple ES/CN/GC (§35.9).
+5 routes (`/`, `/about`, `/legal`, `/settings`, `/404`) × 2 themes × 1440×900 = **10 fullPage PNGs**
+under `.git/duely-p13-shots/`. **Every route: 0 console errors, 0 page errors, 0 NG8xxx, 0 NG0xxx.**
+The creator route (`/`) logged **exactly 1** deprecation warning (the known `ngModel` + `formControlName`
+combination). **D20 pixel-confirmed:** `getComputedStyle(document.body).backgroundColor` returned
+`rgb(221, 221, 221)` **identically for light AND dark on every route** — the hardcoded
+`body { background: #ddd }` never inverts (KNOWN_LIMITATIONS (i.1) / decision D20). Per-theme PNG byte
+sizes still differ (some Material tokens do invert). Container stopped with `docker stop <id>`;
+`docker ps` EMPTY afterwards; porcelain clean.
+
 ---
 
 ## 7. Known deviations
@@ -603,9 +674,12 @@ above the served root.
    `.label-{accent}`, which set `color` and have no equal-specificity competitor, and a 72-shot
    Playwright matrix (6 route states × 2 themes × 2 accents × 375/800/1440) captured before and
    after inside one dev-server session was **byte-identical on all 72 PNGs**.
-5. **`npm run lint` cannot run** (backlog item f): `package.json` passes `--ext`, which ESLint 9
-   removed. There is consequently no automated guard on the `standalone` / `@for` conventions —
-   gates 1, 2 and 3 are the guard.
+5. **CLOSED — `npm run lint` now runs and passes (former backlog item f).** It originally failed
+   because `package.json` passed `--ext`, which ESLint 9 removed. Linting was restored with an ESLint 9
+   **flat config** (`eslint.config.js`, commit `a002265`); `package.json` now runs plain `eslint .`, and
+   a series of follow-ups (`d94c3d7` → `36bb13f` → `3ce6676` → `138a590`) drove the error count
+   516 → 0. Phase 13's lint gate reports **exit 0, 0 errors / 8 warnings**. The `standalone` / `@for`
+   conventions are still guarded primarily by gates 1, 2 and 3, but lint is no longer a dead gate.
 6. **Deviation D5 from the plan persists:** `appointments.service.ts`'s `initializeCalendar()` was
    made `public` solely so `vi.spyOn` type-checks. The revert was deferred because that spec is
    deferred-red anyway; revisit with the CollisionDetector/appointments backlog work.
@@ -785,6 +859,58 @@ d70817f     fix(build): ng serve under the Angular 20 dev-server schema
 ```
 
 Branch `dev-v2` is unpushed with no upstream; nothing in the migration pushes or creates one.
+
+### Backlog-emptying commit chain (Phases 0–13, the plan that retired the backlog)
+
+The migration chain above ends at Phase 8 (`87232ae`). The **14-phase "Emptying and deleting
+`docs/2026_MIGRATION_BACKLOG.md`" plan** then ran on top of it (tasks #25–#38). Newest first, with the
+phase each commit belongs to; the security commits `3a3ce21`/`c379a4c` and the dependency-upgrade docs
+commits `86f75bf`/`1f6fd97` are interleaved but belong to neither plan:
+
+```
+[Phase 13]  docs: retire the migration backlog into KNOWN_LIMITATIONS   (this closure commit)
+1f6fd97     docs(upgrades): record the six upgrade-cycle decisions      (unrelated — HEAD before Phase 13)
+5bec199     [Phase 12] test(i18n): assert en/de translation key parity
+86f75bf     chore: dependency-upgrade task board + dep-graph visualizer (unrelated)
+c24818c     docs(backlog): correct the markForCheck rationale attribution
+6e7aa73     [Phase 11.4] fix(onpush): subscribe to translate.onLangChange
+9ced4a4     [Phase 11.4] perf(change-detection): OnPush on the four appointment-form components
+69c9ea2     docs(routes): correct the false lazy-chunk count
+1b1dbba     [Phase 11.3] docs(backlog): trimmed moment-timezone CLOSED WITH RATIONALE (DECLINED)
+57f0932     [Phase 11.2] refactor(collisions): extract HolidayCatalogService
+33a038e     [Phase 11.1] perf(routes): lazy-load route components, re-tighten budget 2.6→2.55mb
+138a590     [Phase 10-lint] chore(lint): bring vitest.setup.ts into ESLint scope
+3ce6676     [Phase 10-lint] refactor(lint): reach lint exit 0 (111→0)
+e289c18     [Phase 10d] fix(test): restore jsdom localStorage shadowed by the Node 26 getter
+48989b0     [Phase 10c] fix(e2e): bump @playwright/test to ^1.64.1 (Node 26 extract-zip deadlock)
+c379a4c     Switch base images to node:lts-slim                         (user security commit)
+3a3ce21     Add Docker Hub security check script                        (user security commit)
+36bb13f     [Phase 10-lint] refactor(lint): type moment/eventData/settings (441→111)
+d94c3d7     [Phase 10-lint] fix(lint): eslint --fix mechanical corrections (516→441)
+faca1d4     [Phase 10b] build(docker): bake Playwright Chromium into the dev image
+be16352     [Phase 10a] fix(ical): guard against null repeating in ICS generation
+0dbb401     [Phase 10] test(e2e): repair the six stale pre-migration selectors
+51eee0d     [Phase 10] fix(ui): legal screen, aria labels, i18n keys, phantom service worker
+29cce84     [Phase 10] fix(storage): validate persisted setting types on load
+1a123cd     [Phase 10] fix(dates): clone the date-holidays Date instead of mutating it
+05e0c51     [Phase 9A] chore(lint): decline prefer-inject (user decision)
+13f91ae     [Phase 9] test(e2e): repair the Playwright config (dev-server + built-server projects)
+a002265     [Phase 8] chore(lint): restore linting with an ESLint 9 flat config
+aed844b     [Phase 7C] chore(deps): retire dead @angular-devkit/build-angular
+67d9465     [Phase 7] chore: delete dead code, dead configs, unreachable ambient declarations
+185c05d     docs: correct post-Phase-6 findings, consolidate untranslated-strings backlog
+56bb8d5     [Phase 6] build(esbuild): retire the Webpack pipeline for one native esbuild script
+4525785     [Phase 5] build(angular): switch build and serve to the esbuild application builder
+6113520     [Phase 4] fix(styles): replace deprecated Sass @import with @use, end palette double-emit
+0bf8577     [Phase 3] perf(tsconfig): drop emitDecoratorMetadata, which Ivy does not need
+744d70a     [Phase 1/2] chore(deps): manifest hygiene, drop unused date-fns, bump the tar override
+97e3120     [Phase 0] docs: rewrite the testing guide for the Vitest stack, retire stale test docs
+ced1dc8     [Phase 0] docs: consolidate DEPENDENCIES_UPGRADED + DEPRECATION_ANALYSIS (rebaseline HEAD)
+```
+
+Phase 13 is the **terminal** commit of this chain: it authors `docs/2026_KNOWN_LIMITATIONS.md`,
+`git rm`s the backlog, and repoints every inbound reference — no source file changes. See §6's
+"Final gate results … after Phase 13" for its verification battery.
 
 ---
 
@@ -989,3 +1115,36 @@ Not propagated: its "Option B — disable strict mode" (strict mode is a standin
 coverage goal (no coverage target has ever been set on this project), and its Docker run instructions,
 which cite the one-shot `duely-build` service rather than the `duely-dev` service every gate uses. The
 stale snapshot has been consolidated into this section and deleted.
+
+### Closure — the migration backlog is retired (backlog-emptying Phase 13)
+
+The consolidation subsections above repeatedly cite `docs/2026_MIGRATION_BACKLOG.md` items (a)/(e)/(f)/(g)
+as the home of the migration's genuine residue. **That file no longer exists.** Backlog-emptying
+**Phase 13** (task #38, the terminal commit of the plan) retired it:
+
+- Every **open** or **closed-by-decision** item was transcribed into **`docs/2026_KNOWN_LIMITATIONS.md`**,
+  a new committed document with ten sections **(a)–(j)**, each entry stated as
+  **WHAT · WHY-accepted · RISK · WHAT-WOULD-CHANGE-THE-DECISION**. The former backlog letters map onto
+  it: (a) deferred test-and-date work, (b) accepted risks (the six CommonJS bailouts, the 44 icon
+  warnings, the four env files, the Express catch-all), (c) declined modernisation, (d) upstream-owned
+  deprecations (`moment`, `boolean@3.2.0`, `rimraf`, `@angular/animations`, `engines.node`),
+  (e) the dependency-upgrade roadmap pointer, (f) Electron storage, (g) rejected alternatives, plus
+  (h) Phase 11 deferrals, (i) the D20 UI defects and (j) the i18n carry-forward.
+- Every genuinely **FIXED** item now lives only in the commit history and in this document's §6/§7 — it
+  was **not** carried into KNOWN_LIMITATIONS, which records only what was deliberately *not* fixed.
+- `docs/2026_MIGRATION_BACKLOG.md` was removed with **`git rm`**, and every live inbound reference was
+  repointed at `docs/2026_KNOWN_LIMITATIONS.md`: `docs/2026_MIGRATION_PLAN.md` (6 sites),
+  `docs/2026_MATERIAL_MIGRATION.md` (2 sites), `TESTING_GUIDE.md`, `TODO_UPGRADES.md` and the
+  git-excluded `docs/2026_MIGRATION_STATE.md`. Historical references inside these §9 consolidation
+  subsections — which describe what a *deleted* March-2026 snapshot said about the *then-current*
+  backlog — are deliberately **left as-is**: they are prose history, not live pointers.
+
+**Both plans are now complete.** The Bootstrap-to-Material migration (Phases 0–8) finished at
+`87232ae`; the 14-phase backlog-emptying plan (Phases 0–13, tasks #25–#38) that this section's
+consolidations fed into is finished by the Phase 13 closure commit. Phase 13 changed **no** source
+file — only documentation and the backlog deletion — and its full verification battery (all gates
+green, the reduced 10-screenshot visual pass, the 73-spec / 24-failure baseline unchanged) is recorded
+in §6's "Final gate results … after Phase 13". The post-migration developer reference is this document;
+the deferred/accepted work is `docs/2026_KNOWN_LIMITATIONS.md`; the session handoff and the durable
+task-board mirror are the two git-excluded trackers (`docs/2026_MIGRATION_STATE.md` §11 row 13 and
+`docs/2026_MIGRATION_TASKBOARD.md` §42).

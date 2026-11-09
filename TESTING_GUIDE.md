@@ -501,7 +501,7 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
   the 18 locked decisions, the failing-name capture command) — git-excluded, the live handoff.
 - `docs/2026_MATERIAL_MIGRATION.md` §6 (final gate results + bundle measurements) and §9
   (pre-migration infrastructure, including the historical *Test evaluation summary*).
-- `docs/2026_MIGRATION_BACKLOG.md` §1 (the deferred test work) and §2 (build/tooling backlog).
-- `docs/2026_KNOWN_LIMITATIONS.md` — **forthcoming** (backlog-emptying Phase 13); will hold the full
-  diagnosis and disposition of the 24 deferred failures, the 44 icon messages, and the other
-  won't-fix/deferred items.
+- `docs/2026_KNOWN_LIMITATIONS.md` — **created by backlog-emptying Phase 13** (retiring the former
+  `docs/2026_MIGRATION_BACKLOG.md` §1 deferred test work and §2 build/tooling backlog); holds the full
+  diagnosis and disposition of the 24 deferred failures ((a)), the 44 icon messages ((b.2)), and the
+  other won't-fix/deferred items ((b)–(j)).

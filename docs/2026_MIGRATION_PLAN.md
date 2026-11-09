@@ -11,9 +11,10 @@ phase-owned deferred items folded in as **inline annotations** on the steps they
 - `docs/2026_MIGRATION_STATE.md` — the live working state and handoff: where we are, how to
   resume, immutable facts, standing constraints, approved deviations, baseline numbers, agent
   roster, hard invariants. Git-excluded and intentionally uncommitted. **Read it first.**
-- `docs/2026_MIGRATION_BACKLOG.md` — the committed record of deferred work that has **no phase
-  owner**: things to do *after* Phases 1–8 are finished. Phase-owned deferred items live here in
-  the PLAN as annotations, not in the backlog.
+- `docs/2026_KNOWN_LIMITATIONS.md` — the committed record of deferred work that has **no phase
+  owner**: things to do *after* the migration is finished. (This was `docs/2026_MIGRATION_BACKLOG.md`
+  until Phase 13 retired it into `docs/2026_KNOWN_LIMITATIONS.md`.) Phase-owned deferred items live
+  here in the PLAN as annotations, not in the limitations record.
 
 **The approved plan file** at
 `/Users/heg20/Library/Application Support/Qoder/SharedClientCache/cache/plans/Bootstrap_to_Material_migration_9bc8e866.md`
@@ -24,7 +25,8 @@ Annotation keys used below:
 
 - **Correction N** — one of the eleven plan corrections (the plan text is wrong or incomplete at
   that point).
-- **Phase-owned backlog** — a deferred item from `docs/2026_MIGRATION_BACKLOG.md` that this phase
+- **Phase-owned backlog** — a deferred item from the limitations record
+  (`docs/2026_KNOWN_LIMITATIONS.md`, formerly `docs/2026_MIGRATION_BACKLOG.md`) that this phase
   owns and must discharge.
 - **Note** — verified context a future dispatch needs.
 
@@ -85,8 +87,9 @@ Never on the host.
 **1.11** i18n — add `THEME MODE`, `LIGHT`, `DARK` to **both** `en.json` and `de.json` in the same commit, preserving the 135/135 parity invariant and the `UPPER CASE WITH SPACES` convention. In the same commit, apply your confirmed wording for the three calendar-metadata labels: `CALENDAR NAME` → EN `calendar name` / DE `Kalendername`; `CALENDAR PRODUCT ID` → EN `product ID` / DE `Produkt-ID`; `CALENDAR URL` → EN `calendar URL` / DE `Kalender-URL`. Read the current values first and change only what actually differs.
 
 > **Correction 9 (recommendation) — make `ng build` an explicit Phase 1 gate.** Build the
-> development configuration (the `production` configuration cannot run at all; see
-> `docs/2026_MIGRATION_BACKLOG.md` §(a)) before any Material CSS is added, and record the bundle
+> development configuration (at the time the `production` configuration could not run at all; that
+> was later discharged — the production build is now gate **G5**, exit 0 with 0 budget warnings — see
+> `docs/2026_KNOWN_LIMITATIONS.md`) before any Material CSS is added, and record the bundle
 > size and Sass warning count as the baseline, so any later budget breach is attributable. The plan
 > does not currently include this step.
 
@@ -204,7 +207,7 @@ A standalone parent cannot import a non-standalone child, so the order is forced
 > are a new defect.
 >
 > **[Resolved 2026-09-18, task #49.]** `docs/TODO-untranslated-strings.md` was retired on that date;
-> the answer is preserved in `docs/2026_MIGRATION_BACKLOG.md` §3(e): **confirmed yes** — both keys
+> the answer is preserved in `docs/2026_KNOWN_LIMITATIONS.md` (j.5): **confirmed yes** — both keys
 > came from Section C items C4/C5 in commit `dd11df7`, so `/legal` rendering raw keys is not a new
 > defect but the documented consequence of the `.instant()`-in-constructor decision, already tracked
 > as §2(g)-11 / Phase 10.3.
@@ -224,7 +227,8 @@ A standalone parent cannot import a non-standalone child, so the order is forced
 > `bootstrapModule(AppModule)` is JIT with zero `@angular/compiler` imports in `client/`, so the
 > production bundle cannot compile templates at all, and `Dockerfile:22` ships exactly that bundle.
 > **Phase 5.3's move to `bootstrapApplication(...)` is the natural point to revisit the whole Webpack
-> pipeline**, but the pipeline rework is recorded in `docs/2026_MIGRATION_BACKLOG.md` §(e), not owned
+> pipeline**, but the pipeline rework was recorded in the retired backlog §(e) and has since been
+> discharged (Webpack retired for `scripts/build.mjs` in Phase 6); see `docs/2026_KNOWN_LIMITATIONS.md`. It is not owned
 > by this phase.
 
 **5.4** `app.component.{ts,html,scss}` — `standalone: true`, `imports: [RouterLink, RouterOutlet, MatToolbarModule, MatButtonModule, MatIconModule, TranslateModule]`. `<nav class="navbar navbar-fixed-top {{storage.getColor()}}">` → `<mat-toolbar color="primary">`; `glyphicon-cog` → `<mat-icon svgIcon="duely:settings">`; delete `label-{{storage.getColor()}}` from the footer links, since the accent token now colours them via `--mat-sys-primary`. Keep `.additional-links`. Delete the `.main{margin-top:…}` clearance hacks — `.page` owns clearance now. Do not introduce `mat-tab-nav-bar`: the app has 4 routes, not tabs.
@@ -399,8 +403,8 @@ here (the others concerned Phase 0 / Phase P, now complete):
 
 ## Rejected alternatives (rationale — do not re-litigate without new evidence)
 
-Recorded so the rationale survives without re-derivation. Full table also in
-`docs/2026_MIGRATION_BACKLOG.md`.
+Recorded so the rationale survives without re-derivation. Full table also preserved verbatim in
+`docs/2026_KNOWN_LIMITATIONS.md` (g).
 
 - **`MatTable`** (~178 KB with CDK) for a 2-column, unsorted, unpaginated, non-interactive collisions table — the largest single saving in the migration; rejected independently by all three planning passes.
 - **`MatExpansion`** (~61 KB) for collapse sections — `@if` destroys the collapsed subtree (0 retained DOM, 0 change detection); strictly cheaper for 3 nested panels × N appointments.
