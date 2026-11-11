@@ -79,3 +79,11 @@ test-results/
 # replaces the five narrow ones; nothing legitimate lives under /dist.
 /out-tsc/
 /dist/
+
+# Apple specifics from https://github.com/github/gitignore/blob/main/Global/macOS.gitignore
+.DS_Store
+.localized
+__MACOSX/
+.AppleDouble
+.LSOverride
+Icon[]
