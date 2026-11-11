@@ -924,9 +924,9 @@ explained deltas and **0** unexplained. macOS/Windows packages remain unverified
 
 **Scope update (user, 2026-11-10).** The project does not need AppImage packaging: the `deb` is the
 artifact to keep and ship, the AppImage above stays as measured evidence for this record, and a later
-batch does not build one without an explicit request. macOS packaging is deferred to task **M1** in
-`docs/TODO_UPGRADES.md`; it needs a macOS host, runs interactively with the user, and no current
-approval authorizes it.
+batch does not build one without an explicit request. macOS packaging is the deferred task **M1** in
+`docs/2026_KNOWN_LIMITATIONS.md` (l); it needs a macOS host, runs interactively with the user, and no
+current approval authorizes it.
 
 ### Combined-snapshot verification (I4) — DONE, 2026-11-10
 
@@ -952,7 +952,8 @@ snapshot E1 must review; nothing ran on the host and nothing was committed.
 - **Packaging is deb-only, per the scope update above:** 17 checks. `duely_2.0.0_arm64.deb` is
   **97,278,628 B**, 12 B under B12's archive while the payload, control block and 2,855 B `postinst`
   are identical field for field (archive metadata); the unpacked tree launches
-  `app://duely/settings` under Electron 45.2.3. No AppImage is built; macOS/Windows stay with M1.
+  `app://duely/settings` under Electron 45.2.3. No AppImage is built; macOS/Windows stay with M1 in
+  Known Limitations (l).
 - **Attribution:** 31 deltas and **0 unexplained** — 20 calendars that differ only in generated
   `UID`/`DTSTAMP`, 7 capture-noise PNGs and the 4 documents; 0 payload, unit, web or build-warning
   deltas. Three PNGs are fresh control-run noise; the other four already differed between B12's own
@@ -1017,8 +1018,8 @@ documents I4 wrote after its own finalize as the only drift. Nothing was committ
   the expected status — units **2F/131P** over the same `2F/16P` files, Berlin 1F/23P, E2E **22/0**, lint
   **0E/7W** — with the three failing attempts kept beside the passing run (an `any` in the new spec, a
   wrong expected file count in the runner, a one-shot write collision).
-- **Platforms and evidence:** Linux arm64 in the container images is tested; macOS (M1) and Windows stay
-  unverified. Evidence in `.git/duely-batch-20261110/e1/` (`identity.json`,
+- **Platforms and evidence:** Linux arm64 in the container images is tested; macOS (Known Limitations
+  (l)) and Windows stay unverified. Evidence in `.git/duely-batch-20261110/e1/` (`identity.json`,
   `identity-gates-image.json`, `image-rebuild.json`, `protected-before.json`, `measured.json`,
   `manifests.json`, 16 gate logs with `commands.json`/`gate-status.json`, `dist-electron.json`, both E2E
   runs with reports and `e2e-results/`, `desktop.json` + `desktop-shots/`, `review-findings.json`,

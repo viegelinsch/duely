@@ -189,8 +189,8 @@ the acceptance procedure and its measured results are in Testing Guide §4 (B12)
 the save dialog are still unimplemented: Known Limitations (f).
 
 macOS packaging is unverified and cannot be produced in the Linux container; it is a separate,
-user-started task (M1 in [the upgrade task board](docs/TODO_UPGRADES.md)). Windows is unverified as
-well.
+user-started task (M1 in [the known limitations](docs/2026_KNOWN_LIMITATIONS.md)). Windows is unverified
+as well.
 
 Keep the complete third-party licence artefacts when distributing builds. The measured `deb`
 installs the repository `LICENSE` inside `resources/app`, the Angular build's generated

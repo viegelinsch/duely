@@ -16,9 +16,10 @@ verification results in `docs/TESTING_GUIDE.md` §4.
 **Every entry states four things:** WHAT the limitation is · WHY it is accepted · WHAT the risk is ·
 WHAT WOULD CHANGE THE DECISION.
 
-Sections **(a)–(g)** are the prescribed spine. Sections **(h)–(k)** carry (h) architectural deferrals,
+Sections **(a)–(g)** are the prescribed spine. Sections **(h)–(l)** carry (h) architectural deferrals,
 (i) accepted UI defects and user-gated follow-ups, (j) the i18n backlog from the deleted
-`docs/TODO-untranslated-strings.md`, and (k) remaining visual and functional verification gaps.
+`docs/TODO-untranslated-strings.md`, (k) remaining visual and functional verification gaps, and
+(l) the deferred macOS packaging acceptance that moved here from `docs/TODO_UPGRADES.md`.
 The plan/reference retirement additions were checked against source at `f527f26`; the local handoff
 was reviewed against source at `889b3e5`. The complete 6,276-line local task board was reviewed at
 `74a271d`, including its terminal Phase 13 closure and later corrections to earlier OPEN records.
@@ -586,7 +587,7 @@ Electron-versus-container runtime measurement stay with D4/E1.
 - **PLATFORM SCOPE.** Linux arm64 in the container images is measured end to end. Electron 45.2.3 embeds
   Node 24.22.2 / Chromium 156.0.8078.80, which `engines` (`^26.0.0`) cannot cover because the `electron`
   devDependency pins it; the packaged main process needs only `electron`, `fs`, `path` and `url`. macOS
-  packaging stays with M1 and Windows stays unverified.
+  packaging stays with the deferred task **M1** in (l) and Windows stays unverified.
 
 ---
 
@@ -600,6 +601,10 @@ at execution time. In particular, Angular 21's build peer is stricter than its c
 The Webpack/build-angular retirement was already completed by task #52 (`aed844b`); do not restore
 it to make a new runner work. Necessary upgrade changes are allowed, but unrelated signals/DI,
 accessibility and theme rewrites remain deferred in (c), (i). Planning is not execution approval.
+
+The board's one deferred item, macOS packaging acceptance (task **M1**), has since moved out of it and
+is recorded in (l): it needs a macOS host and runs interactively with the user, so it was never part of
+the numbered upgrade sequence.
 
 ---
 
@@ -1085,3 +1090,38 @@ The broader visual matrix in (k.1) and general audit in (k.3) remain separate fo
 - **WHAT WOULD CHANGE THE DECISION.** A Material release that changes the icon again, or a capture
   whose diff leaves that box (size, position or text change indicates a real regression and must be
   investigated).
+
+---
+
+## (l) MACOS PACKAGING ACCEPTANCE — DEFERRED, RUNS INTERACTIVELY WITH THE USER
+
+> **Relocated 2026-11-11** from `docs/TODO_UPGRADES.md` §4, where it was task **M1**, at the user's
+> request to move it here and deal with it later. The identifier **M1** is kept so the B12/E1/E2/R1/R2
+> records that name it stay readable. Nothing about the task changed in the move, and no earlier
+> approval carries over to it.
+
+- **WHAT.** The macOS target of the electron manifest has never been built, installed or launched. B12
+  covered Linux only, and `electron-builder`'s macOS targets need a macOS host, so this cannot be
+  measured in the Linux arm64 container — the same reason Windows is unverified (see (d.6)). The
+  unmeasured scope: build the manifest's macOS target (`dmg`, arm64 first; universal only if asked),
+  install or mount the artifact, launch it, and confirm that `app://duely` serves the routes exactly as
+  it does on Linux — the five route states plus the empty-storage redirect and both locales — together
+  with the base resolution that closes (i.9). The sandbox/entitlement state, the code-signing and
+  notarization status, and what Gatekeeper does with an unsigned build are all unrecorded.
+- **WHY ACCEPTED.** macOS distribution is not a supported claim, so the missing evidence is not a
+  contradiction in the record. No approval authorizes the work, and the Linux container is the wrong
+  host: a cross-build would produce a weaker artifact and a weaker claim than running it properly later.
+  This is a separate platform verification, not a closure gate, so E2 and the numbered upgrade sequence
+  closed without it.
+- **RISK.** The configuration can be read as support that has never been observed —
+  `electron/package.json`'s target list, the `app://duely` protocol registration and the root base href
+  all look complete. An unsigned build will very likely be refused by Gatekeeper, and macOS
+  entitlements may behave differently from the Linux sandbox measured at `Seccomp: 2` /
+  `NoNewPrivs: 1`. Those behaviours are unknown, not known-good.
+- **WHAT WOULD CHANGE THE DECISION.** An explicit request to start, on the user's macOS machine with
+  the user present: the user starts and observes each build and launch, and the coordinator records the
+  output, step by step, in conversation. Capture `codesign --verify`, `spctl --assess` and the launch
+  output verbatim; do not summarise them into a pass. **Exit:** either a launched macOS artifact with
+  its limits recorded, or an explicit statement that macOS distribution stays unsupported. Do not claim
+  macOS support from configuration alone, do not cross-build macOS artifacts in a Linux container, and
+  do not let this task block anything else.

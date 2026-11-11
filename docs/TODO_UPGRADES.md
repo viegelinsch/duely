@@ -60,8 +60,9 @@ plan, including its research agents, does **not** authorize dependency changes, 
   re-check), not a trimmed Moment data build.
 - **Packaging scope (user, 2026-11-10):** this project does not need AppImage packaging. The B12
   AppImage stays as measured evidence, but the Linux artifact to ship and keep is the `deb`; no later
-  batch builds an AppImage without an explicit request. macOS packaging is deferred to task **M1** in
-  §4, which runs interactively with the user and is not authorized by any batch approval.
+  batch builds an AppImage without an explicit request. macOS packaging is no longer a task of this
+  board: it moved to `docs/2026_KNOWN_LIMITATIONS.md` (l), where **M1** runs interactively with the
+  user and is not authorized by any batch approval.
 - **Pause after every task**, including integration, verification, review and documentation tasks.
   Report results and obtain explicit approval for the next task. Play an attention sound only when
   approval, a decision or a blocker actually needs user interaction, explaining the required response;
@@ -446,16 +447,17 @@ set D3 recorded, now without the critical that C1 removed and without the duplic
 ## 4. Tasks and gates
 
 **P0, the four P1 candidates, I1, B0, A1, the isolated A3/C1/D3 candidates, I2, A4, A2, the isolated
-A5/D1/D4 candidates, I3, D2, B12, I4, E1, E2, R1 and R2 are DONE; only the deferred M1 remains.** B0 isolates the
-clean-install/runtime
-bootstrap from B12's desktop acceptance, so GUI/packaging blockers do not block unrelated upgrades. A2
-(Vitest 5) ran **after** A4 because build 22 is the package whose peer range accepts Vitest 5; A3
-includes Vitest 4. I1/I2/I3/I4 were separately approved integration tasks. **M1** (macOS packaging) is
-deferred: it runs interactively with the user, sits outside the numbered batch sequence and blocks
-nothing. The flow diagram and the parallelism rules are in §7. **R1** ran last: it re-verified the
-complete `README.md` against the final tree and regenerated `docs/dep-graph.mmd` as its final step.
-**R2** then closed the cycle with a measured dependency assurance pass and a lockfile-only refresh
-(24 → 18 advisories, 4 highs → 0), touching no manifest key and no source file.
+A5/D1/D4 candidates, I3, D2, B12, I4, E1, E2, R1 and R2 are DONE; every task in this plan is
+closed.** B0 isolates the clean-install/runtime bootstrap from B12's desktop acceptance, so
+GUI/packaging blockers do not block unrelated upgrades. A2 (Vitest 5) ran **after** A4 because build 22
+is the package whose peer range accepts Vitest 5; A3 includes Vitest 4. I1/I2/I3/I4 were separately
+approved integration tasks. **M1** (macOS packaging) is not a task of this board any more: it moved to
+`docs/2026_KNOWN_LIMITATIONS.md` (l), where it still runs interactively with the user, sits outside the
+numbered sequence and blocks nothing. The flow diagram and the parallelism rules are in §7. **R1** ran
+last: it re-verified the complete `README.md` against the final tree and regenerated
+`docs/dep-graph.mmd` as its final step. **R2** then closed the cycle with a measured dependency
+assurance pass and a lockfile-only refresh (24 → 18 advisories, 4 highs → 0), touching no manifest key
+and no source file.
 
 ### P0 — Refresh evidence and capture the untouched baseline — DONE
 
@@ -925,7 +927,7 @@ development stage only). The candidate holds all **134** files and both rebuilt 
   Keep the `deb` as the Linux artifact; the AppImage above stays a measured artifact and an acceptance
   step for this record only, not a requirement of the product or of later batches.
 - **Limits of this record:** macOS and Windows packages were not built or launched (separate authorized
-  platform verification; macOS now has its own deferred task, M1 in §4); the AppImage was verified by
+  platform verification; macOS has since moved to Known Limitations (l)); the AppImage was verified by
   extraction and the unpacked tree by launch, not by FUSE-mounted execution. **11,145 protected
   artifacts unchanged**, `TODO-notes-he.md` untouched, nothing staged and nothing committed.
   **B12 DONE; I4 followed under separate approval and is DONE.**
@@ -1743,10 +1745,11 @@ actual desktop/protocol/packaging behaviour verified on the same final source/de
 
 - **Source parity:** every gated file is byte-identical to B12's measured candidate. The only differences
   from B12's record are four documents written after that finalize — `README.md`,
-  `docs/TODO_UPGRADES.md`, `docs/TESTING_GUIDE.md` and `docs/dep-graph.mmd` (packaging scope, M1/R1, the
-  upgrade-flow diagram, the regenerated graph, the corrected README deployment section). Their old and
-  new hashes are in `identity.json` (`candidateDelta`) and `quality.json` (`documents`); no gate command
-  reads any of them. The candidate equals the working tree file by file, modes included.
+  `docs/TODO_UPGRADES.md`, `docs/TESTING_GUIDE.md` and `docs/dep-graph.mmd` (packaging scope, the macOS
+  deferral, R1, the upgrade-flow diagram, the regenerated graph, the corrected README deployment
+  section). Their old and new hashes are in `identity.json` (`candidateDelta`) and `quality.json`
+  (`documents`); no gate command reads any of them. The candidate equals the working tree file by file,
+  modes included.
 - **Dependencies:** the lock stays `4e6a02640e4a5e44a5b924ff6e8a9f00f14a4f1d520f2f8110b1860fbc1fef3e`
   (949 packages) and all **46** direct versions match B12's record; no manifest, lock or override moved.
 - **16-command battery, all at the expected status:** `dependency-tree` 0, the four `tsc` project gates
@@ -1775,7 +1778,7 @@ actual desktop/protocol/packaging behaviour verified on the same final source/de
   payload's 25 static files and bundle match the build, the licence sits at the package root, the
   helper ships `0755`, both `postinst` branches are present, and the unpacked tree launches
   `app://duely/settings` with the Duely title and Electron 45.2.3. No AppImage was built, per the
-  2026-11-10 scope; macOS/Windows stay unverified (M1).
+  2026-11-10 scope; macOS/Windows stay unverified (macOS: Known Limitations (l)).
 - **Attribution — 31 deltas, 0 unexplained:** 20 calendars that differ only in generated `UID`/`DTSTAMP`,
   7 capture-noise PNGs and the 4 documents; **0** payload, unit, web or build-warning deltas. Of the 7
   PNGs, 3 are fresh control-run noise (this image's two runs disagree). The other 4 (`exclusion-de`,
@@ -1862,9 +1865,9 @@ own finalize. HEAD `1546c4ff` on `dev-v2`, the same 61 modified paths, nothing s
   each resolves in the embedded runtime, and the bundle targets ES2022; the Dockerfile stages are all
   `node:26-slim`; the root lock covers the root manifest only, because `server/` and `electron/` are not
   workspaces (`manifests.json`).
-- **Platforms:** Linux arm64 in the container images is tested; macOS (M1) and Windows stay unverified, and
-  macOS is M1's interactive task. No historical visual matrix was re-run; advisories and container scanning
-  belong to E2.
+- **Platforms:** Linux arm64 in the container images is tested; macOS (Known Limitations (l)) and Windows
+  stay unverified, and macOS remains an interactive task. No historical visual matrix was re-run;
+  advisories and container scanning belong to E2.
 - **Evidence:** `.git/duely-batch-20261110/e1/` — `identity.json`, `identity-gates-image.json`,
   `image-rebuild.json`/`.log`, `protected-before.json`, `input.diff`, `measured.json`, `manifests.json`,
   16 gate logs with `commands.json` and `gate-status.json`, `dist-electron.json`, both E2E runs with their
@@ -1966,7 +1969,7 @@ hashes), lock `4e6a0264…` with 949 entries, Node 26.13.0 / npm 11.20.0, and th
   and `npm ls` output shape) all sit beside the passing runs.
 - **Platforms:** Linux arm64 in the container images is tested; Electron 45.2.3 still embeds Node 24.22.2
   / Chromium 156.0.8078.80, which `engines` cannot cover because the devDependency pins it; macOS stays
-  with M1 and Windows stays unverified.
+  with M1 in Known Limitations (l) and Windows stays unverified.
 - **Evidence:** `.git/duely-batch-20261110/e2/` — `snapshot.json` + `source/`, `identity.json`, both
   build logs, `gate-status.json` with 16 gate logs and `commands.json`, `dist-electron.json`,
   `manifests.json` with `packaging-builder.log`/`packaged/`, `payload-files-e2.json`, `audits.json` with
@@ -1977,9 +1980,10 @@ hashes), lock `4e6a0264…` with 949 entries, Node 26.13.0 / npm 11.20.0, and th
 
 ### R1 — Complete README refresh — scheduled last, after every other update
 
-**Owner:** coordinator · **Needs:** E2 (and M1 first, if the user runs it before this). Runs only when
-the user starts it. This is the full pass over `README.md`, not an incremental edit: the document
-predates the upgrade cycle and still mixes verified facts with statements the batches have invalidated.
+**Owner:** coordinator · **Needs:** E2 (and M1 first, if the user ran it before this; M1 now lives in
+Known Limitations (l)). Runs only when the user starts it. This is the full pass over `README.md`, not
+an incremental edit: the document predates the upgrade cycle and still mixes verified facts with
+statements the batches have invalidated.
 
 **Scope:** read the whole file against the final working tree and check every claim against source,
 configuration or a recorded measurement — version statements, npm scripts, the layout classes, the
@@ -2026,7 +2030,8 @@ container: an `ical-generator` 11.1.3 export probe and the dep-graph generator.
   `electron/package.json` (`directories.output: "../"`, `linux.target: ["deb"]`) and the Dockerfile
   packages; the authors list.
 - **Kept as history:** the Python 2/`windows-build-tools` note, the migration's date/timezone repair
-  caveat, the macOS/Windows unverified statements and the M1 pointer. No version table was added —
+  caveat, the macOS/Windows unverified statements and the M1 pointer, now aimed at Known
+  Limitations (l). No version table was added —
   the README now explicitly defers to `package.json` and `package-lock.json`.
 - **Dependency graph regenerated last**, `docker compose run --rm duely-dev node
   scripts/dep-graph.mjs --output docs/dep-graph.mmd`: the output is byte-identical to the committed
@@ -2034,7 +2039,7 @@ container: an `ical-generator` 11.1.3 export probe and the dep-graph generator.
   `.git/duely-batch-20261110/r1/` (`readme.diff`, `hashes-before.txt`, `dep-graph-r1.mmd`,
   `dep-graph-run.log`, `hashes-after.txt`). No edits to `INSTALL.md`, the Testing Guide or Known
   Limitations beyond the two (d.6) cross-references; README hash `80ab21fd…`. Nothing staged,
-  nothing committed. **R1 DONE; only the deferred M1 remains.**
+  nothing committed. **R1 DONE; the only other item, M1, has since moved to Known Limitations (l).**
 
 ### R2 — Post-cycle dependency assurance refresh — DONE (2026-11-11)
 
@@ -2100,27 +2105,8 @@ version bumps and no additions, removals or tree pruning: `baseline-browser-mapp
 `image-build.log`, `image-build-prod.log`, `css-before.txt`, `dist-before.txt`, `dist-after.txt`,
 `dist-rerun.txt`, `dist-bytes-before.txt`/`-after.txt`, `audit-fix.json`, `audit-after-full.json`,
 `audit-after-prod.json`, `audit-deployed-server.json`, `outdated-after.json`, `packaging.log` and
-`deb.json`. **R2 DONE.**
-
-### M1 — macOS packaging acceptance — DEFERRED, runs interactively with the user
-
-**Owner:** coordinator together with the user · **Needs:** I4 and an explicit request to start; no
-earlier approval authorizes it. B12 covered Linux only, and `electron-builder`'s macOS targets need a
-macOS host, so this cannot be measured in the Linux arm64 container. Run it on the user's machine, in
-conversation, step by step: the user starts and observes each build and launch, and the coordinator
-records the output.
-
-**Scope:** build the electron manifest's macOS target (`dmg`, arm64 first; universal only if asked),
-install or mount the artifact, launch it, and confirm that `app://duely` serves the routes exactly as it
-does on Linux — the five route states plus the empty-storage redirect and both locales — together with
-the base resolution that closes Known Limitations (i.9). Record the sandbox/entitlement state, the
-code-signing and notarization status, and what Gatekeeper does with an unsigned build. Capture
-`codesign --verify`, `spctl --assess` and the launch output verbatim; do not summarise them into a pass.
-
-**Exit:** either a launched macOS artifact with its limits recorded, or an explicit statement that
-macOS distribution stays unsupported. Do not claim macOS support from configuration alone, do not
-cross-build macOS artifacts in a Linux container, and do not let this task block E2 — it is a separate
-platform verification, not a closure gate, unless the user says otherwise.
+`deb.json`. **R2 DONE.** macOS packaging acceptance (task M1) is not part of this board; it is
+recorded in `docs/2026_KNOWN_LIMITATIONS.md` (l).
 
 ---
 
@@ -2238,13 +2224,13 @@ agents execute concurrently. If a batch is not approved, run its tasks sequentia
 | 14 | E1 — DONE | One read-only reviewer over the four risk areas plus runtime verification of the accepted I4 snapshot (source re-verified against the I4 record, nothing rebuilt): **0 critical / 0 high**, 1 medium (E1-001, a legacy time-zone alias missing from the advanced-settings select) and 3 info findings, reconciled against all three manifests; 16/16 gates, units 2F/130P, Berlin 1F/23P, E2E 22/0 twice, lint 0E/7W; 87 desktop checks at 800×600 (EN/DE, save/cancel, timezone persistence, floating and named-zone exports, expanded recurrence, clicked lazy routes, 0 external requests); three-manifest reconciliation accepted; **E1a** then repaired both actionable items (alias list/control with a regression spec, electron target list) at 8/8 gates, units **2F/131P**, E2E 22/0; paused for E2 approval |
 | 15 | E2 — DONE | Clean reproduction from the frozen 134-path source (both images rebuilt `--no-cache` and equal to it file by file, `npm ci` without any peer override, 949 lock entries, Node 26.13.0/npm 11.20.0): 16/16 gates (units **2F/131P**, Berlin 1F/23P, E2E 22/0 twice, lint 0E/7W); distribution 2,766,079 B with drift only in the electron manifest and the web bundle; payload 53 files, +554 B, only E1a's two client files; deb 97,278,672 B, deb-only, accepted postinst; dep graph covers 21/25, 0/1, 2/0 and the committed file matches; audits **0C/4H** full (I3's set), **0C/0H** production and deployed server; container scan 0 critical/54 high, all base-image or npm-bundled; server smoke 200; R1 next |
 | 16 | R1 — DONE | Complete README refresh: seven invalidated statements corrected (Angular 20→22, desktop launch, `start:electron`, `file://`→`app://duely`, AppImage→measured deb licence artefacts, missing `CONTRIBUTING.md`, `esbuild` 0.25.9→manifest pin, standards notice re-verified) and every remaining claim attributed to a manifest, source file, configuration or B12/E1/E2 measurement; `docs/dep-graph.mmd` regenerated last and byte-identical; no commit |
-| 17 | M1 — DEFERRED | macOS packaging acceptance, run interactively with the user; outside the batch sequence, blocks nothing, not authorized by any current approval |
-| 18 | R2 — DONE | Post-cycle dependency assurance on the user's request: 43 of 46 root entries (plus all of `server/` and `electron/`) at the newest version, TypeScript held by the build peer range `>=6.0 <6.1`, Node 26.13.0 Active LTS, 0 peer problems; lockfile-only refresh (ten patch bumps, no manifest key changed) took the audits **24 → 18** full (4 highs → 0), **4 → 3** production and **4 → 3** deployed server; 16/16 gates with E2's exact counts (units 2F/131P, Berlin 1F/23P, E2E 22/0 twice, lint 0E/7W); production CSS byte-identical, the +2,164 B bundle delta fully attributed to `moment` 2.31.0 plus esbuild suffix reallocation; deb 97,279,596 B payload-verified and server smoke 200; base layers identical, so no container re-scan; electron 45.3.0 and sass 1.108.2 left deliberately |
+| 17 | R2 — DONE | Post-cycle dependency assurance on the user's request: 43 of 46 root entries (plus all of `server/` and `electron/`) at the newest version, TypeScript held by the build peer range `>=6.0 <6.1`, Node 26.13.0 Active LTS, 0 peer problems; lockfile-only refresh (ten patch bumps, no manifest key changed) took the audits **24 → 18** full (4 highs → 0), **4 → 3** production and **4 → 3** deployed server; 16/16 gates with E2's exact counts (units 2F/131P, Berlin 1F/23P, E2E 22/0 twice, lint 0E/7W); production CSS byte-identical, the +2,164 B bundle delta fully attributed to `moment` 2.31.0 plus esbuild suffix reallocation; deb 97,279,596 B payload-verified and server smoke 200; base layers identical, so no container re-scan; electron 45.3.0 and sass 1.108.2 left deliberately |
 
 ### Flow of the upgrades
 
 Status is the state of the working tree on 2026-11-10, not the plan's original intent: every `DONE`
-node below has been measured and integrated, and nothing is committed. M1 sits outside the sequence.
+node below has been measured and integrated, and nothing is committed. macOS packaging (M1) is not
+drawn here because it was never part of the sequence; it is recorded in Known Limitations (l).
 
 ```mermaid
 graph TD
@@ -2289,11 +2275,6 @@ graph TD
         R2["R2: Dependency assurance refresh"]
     end
 
-    subgraph deferred ["Deferred — interactive with the user, not authorized"]
-        direction LR
-        M1["M1: macOS packaging acceptance"]
-    end
-
     P0 --> P1C
     P0 --> P1F
     P0 --> P1E
@@ -2330,13 +2311,9 @@ graph TD
     E2 --> R1
     R1 --> R2
 
-    I4 -.->|after I4, with the user present| M1
-
     classDef done fill:#d7f5dd,stroke:#2e7d32,color:#17351b
     classDef todo fill:#fff3cc,stroke:#a68b00,color:#463a00
-    classDef deferred fill:#ececec,stroke:#6f6f6f,color:#333333
     class P0,P1C,P1F,P1E,P1W,I1,B0,A1,A3,C1,D3,I2,A4,A2,A5,D1,D4,I3,D2,B12,I4,E1,E2,R1,R2 done
-    class M1 deferred
 ```
 
 ### Parallelism and serialisation
@@ -2350,7 +2327,6 @@ provisioning and integration stay serial, and every integration needs its own ap
 | A3 + C1 + D3 — dispatched from the same A1 checkpoint, separate candidates and images | A1 → I2 → A4 → A2 |
 | A5 + D1 + D4 — dispatched from the same A2 checkpoint, one shared repair carried by all three | A2 → I3 |
 | D2 + B12 — parallel only on disjoint leases; a shared client/base-configuration edit waits for the exclusive lease | I3 → I4 → E1 → E2 |
-| M1 — any time after I4, with the user present and observing each step | I4 needs both D2 and B12 results |
 
 **Next executable checkpoint:** separately approve **E1** (targeted read-only review of the protocol
 boundary, ICS/date semantics, long-range timezone behaviour and the installer/override choices, plus
@@ -2365,9 +2341,9 @@ it: HEAD `1546c4ff` on `dev-v2`, 61 modified paths, no added or removed path, no
 `duely-i4-development:20261110` and `duely-i4-production:20261110`. Because this plan text and
 `docs/TESTING_GUIDE.md` moved the recorded doc hashes, I4 re-pinned them through
 `docs-post-integration.json`, exactly as D2 and B12 did. I4's approval does not authorize E1/E2/R1, any
-commit/push, or macOS/Windows packaging. macOS packaging now has its own deferred task — **M1** in §4,
-run interactively with the user and blocking nothing — and Linux AppImage packaging is no longer a
-requirement: the artifact to keep and ship is the `deb` (§1.1). The documented
+commit/push, or macOS/Windows packaging. macOS packaging is recorded in Known Limitations (l) as the
+deferred task **M1**, which runs interactively with the user and blocks nothing — and Linux AppImage
+packaging is no longer a requirement: the artifact to keep and ship is the `deb` (§1.1). The documented
 unresolved audit paths are unchanged **except where R2 closed them** — A2's `jsdom` 31 removed the
 `ws` high advisory, A5's three moderate `minimatch` entries ride on ESLint 10 until upstream ships
 `>= 11.0.1`, the `date-holidays` low has no upstream fix, and the electron-builder chain stays in the
@@ -2378,9 +2354,11 @@ lows. The P1E
 inventory's four unresolved policy choices must still be explicitly settled before any further
 date/export change, not inferred from batch approval.
 
-**Final documentation task:** after E2 — and after M1, if the user runs it — **R1** re-verified the whole
-`README.md` against the final tree and regenerated `docs/dep-graph.mmd` as its last step. **R1 is DONE;
-M1 remains deferred** and is not authorized by any approval listed here.
+**Final documentation task:** after E2 — and after M1, if the user chooses to run it — **R1**
+re-verified the whole `README.md` against the final tree and regenerated `docs/dep-graph.mmd` as its
+last step. **R1 is DONE.**
+macOS packaging (**M1**) is not a task of this plan any more: it is recorded in Known Limitations (l)
+and is not authorized by any approval listed here.
 
 **Closing dependency pass:** **R2** then answered the user's request for a Compatibility / Actuality /
 Security assurance and executed the approved lockfile-only refresh. No manifest key changed, so the
