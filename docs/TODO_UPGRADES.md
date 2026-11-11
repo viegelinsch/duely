@@ -446,7 +446,7 @@ set D3 recorded, now without the critical that C1 removed and without the duplic
 ## 4. Tasks and gates
 
 **P0, the four P1 candidates, I1, B0, A1, the isolated A3/C1/D3 candidates, I2, A4, A2, the isolated
-A5/D1/D4 candidates, I3, D2, B12, I4, E1, E2 and R1 are DONE; only the deferred M1 remains.** B0 isolates the
+A5/D1/D4 candidates, I3, D2, B12, I4, E1, E2, R1 and R2 are DONE; only the deferred M1 remains.** B0 isolates the
 clean-install/runtime
 bootstrap from B12's desktop acceptance, so GUI/packaging blockers do not block unrelated upgrades. A2
 (Vitest 5) ran **after** A4 because build 22 is the package whose peer range accepts Vitest 5; A3
@@ -454,6 +454,8 @@ includes Vitest 4. I1/I2/I3/I4 were separately approved integration tasks. **M1*
 deferred: it runs interactively with the user, sits outside the numbered batch sequence and blocks
 nothing. The flow diagram and the parallelism rules are in §7. **R1** ran last: it re-verified the
 complete `README.md` against the final tree and regenerated `docs/dep-graph.mmd` as its final step.
+**R2** then closed the cycle with a measured dependency assurance pass and a lockfile-only refresh
+(24 → 18 advisories, 4 highs → 0), touching no manifest key and no source file.
 
 ### P0 — Refresh evidence and capture the untouched baseline — DONE
 
@@ -2034,6 +2036,72 @@ container: an `ical-generator` 11.1.3 export probe and the dep-graph generator.
   Limitations beyond the two (d.6) cross-references; README hash `80ab21fd…`. Nothing staged,
   nothing committed. **R1 DONE; only the deferred M1 remains.**
 
+### R2 — Post-cycle dependency assurance refresh — DONE (2026-11-11)
+
+**Origin:** an explicit user request after R1 — "go through all frameworks, packages and dependencies
+and assure that the code has reached for now a good balance between Compatibility, Actuality and
+Security". The pass was read-only until its verdict was accepted; the user then approved the
+lockfile-only option.
+
+**Assurance findings (before any change).** 43 of the 46 root-manifest entries, all of `server/`'s two
+and `electron/`'s one were at the newest published version. Only three were not: `electron` 45.2.3 →
+45.3.0 (published the day before), `sass` 1.108.1 → 1.108.2 (published that morning) and `typescript`
+6.0.3, which is a **deliberate hold** — `@angular/build` 22.2.6 declares `typescript: ">=6.0 <6.1"`,
+so TS 7.0.2 is correctly excluded. `electron-builder` 26.18.1 sits on the `v26` dist-tag and is
+**ahead** of `latest` (26.18.0), not behind, and is not deprecated. Node 26.13.0 reports
+`process.release.lts === "Lithium"` (Active LTS); every `engines` range in the tree accepts it, and
+`npm ls --all` reported **0 problems** with no `invalid` peer.
+
+**The change.** `npm audit fix --package-lock-only` in the development container. `package.json` is
+byte-identical (`79c5d95a…` before and after); the lock went `4e6a0264…` → `b1ba0291…` with exactly ten
+version bumps and no additions, removals or tree pruning: `baseline-browser-mapping` 2.10.18→2.11.35,
+`browserslist` 4.28.2→4.29.5, `caniuse-lite` 1.0.30001788→1.0.30001823, `electron-to-chromium`
+1.5.336→1.5.481, `fast-uri` 3.1.0→3.1.9, `immutable` 5.1.5→5.1.10, `js-yaml` 4.1.1→4.3.2,
+`moment` 2.30.1→2.31.0, `node-releases` 2.0.37→2.0.63, `update-browserslist-db` 1.2.3→1.3.4.
+
+- **Security, measured:** full tree **24 → 18** (0C/4H/17M/3L → 0C/**0**H/15M/3L); production
+  `--omit=dev` **4 → 3** (0C/0H/1M/3L → 0C/0H/**0**M/3L); the rebuilt deployed server image likewise
+  **4 → 3**. `browserslist`, `fast-uri`, `immutable`, `js-yaml` and `moment` leave the advisory list
+  entirely. The 15 remaining moderates are the ESLint 10 / typescript-eslint 8.72.2 /
+  electron-builder 26.18.1 tooling chain plus `minimatch`, all dev-only and all offering only a
+  **downgrade** as "fix" (eslint 9.39.5, typescript-eslint 8.36.0, electron-builder 25.1.0); the 3
+  lows are the `date-holidays → parser → deepmerge` chain whose only fix is `date-holidays` 1.8.4.
+- **Compatibility re-proven by the image build:** `npm ci` completed with no ERESOLVE and no peer
+  warning, and its npm messages are byte-identical to E2's log (the two deprecation notices and the
+  five install-script notices). Correction to the review: `rimraf` is 6.1.4 at the top level but a
+  **nested 2.6.3** remains under the electron-builder chain — pre-existing at E2, not a regression.
+- **16/16 gates at the expected status**, with every count identical to E2: `dependency-tree` 0
+  (0 problems, 46 direct), the four `tsc` project gates and `e2e-types` 0, negative control **2**,
+  lint 0 errors/7 warnings, `units-UTC` **1** (**2F/131P** of 133), `focused-CF-Europe-Berlin` **1**
+  (**1F/23P** of 24), both probe builds and both distribution builds 0, E2E **22/0** twice.
+- **The flagged CSS risk did not materialise:** the production stylesheet is **byte-identical**
+  (`styles-TLKQQXXL.css`, `0c637f9d…`) before and after, so the caniuse refresh changed no
+  autoprefixing. Distribution: 60 files, same set; `dist/electron` 2,766,079 → 2,768,243 B and
+  `dist/server` 2,737,615 → 2,739,779 B (+2,164 each, +0.08 %).
+- **The whole bundle delta is attributed.** The only semantic change is the ICS chunk, 61,305 →
+  61,211 B (−94 B), plus one line in `3rdpartylicenses.txt` ("JS Foundation" → "OpenJS Foundation") —
+  both are `moment` 2.31.0, which is bundled into that chunk. Everything else is esbuild's
+  deterministic symbol-suffix reallocation (`I$3` → `I`, `jg` → `jg$2`), which renames the
+  content-hashed files and rewrites `index.html`. No downleveling change: `static{` stays at 28 and no
+  `__publicField`/`__awaiter` helpers appear. Determinism proven twice — a consecutive rebuild is
+  byte-identical, and a build with `.angular` cached moved aside reproduces the same hashes.
+- **Packaging and runtime still hold:** `duely_2.0.0_arm64.deb` 97,278,672 → **97,279,596 B**
+  (+924 B), payload read back and verified to carry `main-AREEED6T.js` and the unchanged CSS hash;
+  the rebuilt production container answered **HTTP 200**. The production image's layers 1–5 are
+  byte-identical to `duely-e2-production:20261110`, so the Debian base is unchanged and E2's
+  container scan (0 critical/54 high, base-image or npm-bundled) still applies — the recorded
+  "re-scan on the next base-image bump" decision is unaffected and no re-scan was run.
+- **Not acted on, deliberately:** `electron` 45.3.0 and `sass` 1.108.2 remain unpulled (an Electron
+  bump changes the deb and the desktop evidence); TypeScript stays at 6.0.3; the downgrade-only
+  moderates and the `date-holidays` lows stay; the container highs stay base-image bound.
+
+**Evidence:** `.git/duely-batch-20261110/dependency-refresh/` — `manifests-before.sha256`,
+`manifests-after-fix.sha256`, `lock.diff`, `gates.sh` with `gate-codes.txt` and the 16 gate logs,
+`image-build.log`, `image-build-prod.log`, `css-before.txt`, `dist-before.txt`, `dist-after.txt`,
+`dist-rerun.txt`, `dist-bytes-before.txt`/`-after.txt`, `audit-fix.json`, `audit-after-full.json`,
+`audit-after-prod.json`, `audit-deployed-server.json`, `outdated-after.json`, `packaging.log` and
+`deb.json`. **R2 DONE.**
+
 ### M1 — macOS packaging acceptance — DEFERRED, runs interactively with the user
 
 **Owner:** coordinator together with the user · **Needs:** I4 and an explicit request to start; no
@@ -2171,6 +2239,7 @@ agents execute concurrently. If a batch is not approved, run its tasks sequentia
 | 15 | E2 — DONE | Clean reproduction from the frozen 134-path source (both images rebuilt `--no-cache` and equal to it file by file, `npm ci` without any peer override, 949 lock entries, Node 26.13.0/npm 11.20.0): 16/16 gates (units **2F/131P**, Berlin 1F/23P, E2E 22/0 twice, lint 0E/7W); distribution 2,766,079 B with drift only in the electron manifest and the web bundle; payload 53 files, +554 B, only E1a's two client files; deb 97,278,672 B, deb-only, accepted postinst; dep graph covers 21/25, 0/1, 2/0 and the committed file matches; audits **0C/4H** full (I3's set), **0C/0H** production and deployed server; container scan 0 critical/54 high, all base-image or npm-bundled; server smoke 200; R1 next |
 | 16 | R1 — DONE | Complete README refresh: seven invalidated statements corrected (Angular 20→22, desktop launch, `start:electron`, `file://`→`app://duely`, AppImage→measured deb licence artefacts, missing `CONTRIBUTING.md`, `esbuild` 0.25.9→manifest pin, standards notice re-verified) and every remaining claim attributed to a manifest, source file, configuration or B12/E1/E2 measurement; `docs/dep-graph.mmd` regenerated last and byte-identical; no commit |
 | 17 | M1 — DEFERRED | macOS packaging acceptance, run interactively with the user; outside the batch sequence, blocks nothing, not authorized by any current approval |
+| 18 | R2 — DONE | Post-cycle dependency assurance on the user's request: 43 of 46 root entries (plus all of `server/` and `electron/`) at the newest version, TypeScript held by the build peer range `>=6.0 <6.1`, Node 26.13.0 Active LTS, 0 peer problems; lockfile-only refresh (ten patch bumps, no manifest key changed) took the audits **24 → 18** full (4 highs → 0), **4 → 3** production and **4 → 3** deployed server; 16/16 gates with E2's exact counts (units 2F/131P, Berlin 1F/23P, E2E 22/0 twice, lint 0E/7W); production CSS byte-identical, the +2,164 B bundle delta fully attributed to `moment` 2.31.0 plus esbuild suffix reallocation; deb 97,279,596 B payload-verified and server smoke 200; base layers identical, so no container re-scan; electron 45.3.0 and sass 1.108.2 left deliberately |
 
 ### Flow of the upgrades
 
@@ -2212,11 +2281,12 @@ graph TD
         I4["I4: Integrate date and desktop"]
     end
 
-    subgraph closure ["Closure and final documentation — E1/E2/R1 DONE"]
+    subgraph closure ["Closure and final documentation — E1/E2/R1/R2 DONE"]
         direction LR
         E1["E1: Risk review and runtime verification"]
         E2["E2: Final audit and closure"]
         R1["R1: Complete README refresh"]
+        R2["R2: Dependency assurance refresh"]
     end
 
     subgraph deferred ["Deferred — interactive with the user, not authorized"]
@@ -2258,13 +2328,14 @@ graph TD
     I4 --> E1
     E1 --> E2
     E2 --> R1
+    R1 --> R2
 
     I4 -.->|after I4, with the user present| M1
 
     classDef done fill:#d7f5dd,stroke:#2e7d32,color:#17351b
     classDef todo fill:#fff3cc,stroke:#a68b00,color:#463a00
     classDef deferred fill:#ececec,stroke:#6f6f6f,color:#333333
-    class P0,P1C,P1F,P1E,P1W,I1,B0,A1,A3,C1,D3,I2,A4,A2,A5,D1,D4,I3,D2,B12,I4,E1,E2,R1 done
+    class P0,P1C,P1F,P1E,P1W,I1,B0,A1,A3,C1,D3,I2,A4,A2,A5,D1,D4,I3,D2,B12,I4,E1,E2,R1,R2 done
     class M1 deferred
 ```
 
@@ -2297,13 +2368,23 @@ it: HEAD `1546c4ff` on `dev-v2`, 61 modified paths, no added or removed path, no
 commit/push, or macOS/Windows packaging. macOS packaging now has its own deferred task — **M1** in §4,
 run interactively with the user and blocking nothing — and Linux AppImage packaging is no longer a
 requirement: the artifact to keep and ship is the `deb` (§1.1). The documented
-unresolved audit paths are unchanged — A2's `jsdom` 31 removed the `ws` high advisory, A5's three
-moderate `minimatch` entries ride on ESLint 10 until upstream ships `>= 11.0.1`, the `date-holidays`
-low has no upstream fix, the `moment` moderate advisory now stands only on the `caldate` remnant because
-no application code imports Moment, and the electron-builder chain stays in the B-series. The P1E
+unresolved audit paths are unchanged **except where R2 closed them** — A2's `jsdom` 31 removed the
+`ws` high advisory, A5's three moderate `minimatch` entries ride on ESLint 10 until upstream ships
+`>= 11.0.1`, the `date-holidays` low has no upstream fix, and the electron-builder chain stays in the
+B-series; R2's lockfile-only refresh removed the `browserslist`, `fast-uri`, `immutable` and
+`js-yaml` highs as well as the `moment` moderate (2.31.0), so the full tree now reports 0 critical and
+0 high, and production and the deployed server report 0C/0H/0M with only the three `date-holidays`
+lows. The P1E
 inventory's four unresolved policy choices must still be explicitly settled before any further
 date/export change, not inferred from batch approval.
 
 **Final documentation task:** after E2 — and after M1, if the user runs it — **R1** re-verified the whole
 `README.md` against the final tree and regenerated `docs/dep-graph.mmd` as its last step. **R1 is DONE;
 M1 remains deferred** and is not authorized by any approval listed here.
+
+**Closing dependency pass:** **R2** then answered the user's request for a Compatibility / Actuality /
+Security assurance and executed the approved lockfile-only refresh. No manifest key changed, so the
+declared ranges behind `docs/dep-graph.mmd` are unaffected and the graph did not need regenerating;
+`package.json`, `electron/package.json` and `server/package.json` are byte-identical. **R2 is DONE** —
+the tree now carries 0 critical and 0 high advisories in the shipped surface (production and deployed
+server 0C/0H/0M with only the three `date-holidays` lows), and 0 highs anywhere in the full tree.

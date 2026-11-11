@@ -574,6 +574,15 @@ Electron-versus-container runtime measurement stay with D4/E1.
   after updating the tool chain (`browserslist`, `fast-uri`, `immutable`, `js-yaml` parents), or a base
   image refresh that carries the Debian and npm fixes. `docker scout` needs a Docker ID login in this
   environment, so a second scanner is available only with credentials.
+- **TRIGGERED 2026-11-11 by R2.** The decision above was exercised: a lockfile-only refresh
+  (`npm audit fix --package-lock-only`, no manifest key changed) reinstalled cleanly with no peer
+  override and moved the **development tree to `0 critical / 0 high / 15 moderate / 3 low = 18`** and
+  the shipped set, including the audit inside the production image, to **`0 critical / 0 high /
+  0 moderate / 3 low = 3`**. The four high findings and the `moment` moderate are gone; what remains
+  is the dev-only ESLint/electron-builder tooling chain whose only offered fix is a downgrade, and the
+  `date-holidays` chain of (d.5). The container rows stand unchanged, because the base image did not
+  move (the production image's base layers are byte-identical to E2's), so the recorded "re-scan on the
+  next base-image bump" rule still governs them. See the R2 record in `docs/TODO_UPGRADES.md`.
 - **PLATFORM SCOPE.** Linux arm64 in the container images is measured end to end. Electron 45.2.3 embeds
   Node 24.22.2 / Chromium 156.0.8078.80, which `engines` (`^26.0.0`) cannot cover because the `electron`
   devDependency pins it; the packaged main process needs only `electron`, `fs`, `path` and `url`. macOS
