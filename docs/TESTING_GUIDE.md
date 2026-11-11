@@ -5,6 +5,10 @@ checks · Electron 45.2.3 on the `app://duely` protocol · Angular 22 · TypeScr
 `node:26-slim` (Node 26 updates retained; B0/A1/A4/A2/I3/D2/B12/I4/E1/E1a/E2 verified).
 `package.json` / `package-lock.json` are authoritative for declared / resolved versions.
 **Documentation consolidated:** 2026-11-09, against source at `f527f26` and existing migration records.
+**Current factual baseline:** KL01, 2026-11-11, at `d47b59e2ac059d0c96250d07d491ba519677703d`;
+see [the KL01 evidence record](#kl01-baseline). Its fresh 2F/131P unit, 1F/23P focused, 22/0 E2E
+and 0E/7W lint results take precedence over earlier tables. Those tables retain their historical
+counts and diagnoses; they do not prescribe the current acceptance target.
 
 The former Karma/Jasmine stack and `client/test.ts` are gone. This guide preserves the historical
 migration-closure snapshot, **P0 baseline run**, **isolated P1 candidate results**, the approved
@@ -19,9 +23,10 @@ Material migration reference has been retired; completed history remains in Git.
 
 ## 1. What the unit-test stack actually is
 
-Duely's unit tests run on **Vitest** (`package.json` declares `"vitest": "^3.1.0"`; the recorded
-resolved version is 3.2.4), driven by the official Angular builder. The `test` target in
-`angular.json` is:
+Duely's unit tests run on **Vitest 5.1.0** with **jsdom 31.0.0**, declared and resolved at those
+versions, driven by `@angular/build:unit-test` **22.2.6**. KL01 rechecked this configuration against
+source and the retained Docker image. The earlier declaration `"vitest": "^3.1.0"` / resolution
+3.2.4 describes the migration-era stack, not the current runner. The `test` target in `angular.json` is:
 
 ```jsonc
 "test": {
@@ -122,8 +127,8 @@ The npm scripts (from `package.json`) and their Docker form:
 
 ## 3. Test layout
 
-- **Location:** `client/app/**/*.spec.ts` (17 spec files since Phase 12 added `i18n-parity.spec.ts`;
-  16 at `ced1dc8`).
+- **Location:** `client/app/**/*.spec.ts` (**18** spec files in KL01's source scan; 17 after Phase 12
+  added `i18n-parity.spec.ts`, and 16 at `ced1dc8`).
 - **Included by:** `client/tsconfig.spec.json` (`"include": ["**/*.spec.ts", "**/*.d.ts"]`).
 - **Runner:** Vitest, via the builder above. Vitest reports file/suite/test in the form
   `FAIL  |duely| <compiled-spec-file> > <suite> > <test>`.
@@ -136,8 +141,9 @@ TestBed setup:
 - A standalone component goes into TestBed **`imports`**, never `declarations`. When you flip a
   component to standalone, grep **every** `*.spec.ts` for its name — other specs may declare it too.
 - Add `provideNativeDateAdapter()` to `providers` for any spec that renders a `mat-datepicker`.
-- `TranslateModule.forRoot()` — not the bare `TranslateModule` — is required wherever a component
-  injects `TranslateService` / `TranslateStore`.
+- With `@ngx-translate/core` **18.1.0**, use `provideTranslateService()` in spec providers and the
+  component's standalone translation imports. `TranslateModule.forRoot()` was historical guidance;
+  v18 removed that NgModule entry point. Match the actual component injector scope when spying.
 - Animations are not needed in specs: Material templates render under `fixture.detectChanges()`
   without `provideAnimations()`.
 - `provideDuelyIcons()` is deliberately **not** added to spec TestBeds; the resulting
@@ -145,23 +151,23 @@ TestBed setup:
 
 ### `vi.spyOn` usage
 
-`vi.spyOn` is used in **8** of the 16 spec files (verified with
-`grep -rl "vi.spyOn" client --include='*.spec.ts' | wc -l` → `8`):
+`vi.spyOn` occurs in **7 of 18** client spec files in KL01's Docker source scan
+(`source-facts.json`). The earlier 8-of-16 inventory described the migration-era specs:
 
 ```
 client/app/app.component.spec.ts
+client/app/creator/appointment-form/alarm-settings/alarm-settings.component.spec.ts
+client/app/creator/appointment-form/appointment-form.component.spec.ts
+client/app/creator/appointment-form/recurring-settings/recurring-settings.component.spec.ts
 client/app/creator/appointments.service.spec.ts
 client/app/creator/creator.component.spec.ts
-client/app/creator/appointment-form/alarm-settings/alarm-settings.component.spec.ts
-client/app/creator/appointment-form/recurring-settings/recurring-settings.component.spec.ts
-client/app/storage/storage.service.spec.ts
 client/app/storage/web-storage.service.spec.ts
-client/app/storage/electron-storage.service.spec.ts
 ```
 
-Note the `saveAs` failures (§6): `file-saver@2.0.5` is CJS-only, and esbuild's synthesized module
-namespace is non-configurable, so `vi.spyOn` **cannot** redefine `saveAs` — that is the root cause of
-three of the deferred failures, not a test-authoring mistake.
+The historical `saveAs` failures (§6) came from spying on a non-configurable CJS namespace.
+A3 repaired the three storage specs with hoisted module mocks and content assertions, without a
+production seam; they are no longer deferred failures. The separate positive CreatorComponent
+`saveText` test remains red and belongs to KL06, not a namespace-spy repair.
 
 ### The i18n key-parity spec (Phase 12, task #37)
 
@@ -1134,6 +1140,96 @@ tree pruning.
   `css-before.txt`, the `dist-*` listings, `audit-fix.json`, the three `audit-after-*.json` files,
   `outdated-after.json` and `deb.json`).
 
+<a id="kl01-baseline"></a>
+### KL01 factual reconciliation and Docker baseline — DONE, accepted 2026-11-11
+
+After individually authorizing KL01, the user accepted its execution and recorded baseline:
+"I approve KL01." This is a **fresh factual baseline**, not a remediation, all-green claim or new
+security risk waiver. No application, dependency, manifest or build/test configuration changed.
+The user subsequently stated, "Please commit the current status." This documentation checkpoint
+includes this guide and Known Limitations, closing KL01's separately approved Git step. Local `.git`
+evidence remains preserved outside the commit. No push or successor is approved; work remains paused.
+[KL01's register](2026_KNOWN_LIMITATIONS.md#kl01) holds the classifications and accepted outcome.
+
+**Identity and isolation.** Source revision `d47b59e2ac059d0c96250d07d491ba519677703d`, Docker 29.9.3,
+Linux arm64, Node 26.13.0 / npm 11.20.0. The development image is
+`sha256:49ff3eb6511d27a8d7cfdcdab6754dbdd6c0ba584641714897dfcbf0224b9f8d`; the production image is
+`sha256:8097c30bb0c7395c08ea91825298887d528eb023fb358e3367b61db59ff17bf4`.
+Workspace and both image locks match SHA-256
+`b1ba02913604cca0838e4def31ce27e4223cb1b3b86eca0cc6611a1d38fd9c68`.
+The retained installation matches all declared/locked direct dependencies. No install or image
+rebuild was needed. One-shot containers mounted the workspace read-only and ran from an isolated
+`/tmp/duely-kl01-source` copy with image-layer modules. Outputs, traces and logs stayed private.
+
+| Gate | Actual exit/result |
+|---|---|
+| Dependency tree (`/app`, real installation) | 0; zero problems, 46 root entries |
+| App/server/Electron/spec types and E2E file-list types | 0 for each |
+| Deliberate isolated server type-error control | 2; TS2322 present |
+| Lint | 0; 0 errors / 7 warnings |
+| UTC units | 1; 2 failed / 131 passed (133), 2 failed / 16 passed files (18) |
+| Focused collision/form/recurrence, Europe/Berlin | 1; 1 failed / 23 passed (24) |
+| Development/production probe and distribution builds | 0 for all four; zero budget warnings |
+| Chromium E2E, dev/server, and repeat control | 0 each; 22 passed each, no failed/skipped/flaky |
+| Full npm audit | 1; 0C/0H/15M/3L = 18 |
+| Production-scope and production-image npm audits | 1 each; 0C/0H/0M/3L = 3 |
+
+All sixteen gates reproduced R2's expected status. Audits are additional checks, not green exits.
+The exact two failing names are:
+
+```
+client/app/DatesAndCollisions/CollisionDetector.spec.ts > CollisionDetector > should return all holidays of Lower Saxony and the city of Augsburg in Bavaria of the year 2032
+client/app/creator/creator.component.spec.ts > CreatorComponent > should call saveText and getICalString if input is valid
+```
+
+Their sorted newline-terminated capture has SHA-256
+`18a9e5f4b3a02bc697f265cc14e2629f289c7abf79debe832d41ae2b73427b30`.
+The raw 2032 holiday catalogue oracle passes; collision timestamps still reflect the retained
+host-local event-time policy. The Creator test changes the model summary without settling and
+validating the rendered form, and its TestBed service spy does not target the component's separate
+AppointmentsService instance. Neither failure was repaired, skipped or rebaselined.
+
+**Warnings and builds.** UTC units emit 74 missing-icon messages, exactly as R2, zero experimental
+storage warnings and zero NG0xxx/NG8xxx diagnostics. The seven lint identities/locations are in
+KL01's register. Production bailouts are `deepmerge`, `file-saver`, `moment-timezone`; development
+logs contain none. Development initial size is 5.54 MB; production is **2,460,981 B** (displayed
+2.46 MB). The isolated build estimates 399.78 kB transfer; a current-source `/app` control gives
+R2's 399.85 kB and exactly reproduces its initial assets and index. This is build-context/generated
+identifier variation, not a source or budget regression. CSS remains `styles-TLKQQXXL.css`, SHA-256
+`0c637f9dd39bc30784b8c5ad15e0c60e1121d2d6a1e8bd36e2c8680ac58340da`.
+Isolated distribution totals are server 2,739,779 B / 29 files and Electron 2,768,243 B / 31 files;
+Node bundles are 1,212 B and 2,874 B respectively. These are build outputs, not new package sizes.
+
+**Retained attempts and limits.** Initial captures stopped for npm's symlink-layout extraneous
+classification and then reporter extraction (ANSI colors, repeated soft assertions, project
+prefixes). Controls explained each; raw attempts remain. The successful continuation reused completed
+gates only after matching their non-documentation input hashes. A strict image-input control also
+found an old wall-clock comment and pre-Apple `.gitignore`; transpilation and same-current-source
+`/app` builds proved these do not change executable output. The frozen and current `/app` asset/index
+controls match exactly. No unexplained baseline delta remains.
+
+The default production user is uid/gid 1000; separate readiness controls return 1 without a server
+and 0 with HTTP 200. Writable-evidence route/audit inspection ran as root and is not that non-root
+proof. Missing assets and `/3rdpartylicenses.txt` still return index.html/200; the actual parent-root
+license artifact is 56,795 B, not an exposed HTTP license response. Electron's Node-mode version
+probe is not a GUI launch. Existing B12/E1/E2/R2 Linux launch/deb records remain historical; no fresh
+desktop package, macOS/Windows execution, full visual matrix or container scanner run occurred.
+Production base layers 1–5 match E2, but changing advisory databases still requires fresh assessment
+under KL03/KL04; old scanner rows are not newly measured or newly accepted risk.
+
+**Evidence root:** `.git/duely-batch-20261111/kl01/` (local, uncommitted, not portable). It retains
+`identity.json`, `direct-versions.json`, original input inventory/diff, all stopped attempts,
+`final-run/summary.json`, `gate-codes.jsonl`, every gate log, `failing-names.txt`, `audit-facts.json`,
+distribution inventory and both E2E trace trees; `source-facts.json`, `asset-facts.json`, production
+route/audit and default-user controls; build-input discrepancy and both `/app` controls;
+`final-verification.json` for source/publication preservation, staged state and browser/advisory
+identities; `final-document-verification.json` adds document hashes, anchor/fence checks and failure
+hash verification. Final document edits do not alter executable gate inputs. Those verification
+reports retain the document hashes/status at their capture time, before the subsequent audit-plan
+amendment, acceptance and Git checkpoint updates. KL01's recorded baseline is accepted and its
+separately authorized Git step is included in this documentation checkpoint. No executable input
+changed; no gate rerun or subsequent task starts automatically.
+
 ---
 
 ## 5. The baseline contract (must not move without authorization)
@@ -1259,7 +1355,8 @@ alternatives, not current standards-status claims.
 
 This table preserves the pre-P1 diagnosis, not current test/source coverage. P1/I1 added executing
 guards and repaired the collision assertion loops; B0 reproduces the 55-name baseline in §4.
-All original 24 failed names remain loud, classified and deferred. Phase 6's `TranslateStore` repair unmasked the 19
+At that historical checkpoint all original 24 failed names remained loud, classified and deferred;
+the subsequent A3/D1/D2 repairs supersede that status. Phase 6's `TranslateStore` repair unmasked the 19
 appointments-service failures. Later commit `be16352` fixed the null-repeating crash, exposing
 residual assertions in two of the same tests; their names and the partition stayed unchanged.
 Known Limitations (a.1)–(a.3), (a.6)–(a.7) are the current diagnosis/disposition.
@@ -1284,10 +1381,13 @@ Known Limitations (a.1)–(a.3), (a.6)–(a.7) are the current diagnosis/disposi
 | `web-storage.service.spec` | **2** |
 | **Total** | **24** |
 
-### Why they are still red
+### Why they were deferred at the historical checkpoint
 
-The failures are **deferred by user decision** to a future test-and-date phase or, for the positive
-`saveText` test, a user-initiated coverage review. Do not fix, drop or skip them under unrelated work.
+These failures were **deferred by user decision** to a future test-and-date phase or, for the positive
+`saveText` test, a user-initiated coverage review. Most were subsequently repaired by approved work;
+only the holiday collision assertion and positive Creator test remain red in KL01. Realistic positive
+coverage is now the planning direction, not authorization to delete the test. Do not fix, drop or
+skip the remaining failures under unrelated work.
 `docs/2026_KNOWN_LIMITATIONS.md` (a) holds the full diagnosis and disposition, including production
 recurrence/collision defects that test-only expectation changes would not repair.
 
@@ -1296,16 +1396,34 @@ recurrence/collision defects that test-only expectation changes would not repair
 ## 7. The reproducible failing-name capture (and the trap that broke the naive version)
 
 The strongest form of the baseline contract is a sorted list of failing test **names**, with their
-causes, compared against the applicable approved capture. Current A1 uses
-**`.git/duely-a1-20261110-refresh/failing-names.txt`** (55 normalized names, byte-identical to B0's and
-the retained I1 capture; §4). Do not compare
-current main tests to the historical 24-name file as though no test integration had been approved.
+causes, compared against the applicable approved capture. KL01's current capture is
+**`.git/duely-batch-20261111/kl01/final-run/failing-names.txt`**: two names with SHA-256
+`18a9e5f4b3a02bc697f265cc14e2629f289c7abf79debe832d41ae2b73427b30`.
+A1's **`.git/duely-a1-20261110-refresh/failing-names.txt`** has 55 normalized names, byte-identical
+to B0's and the retained I1 capture; it is historical (§4). Do not compare current tests to an old
+24- or 55-name file as though no intervening integration had been approved.
 The historical capture remains at **`.git/duely-failing-names-baseline.txt`**. It is durable via the
 `.:/app` bind mount but **not committed** or portable to another checkout. The historical md5 is
 `172d78996b50c84e38211b529d76ab0b`; preserve an existing baseline instead of overwriting it.
 Commit `74a271d` intentionally renamed the failing holiday test to 2032 (§5), so the old names are
 not a current exact-match oracle. P0's separately authorized full-suite capture (§4) recorded only that known rename and established
 `fa0bdd93490bc4cbdf2103d7a63878fe` in its task-specific file, without replacing this historical baseline.
+
+### Current reporter normalization (KL01)
+
+Preserve the actual child-process exit and full log first. KL01's extractor strips ANSI formatting,
+uses only `FAIL` detail lines, removes either `duely` or `|duely|` project prefixes, deduplicates the
+15 repeated holiday soft-assert details and sorts the resulting names. It never changes test titles,
+fixtures or expectations. The unique-name count must equal the reporter's failed-test count.
+The historical pipelines below are not a substitute for this current extraction or exit capture.
+
+```js
+const names = [...new Set([...log.replace(/\x1b\[[0-9;]*m/g, '')
+  .matchAll(/^\s*FAIL\s+(.+)$/gm)]
+  .map(match => match[1].trim().replace(/^(?:\|duely\||duely)\s+/, '')))].sort();
+```
+
+Run analysis of captured logs in Docker and write each new capture under its task evidence root.
 
 ### Historical capture recipes (preserved; select the current approved baseline first)
 
@@ -1422,10 +1540,12 @@ wait never resolved, so `npm run test:e2e` hung indefinitely.
 - **Port 8000** = the Express static server (`server/app.ts`,
   `const port: number = Number(process.env.PORT ?? 8000)`, serving `dist/server/static/browser`) —
   the built-app path targeted by the second Playwright project.
-- The `duely-dev` image ships Playwright (`@playwright/test ^1.64.1`; resolved to 1.64.1 by the
-  lockfile, Chromium revision **v1248** = Chrome for Testing 156.0.8078.4) **with Chromium and all
-  OS-level dependencies baked in at build time** (Dockerfile
-  `development` stage). No manual browser installation step is needed.
+- The retained development image ships **`@playwright/test` 1.65.0**, declared and resolved at
+  that version, with Chromium and its OS-level dependencies installed by Dockerfile's `development`
+  stage. KL01 exercised both Chromium projects twice. The old 1.64.1 / v1248 / Chrome for Testing
+  156.0.8078.4 figures describe the earlier image, not the current browser baseline. Browser revision
+  metadata in KL01's `final-verification.json` identifies revision 1254 / Chrome for Testing
+  158.0.8127.18; this does not imply Firefox/Safari support.
 
 ### The recipe
 
@@ -1503,8 +1623,9 @@ visit is not necessarily identical to the empty-storage redirect.
 
 Static images and the historical 16 passing E2E executions do not prove the full functional matrix.
 P1W replaced the conditional nonexistent selector, collision logging and filename/panel-only checks
-with real semantic guards; separately approved I1 integrated them. B0's clean images reproduce
-8F/14P across both projects (§4). Production defects remain attributable, not repaired or waived.
+with real semantic guards; separately approved I1 integrated them. B0 reproduced 8F/14P; approved
+D1/D2 repairs moved this to 22/0, reproduced twice in KL01 (§4). Broader visual, platform and export
+contract limitations remain; a passing bounded suite does not waive them.
 
 **Readiness waits (do not skip):** before each shot the script waits for `document.fonts.ready`, for
 every `<img>` to `decode()`, then an 800 ms settle. **Never** use `waitForLoadState('networkidle')` —
@@ -1544,8 +1665,9 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
   working-tree edits (§7).
 - **`× … 38ms` lines appear in your capture.** You used the naive pattern; switch to the
   `^[[:space:]]*FAIL[[:space:]]` command (§7).
-- **44 `Error retrieving icon duely:*` lines.** Cosmetic and expected (§5). Count the error message,
-  not every line containing `icon`: stack frames doubled the historical broad-match count to 88.
+- **`Error retrieving icon duely:*` messages.** KL01 counted **74**, matching R2; 44 belongs to the
+  migration baseline (§5). Count the error message, not every line containing `icon`: stack frames
+  doubled the historical broad-match count to 88.
   Do not "fix" by adding `provideDuelyIcons()` to TestBeds.
 - **Watch builds appear unchanged.** Verify a temporary executable source change, not a comment-only
   edit that emits identical bytes; restore only your own probe. `build:watch` watches Node bundles,
@@ -1566,7 +1688,8 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
 - **Playwright: "browser not found".** Should not occur — Chromium is baked into the `duely-dev`
   image at build time. If you see this, the image is stale: run `docker compose build duely-dev`
   to re-provision. Verify with `docker compose run --rm duely-dev npx playwright --version`
-  (expect 1.64.1) and `docker compose run --rm duely-dev ls /root/.cache/ms-playwright/`.
+  (expect 1.65.0 for KL01's lock) and inspect the image's browser cache. Confirm image, lock and
+  installed browser identities before provisioning; do not trust an old anonymous dependency volume.
 - **`npm test` suddenly fails ~37 extra specs with `TypeError: Cannot read properties of undefined
   (reading 'getItem')` in `StorageService.loadSettings`.** **FIXED 2026-11-01 and RE-PROVED BY A2 —
   this should no longer happen.** Cause, for the record: Node ≥ 26 defines an experimental
