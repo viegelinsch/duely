@@ -28,9 +28,26 @@ describe('StorageService', () => {
 
     it('should save the settings with correct content', inject([StorageService], (service: StorageService) => {
         service.loadSettings();
-        vi.spyOn(localStorage, 'setItem');
+        // Round-trips through the real Web Storage implementation Vitest's jsdom
+        // environment installs, with no Node localStorage flag involved:
+        // persist, read the raw blob back, then re-hydrate the service from it.
+        service.settings.language = 'de';
+        service.settings.timeZone = 'Europe/Berlin';
         service.saveSettings(service.settings);
-        // expect(spy).toHaveBeenCalledWith('settings', JSON.stringify(service.settings));
+
+        const persisted = JSON.parse(localStorage.getItem('settings')!) as Record<string, unknown>;
+        expect(persisted.language).toBe('de');
+        expect(persisted.timeZone).toBe('Europe/Berlin');
+        expect(service.settingsLoaded).toBe(true);
+
+        service.settings.language = 'en';
+        service.loadSettings();
+        expect(service.settings.language).toBe('de');
+        expect(service.settings.timeZone).toBe('Europe/Berlin');
+
+        sessionStorage.setItem('__duely_round_trip__', 'ok');
+        expect(sessionStorage.getItem('__duely_round_trip__')).toBe('ok');
+        sessionStorage.removeItem('__duely_round_trip__');
     }));
 
 });

@@ -6,17 +6,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { AppointmentsService } from './appointments.service';
 import { Appointment } from './appointment';
 import { FormBuilder } from '@angular/forms';
 import { Collision } from '../DatesAndCollisions/CollisionDetector';
 
-import moment from 'moment-timezone';
-
 import { StorageService } from '../storage/storage.service';
 
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { JsonPipe } from '@angular/common';
@@ -28,17 +26,17 @@ import { AppointmentFormComponent } from './appointment-form/appointment-form.co
   imports: [
     MatButtonModule,
     MatIconModule,
-    TranslateModule,
+    TranslatePipe,
     JsonPipe,
     AppointmentFormComponent
   ],
   templateUrl: './creator.component.html',
   styleUrls: ['./creator.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   providers: [AppointmentsService]
 })
 export class CreatorComponent implements OnInit {
   appointments: Appointment[] = [];
-  timeZoneNames: string[];
   visible: boolean[] = [true];
   public valid: boolean[][] = [];
   public collisions: Collision[] = [];
@@ -46,7 +44,6 @@ export class CreatorComponent implements OnInit {
   /** constructs a CreatorComponent */
   constructor(private fb: FormBuilder, private appointmentsService: AppointmentsService, private translate: TranslateService,
     public storage: StorageService) {
-    this.timeZoneNames = moment.tz.names();
   }
   /** gets all saved appointments */
   getAppointments(): Promise<void> {

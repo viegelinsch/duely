@@ -3,7 +3,7 @@ import { CreatorComponent } from './creator.component';
 import { StorageService } from '../storage/storage.service';
 import { selectStorageService } from '../storage/storage.factory';
 import { AppointmentsService } from './appointments.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 import { AppointmentFormComponent } from './appointment-form/appointment-form.component';
 import { RecurringSettingsComponent } from './appointment-form/recurring-settings/recurring-settings.component';
 import { AlarmSettingsComponent } from './appointment-form/alarm-settings/alarm-settings.component';
@@ -18,10 +18,10 @@ describe('CreatorComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            imports: [TranslateModule.forRoot(), ReactiveFormsModule, CreatorComponent,
+            imports: [ReactiveFormsModule, CreatorComponent,
                 AppointmentFormComponent, AdvancedSettingsComponent, AlarmSettingsComponent,
                 RecurringSettingsComponent],
-            providers: [AppointmentsService, { provide: StorageService, useFactory: selectStorageService }]
+            providers: [provideTranslateService(), AppointmentsService, { provide: StorageService, useFactory: selectStorageService }]
         })
             .compileComponents();
     });

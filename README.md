@@ -1,16 +1,20 @@
 # Duely
 
 Duely creates recurring appointments, filters national holidays and exports iCalendar (`.ics`)
-files for calendar applications. The web application uses Angular 20 standalone components and
-Angular Material 3 design tokens; an Electron build exists, but desktop launch and storage remain
-unverified (see [Known Limitations](docs/2026_KNOWN_LIMITATIONS.md#f-electron-desktop-storage--unresolved-deliberately-deferred)).
+files for calendar applications. The web application uses Angular 22 standalone components and
+Angular Material 3 design tokens. The Electron desktop build serves its bundle from the privileged
+`app://duely` origin and was launched and exercised on Linux arm64, development and packaged, in the
+Testing Guide §4 runs (B12, E1); desktop storage and the save dialog are still unimplemented
+([Known Limitations](docs/2026_KNOWN_LIMITATIONS.md#f-electron-desktop-storage--unresolved-deliberately-deferred)).
+macOS and Windows are outside the verified platform scope (Known Limitations (d.6)).
 
 ## Getting started
 
 Install Git and Docker with Docker Compose. All dependency installation, builds, linting, type-checks
-and tests run inside Docker, never on the development host. The manifests require Node >=24 and
-npm >=10.2; `Dockerfile` currently uses the floating `node:lts-slim` tag, so check the actual container
-version rather than assuming Node 24. Python 2 and `windows-build-tools` are not prerequisites.
+and tests run inside Docker, never on the development host. All three manifests require Node `^26.0.0`
+and npm `^11.20.0`, and every `Dockerfile` stage starts from `node:26-slim`; the container measured for
+the final audit ran Node 26.13.0 with npm 11.20.0. Python 2 and `windows-build-tools` are not
+prerequisites.
 
 From the repository root:
 
@@ -23,8 +27,8 @@ docker compose run --rm --service-ports duely-dev \
 Open `http://localhost:4200`. Stop the foreground server with Ctrl+C. If Docker is unavailable,
 stop rather than falling back to host execution. See [Installation](INSTALL.md) for production
 containers and build outputs, and [Testing Guide](docs/TESTING_GUIDE.md) for verification commands.
-There is no verified browser/desktop OS support matrix; the missing browser-target policy is
-recorded in Known Limitations (b.6).
+There is no verified browser/desktop OS support matrix: the missing browser-target policy is
+recorded in Known Limitations (b.6), the measured platform scope — Linux arm64 only — in (d.6).
 
 ## Commands overview
 
@@ -43,13 +47,30 @@ Run npm scripts as `docker compose run --rm duely-dev npm run <script>`.
 | `test` / `test:watch` / `test:coverage` | Vitest once, in watch mode, or with coverage through `@angular/build:unit-test` |
 | `test:e2e` | Playwright against both the dev server and built Express server |
 | `start:server` | Start the previously built Express application |
-| `start:electron` | Launch the previously built Electron application; runtime remains unverified |
+| `start:electron` | Launch the previously built Electron application; verified on Linux arm64 only (Testing Guide §4) |
 
 The build orchestrator is `scripts/build.mjs`: esbuild's Node API produces CJS server/Electron
 bundles, and `@angular/build:application` produces the Angular client. `build:watch` watches
 `server/app.ts` and `electron/main.ts`; use `serve` for client hot reload. Generated static output
 is cleaned during a build and `browser/index.html` is asserted, so do not put hand-maintained files
 in `dist/`. Diagnostic Angular builds should use a temporary output path (Testing Guide §4).
+
+### Dependency graph
+
+`docs/dep-graph.mmd` is generated, never hand-edited: `scripts/dep-graph.mjs` reads the root,
+`electron/` and `server/` manifests and emits a Mermaid `graph TD` linking each manifest to its
+runtime and dev dependencies, with a separate section for packages that appear in more than one
+manifest. Regenerate it in the dev container after changing any of those manifests; the `duely-dev`
+service bind-mounts the repository, so the file is written into the working tree on the host:
+
+```bash
+docker compose run --rm duely-dev node scripts/dep-graph.mjs --output docs/dep-graph.mmd
+```
+
+Drop `--output docs/dep-graph.mmd` to print the graph to stdout instead, which is the way to review
+a change before overwriting the committed file. The script uses only Node built-ins, so it needs no
+installed dependencies and no prior build; it reads the manifests alone, so the edge labels show
+declared ranges, not the resolved versions in `package-lock.json`.
 
 ## UI development
 
@@ -89,8 +110,9 @@ already cover. The navbar is in document flow; routed pages do not need fixed-na
   entry HTML and build configuration.
 - `client/app/shared/icons/duely-icons.ts` contains eight bundled SVG literals. `provideDuelyIcons()`
   registers them through `addSvgIconLiteralInNamespace`, used as `svgIcon="duely:add"`. Literal
-  registration avoids HTTP/font fetches under offline or Electron `file://` origins. The sanitizer
-  trust applies only to first-party build-time literals, never user-supplied SVG.
+  registration avoids HTTP/font fetches under offline conditions and on the privileged `app://duely`
+  origin the desktop build serves from. The sanitizer trust applies only to first-party build-time
+  literals, never user-supplied SVG.
 
 To add an accent, add its colour and map entry in `_palette.scss`, the option in
 `settings.component.html`, and the label in **both** locale JSON files. Add swatch helper classes
@@ -146,25 +168,54 @@ is not a claim of byte-identical exported ICS before and after those repairs.
 
 ## Deployment
 
-See [Installation](INSTALL.md) for the production container. There is no npm packaging script for
-Electron platform binaries/installers: `build:electron:prod` emits `dist/electron/`, not an
-installable application. Existing electron-builder configuration does not establish a working
-packaging or desktop-runtime path. Keep the complete third-party licence artefacts when distributing
-builds (Known Limitations (b.5)).
+See [Installation](INSTALL.md) for the production container.
+
+`build:electron:prod` emits `dist/electron/` — the runnable Electron bundle with its runtime
+`package.json`, `manifest.json` and `LICENSE` — not an installer. Installers are produced by
+electron-builder 26.18.1 from the build configuration in `electron/package.json`. Only the Linux arm64
+path is verified; package it in the development container on an arm64 host:
+
+```bash
+docker compose run --rm duely-dev npm run build:electron:prod
+docker compose run --rm duely-dev npx electron-builder --projectDir dist/electron \
+  --linux deb --arm64 --publish never
+```
+
+The artifacts land in `dist/`, because the manifest's `directories.output` is `../`. The `deb` is the
+package to ship; AppImage is not a project requirement. The `deb` target needs `xz-utils` and
+`binutils`, which the development stage installs. The packaged application starts on `app://duely`
+with the Chromium sandbox enabled, reads both locales from the bundled dictionaries and runs offline;
+the acceptance procedure and its measured results are in Testing Guide §4 (B12). Desktop storage and
+the save dialog are still unimplemented: Known Limitations (f).
+
+macOS packaging is unverified and cannot be produced in the Linux container; it is a separate,
+user-started task (M1 in [the upgrade task board](docs/TODO_UPGRADES.md)). Windows is unverified as
+well.
+
+Keep the complete third-party licence artefacts when distributing builds. The measured `deb`
+installs the repository `LICENSE` inside `resources/app`, the Angular build's generated
+`resources/app/static/3rdpartylicenses.txt`, and the runtime notices `LICENSE.electron.txt` and
+`LICENSES.chromium.html` at the package root. A package that copied only `static/browser/` would
+drop the generated notices, which sit one level above the served root (Known Limitations (b.5));
+the production container copies all of `dist/server` and keeps them.
 
 ## Contributing
 
-Please read `CONTRIBUTING.md` for the code of conduct and pull-request process. Git history and tags
-preserve completed migration records; open or accepted items live in
-[Known Limitations](docs/2026_KNOWN_LIMITATIONS.md), not a separate migration plan/reference.
-Dependency-upgrade work is tracked in [the upgrade task board](docs/TODO_UPGRADES.md).
+This repository has no contribution guide. The working rules are the [Testing Guide](docs/TESTING_GUIDE.md)
+(§2 keeps every install, build, lint, type-check and test command in Docker; §3 the test layout) and
+the upgrade task board's standing constraints. Git history and tags preserve completed migration
+records; open or accepted items live in [Known Limitations](docs/2026_KNOWN_LIMITATIONS.md), not a
+separate migration plan/reference. Dependency-upgrade work is tracked in
+[the upgrade task board](docs/TODO_UPGRADES.md).
 
 ## Versioning
 
-`package.json` and `package-lock.json` are authoritative for declared and resolved versions.
-`esbuild` is pinned exactly to **0.25.9**: `scripts/build.mjs` uses its `context()` / `watch()` /
-`rebuild()` API, whose watch options differ between releases. Review that script when changing the
-pin. Other direct dependencies use `^` or `~` ranges; do not duplicate their version table here.
+`package.json` and `package-lock.json` are authoritative for declared and resolved versions; this
+document repeats no version table. Most direct dependencies are pinned to exact versions. `esbuild`
+is one of them and must stay exact: `scripts/build.mjs` uses its `context()` / `watch()` /
+`rebuild()` API, whose watch behaviour differs between releases, so review that script when changing
+the pin. Only `rxjs`, `zone.js`, `file-saver`, `ts-node` and the `@types/*` packages use `^` or `~`
+ranges, and the root `overrides` keep `glob` and `tar` on a single hoisted version each.
 
 ## Authors
 
@@ -177,11 +228,13 @@ pin. Other direct dependencies use `^` or `~` ranges; do not duplicate their ver
 
 ## Notice about standard conformity
 
-The implementation of timezones is not conform to the iCal standard specified in "RFC 5545 3.2.19.
-Time Zone Identifier" as the utilized library "ical-generator" makes use of the non-standard
-`Timezone-ID` instead of `VTIMEZONE` in order to support older versions of Microsoft Outlook.
-This legacy notice has not been re-verified by the documentation consolidation; timezone/export
-expectations remain part of the deferred test-and-date work.
+The timezone export does not conform to "RFC 5545 3.2.19. Time Zone Identifier". `ical-generator`
+carries no timezone database and emits a `VTIMEZONE` component only when an external generator such
+as `@touch4it/ical-timezones` is configured; Duely configures none. A named-zone export therefore
+references `DTSTART;TZID=Europe/Berlin:…` without defining that zone and adds the non-standard
+`TIMEZONE-ID` and `X-WR-TIMEZONE` properties instead. Re-verified against `ical-generator` 11.1.3
+with the output recorded by E1 (Testing Guide §4). This is accepted residual behaviour: changing it
+needs that extra generator and new export coverage, not a documentation edit.
 
 ## License
 

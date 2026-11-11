@@ -1,4 +1,4 @@
-import moment from 'moment';
+import { isSameDay } from 'date-fns';
 import { RecurrencePattern } from './RecurrencePattern';
 import { EventCollisionData } from '../EventCollisionData';
 
@@ -14,7 +14,7 @@ export class DailyRecurrencePattern extends RecurrencePattern {
      * @param date          The date to check.
      */
     public isMatch(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
-        if (moment(date).isSame(eventData.start, 'days') === true) {
+        if (isSameDay(date, eventData.start) === true) {
             return {match: true, break: false};
         } else {
             const diff = this.daysBetween(eventData.start, date);

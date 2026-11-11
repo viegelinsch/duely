@@ -20,8 +20,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { StorageService } from '../../../storage/storage.service';
 import Holidays from 'date-holidays';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import moment from 'moment-timezone';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { addYears, format } from 'date-fns';
+import {
+  formatWallDate, pickerDayFromModel, pickerDayFromWallValue, wallDayNumber, wallDayNumberFromPicker
+} from '../../../shared/wall-clock';
 
 
 /**
@@ -41,7 +44,7 @@ import moment from 'moment-timezone';
     MatRadioModule,
     MatIconModule,
     MatButtonModule,
-    TranslateModule
+    TranslatePipe
   ],
   templateUrl: './recurring-settings.component.html',
   styleUrls: ['./recurring-settings.component.scss']
@@ -126,11 +129,21 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
         repByMonthly: 'MONTH',
         repByYearly: 'DAYMONTHYEAR',
         count: 1,
-        untilDate: moment(new Date()).add(100, 'y').format('YYYY-MM-DD'),
+        untilDate: this.defaultUntilDate(),
         exclusions: [],
       };
     }
     this.recurringSettings = this.appointment.recurringSettings;
+    // The UNTIL picker has to start on the day the appointment already stores.
+    // Without this the control keeps the form default (today + 100 years) and
+    // the first reveal of the ENDS section shows a date the appointment does not
+    // use; the saved date-only string is hydrated as a local picker day so the
+    // calendar and the model agree in every host timezone.
+    const savedUntil = pickerDayFromWallValue(this.recurringSettings.untilDate);
+    if (savedUntil !== null) {
+      this.recurringForm.controls['untilDate'].setValue(savedUntil);
+      this.enddate = savedUntil;
+    }
     this.subscription[0] = this.recurringForm.controls['ends'].valueChanges.subscribe((end: string) => {
       if (end === 'COUNT') {
         this.recurringForm.controls['count'].setValidators([Validators.min(1), Validators.required.bind(Validators)]);
@@ -161,22 +174,24 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
     this.appointment.valid![1] = this.recurringForm.valid;
   }
 
+  /** The default UNTIL day: one hundred years from today, as a date-only string. */
+  private defaultUntilDate(): string {
+    return format(addYears(new Date(), 100), 'yyyy-MM-dd');
+  }
+
   /** gets event data, checks the end date. Checks if it is not
    * before the start date and updates it
    */
   endDateListener(event: MatDatepickerInputEvent<Date>): void {
     const value = event.value;
     if (value != null) {
-      const date = moment.utc().set({
-        year: value.getFullYear(),
-        month: value.getMonth(),
-        date: value.getDate()
-      });
-      if (date.isSameOrAfter(moment.utc(this.appointment.end), 'day')) {
-        this.recurringSettings.untilDate = date.format('YYYY-MM-DD');
+      const pickedDay = wallDayNumberFromPicker(value);
+      const endDay = wallDayNumber(this.appointment.end);
+      if (endDay !== null && pickedDay >= endDay) {
+        this.recurringSettings.untilDate = formatWallDate(new Date(pickedDay));
       } else {
-        const d = moment.utc(this.appointment.end);
-        this.recurringForm.controls['untilDate'].setValue(new Date(d.year(), d.month(), d.date()));
+        this.recurringForm.controls['untilDate'].setValue(pickerDayFromModel(this.appointment.end!));
+        this.enddate = pickerDayFromModel(this.appointment.end!);
       }
     }
   }
@@ -310,7 +325,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
       repByMonthly: 'MONTH',
       repByYearly: 'DAYMONTHYEAR',
       count: null,
-      untilDate: moment(new Date()).add(100, 'y').format('YYYY-MM-DD'),
+      untilDate: this.defaultUntilDate(),
       exclusions: this.fb.array([]),
     });
   }
@@ -344,7 +359,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
       holiday_countries: this.storage.settings.country != null ? this.storage.settings.country : '',
       holiday_states: this.storage.settings.state != null ? this.storage.settings.state : '',
       holiday_regions: this.storage.settings.region != null ? this.storage.settings.region : '',
-      date: moment(new Date()).format('YYYY-MM-DD'),
+      date: format(new Date(), 'yyyy-MM-dd'),
     };
     this.recurringSettings.exclusions.push(newExclusion);
     this.setExclusions(this.recurringSettings.exclusions);
@@ -361,7 +376,7 @@ export class RecurringSettingsComponent implements OnChanges, OnInit, AfterViewC
    */
   setExclusionDate(event: MatDatepickerInputEvent<Date>, i: number): void {
     if (event.value != null) {
-      this.exclusions[i].date = moment(event.value).format('YYYY-MM-DD');
+      this.exclusions[i].date = format(event.value, 'yyyy-MM-dd');
     }
   }
 

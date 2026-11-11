@@ -6,13 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { StorageService } from './storage/storage.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { ThemeService } from './theme/theme.service';
 
 /**
@@ -29,9 +29,10 @@ import { ThemeService } from './theme/theme.service';
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
-    TranslateModule
+    TranslatePipe
   ],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
@@ -43,7 +44,7 @@ export class AppComponent {
   constructor(public storage: StorageService, private translate: TranslateService, private theme: ThemeService) {
     translate.addLangs(['de', 'en']);
 
-    translate.setDefaultLang('en');
+    translate.setFallbackLang('en');
     translate.use(storage.settings.language);
     theme.apply();
   }

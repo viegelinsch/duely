@@ -5,18 +5,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import Holidays from 'date-holidays';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import moment from 'moment-timezone';
+import { timeZoneNames } from '../shared/time-zone-names';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { StorageService } from '../storage/storage.service';
 import { ThemeService } from '../theme/theme.service';
 
@@ -36,9 +36,10 @@ import { ThemeService } from '../theme/theme.service';
     MatButtonModule,
     MatIconModule,
     MatSlideToggleModule,
-    TranslateModule
+    TranslatePipe
   ],
   templateUrl: './settings.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent implements OnInit {
@@ -59,7 +60,7 @@ export class SettingsComponent implements OnInit {
   constructor(private fb: FormBuilder, private router: Router, private storage: StorageService,
               protected translate: TranslateService, private theme: ThemeService) {
     this.hd = new Holidays();
-    this.timeZoneNames = moment.tz.names();
+    this.timeZoneNames = timeZoneNames(this.storage.settings.timeZone);
   }
 
   /** creates fthe form */

@@ -1,8 +1,9 @@
 import { inject, ComponentFixture, TestBed } from '@angular/core/testing';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 
 import { RecurringSettingsComponent } from './recurring-settings.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { StorageService } from '../../../storage/storage.service';
 import { AppointmentsService } from '../../appointments.service';
 
@@ -14,8 +15,8 @@ describe('RecurringSettingsComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            imports: [TranslateModule.forRoot(), ReactiveFormsModule, RecurringSettingsComponent],
-            providers: [AppointmentsService, StorageService]
+            imports: [ReactiveFormsModule, RecurringSettingsComponent],
+            providers: [provideTranslateService(), AppointmentsService, StorageService, provideNativeDateAdapter()]
         })
             .compileComponents();
     });
@@ -23,7 +24,11 @@ describe('RecurringSettingsComponent', () => {
     beforeEach(inject([AppointmentsService], (service: AppointmentsService) => {
         fixture = TestBed.createComponent(RecurringSettingsComponent);
         component = fixture.componentInstance;
-        component.appointment = service.defaultAppointment();
+        const appointment = service.defaultAppointment();
+        appointment.start = new Date('2032-03-27T09:00:00Z');
+        appointment.end = new Date('2032-03-27T10:00:00Z');
+        appointment.recurringSettings!.untilDate = '2032-04-03';
+        fixture.componentRef.setInput('appointment', appointment);
         fixture.detectChanges();
     }));
 
@@ -31,9 +36,61 @@ describe('RecurringSettingsComponent', () => {
         expect(component).toBeTruthy();
     }));
 
-    it('should update validation of the end date', () => {
-        // throws error: appointment of undefined
-        // expect(component.endValidation).not.toThrow();
+    it('should update recurrence validity for COUNT and remove that constraint for UNTIL', () => {
+        component.recurringForm.get('ends')!.setValue('COUNT');
+        component.recurringForm.get('count')!.setValue(0);
+        expect(component.appointment.valid![1]).toBe(false);
+        component.recurringForm.get('count')!.setValue(3);
+        expect(component.appointment.valid![1]).toBe(true);
+        component.recurringForm.get('ends')!.setValue('UNTIL');
+        component.recurringForm.get('count')!.setValue(0);
+        expect(component.appointment.valid![1]).toBe(true);
+    });
+
+    async function revealUntil(): Promise<HTMLInputElement> {
+        component.recurringSettings.frequency = 'DAILY';
+        component.recurringSettings.ends = 'UNTIL';
+        component.hideSettings = false;
+        component.markForCheck();
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+        const element = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('input[formControlName="untilDate"]');
+        expect(element).not.toBeNull();
+        return element!;
+    }
+
+    it('intended guard: hydrates the saved UNTIL calendar day on first reveal and reopening', async () => {
+        const first = await revealUntil();
+        expect.soft(first.value).toBe('4/3/2032');
+        expect.soft(component.enddate).toEqual(new Date(2032, 3, 3));
+        component.hideSettings = true;
+        component.markForCheck();
+        fixture.detectChanges();
+        const reopened = await revealUntil();
+        expect(reopened.value).toBe('4/3/2032');
+        expect(component.recurringSettings.untilDate).toBe('2032-04-03');
+    });
+
+    it('keeps a picker-selected UNTIL day on reopening and exports it through the public flow', async () => {
+        const element = await revealUntil();
+        element.value = '04/05/2032';
+        element.dispatchEvent(new Event('input', {bubbles: true}));
+        element.dispatchEvent(new Event('change', {bubbles: true}));
+        fixture.detectChanges();
+        await fixture.whenStable();
+        expect(component.enddate).toEqual(new Date(2032, 3, 5));
+        expect(component.recurringSettings.untilDate).toBe('2032-04-05');
+        component.hideSettings = true;
+        component.markForCheck();
+        fixture.detectChanges();
+        expect((await revealUntil()).value).toBe('4/5/2032');
+        const service = TestBed.inject(AppointmentsService);
+        service.addAppointment(component.appointment);
+        const ics = service.getICalString().replace(/\r?\n[ \t]/g, '');
+        const rule = ics.split(/\r?\n/).find(line => line.startsWith('RRULE:'));
+        expect(rule).toContain('FREQ=DAILY');
+        expect(rule).toContain('UNTIL=20320405T000000');
     });
 
     it('should return countries', () => {

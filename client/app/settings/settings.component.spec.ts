@@ -1,6 +1,6 @@
 import { inject, ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 import { RouterTestingModule } from '@angular/router/testing';
 import { SettingsComponent } from './settings.component';
 import { StorageService } from '../storage/storage.service';
@@ -12,8 +12,8 @@ describe('SettingsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ SettingsComponent, TranslateModule.forRoot(), ReactiveFormsModule, RouterTestingModule ],
-      providers: [ { provide: StorageService, useFactory: selectStorageService } ]
+      imports: [ SettingsComponent, ReactiveFormsModule, RouterTestingModule ],
+      providers: [ provideTranslateService(), { provide: StorageService, useFactory: selectStorageService } ]
     })
     .compileComponents();
   });

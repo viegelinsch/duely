@@ -7,7 +7,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 
@@ -19,6 +19,7 @@ import { Subscription } from 'rxjs';
   selector: 'rac-impress',
   standalone: true,
   templateUrl: './legal.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./legal.component.scss']
 })
 export class LegalComponent implements OnDestroy {

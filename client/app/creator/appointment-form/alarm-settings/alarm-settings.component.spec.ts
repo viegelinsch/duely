@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, inject } from '@angular/core/testing';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 import { StorageService } from '../../../storage/storage.service';
-import moment from 'moment-timezone';
+import { subMinutes } from 'date-fns';
 import { AlarmData } from '../../alarmData';
 
 import { AlarmSettingsComponent } from './alarm-settings.component';
@@ -14,8 +14,8 @@ describe('AlarmSettingsComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            imports: [TranslateModule.forRoot(), ReactiveFormsModule, AlarmSettingsComponent],
-            providers: [StorageService, AppointmentsService]
+            imports: [ReactiveFormsModule, AlarmSettingsComponent],
+            providers: [provideTranslateService(), StorageService, AppointmentsService]
         })
             .compileComponents();
     });
@@ -50,7 +50,7 @@ describe('AlarmSettingsComponent', () => {
             triggerUnit: 'MINUTES',
             repeat: 1,
             intervalMinutes: 5,
-            trigger: moment(component.appointment.start).subtract(10, 'MINUTES' as unknown as moment.unitOfTime.DurationConstructor).toDate(),
+            trigger: subMinutes(component.appointment.start, 10),
             interval: 5 * 60
         };
         vi.spyOn(component.alarms, 'push');
@@ -68,7 +68,7 @@ describe('AlarmSettingsComponent', () => {
             triggerUnit: 'MINUTES',
             repeat: 1,
             intervalMinutes: 5,
-            trigger: moment(component.appointment.start).subtract(10, 'MINUTES' as unknown as moment.unitOfTime.DurationConstructor).toDate(),
+            trigger: subMinutes(component.appointment.start, 10),
             interval: 5 * 60
         };
 
@@ -95,7 +95,7 @@ describe('AlarmSettingsComponent', () => {
             repeat: 1,
             intervalMinutes: 5
         };
-        const expectedTrigger = moment(component.appointment.start).subtract(10, 'MINUTES' as unknown as moment.unitOfTime.DurationConstructor).toDate();
+        const expectedTrigger = subMinutes(component.appointment.start, 10);
         component.recalculateTrigger(defaultAlarm);
         expect(defaultAlarm.trigger).toEqual(expectedTrigger);
 

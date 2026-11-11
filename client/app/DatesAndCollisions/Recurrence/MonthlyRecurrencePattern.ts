@@ -1,4 +1,7 @@
-import moment from 'moment';
+import {
+  addDays, addWeeks, differenceInCalendarMonths, getDate, getISODay, getMonth, isLastDayOfMonth, startOfMonth,
+  subDays, subWeeks
+} from 'date-fns';
 import { RecurrencePattern } from './RecurrencePattern';
 import { EventCollisionData } from '../EventCollisionData';
 
@@ -40,7 +43,7 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
      * @param date          The date to check.
      */
     private lastDayOfMonth(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
-        if (+moment(date).endOf('month').toDate().setHours( 0, 0, 0, 0) === +moment(date).toDate().setHours( 0, 0, 0, 0)) {
+        if (isLastDayOfMonth(date) === true) {
             return this.isMatchOfInterval(eventData, date);
         }
 
@@ -57,19 +60,19 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
         const factorPart: string = byDayString.slice(0, index);
         const factor: number = Number(factorPart) === 0 ?  1 : Number(factorPart);
 
-        if (moment(date).isoWeekday() === this.getIsoWeekday(dayPart)) {
-            const month: number = moment(date).get('month');
+        if (getISODay(date) === this.getIsoWeekday(dayPart)) {
+            const month: number = getMonth(date);
 
             let counter = 0;
             let d = date;
             if (factor >= 0) {
-                while (moment(d).get('month') === month) {
-                    d = moment(d).subtract(1, 'week').toDate();
+                while (getMonth(d) === month) {
+                    d = subWeeks(d, 1);
                     counter++;
                 }
             } else {
-                while (moment(d).get('month') === month) {
-                    d = moment(d).add(1, 'week').toDate();
+                while (getMonth(d) === month) {
+                    d = addWeeks(d, 1);
                     counter--;
                 }
             }
@@ -91,25 +94,25 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
             let counter = 0;
 
             if (eventData.repeating!.bySetPos! >= 0) {
-                const month: number = moment(date).get('month');
+                const month: number = getMonth(date);
 
                 let d = date;
-                while (moment(d).get('month') === month) {
+                while (getMonth(d) === month) {
                     if (this.isIn(eventData.repeating!.byDay!, d) === true) {
 
                         counter++;
                     }
-                    d = moment(d).subtract(1, 'day').toDate();
+                    d = subDays(d, 1);
                 }
             } else {
-               const month: number = moment(date).get('month');
+               const month: number = getMonth(date);
 
                 let d = date;
-                while (moment(d).get('month') === month) {
+                while (getMonth(d) === month) {
                     if (this.isIn(eventData.repeating!.byDay!, d) === true) {
                         counter--;
                     }
-                    d = moment(d).add(1, 'day').toDate();
+                    d = addDays(d, 1);
                 }
             }
 
@@ -125,7 +128,7 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
     * @return true, true if the intervall is right
     */
     private monthly(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
-        if (moment(date).date() === moment(eventData.start).date()) {
+        if (getDate(date) === getDate(eventData.start)) {
 
             return this.isMatchOfInterval(eventData, date);
         }
@@ -158,12 +161,12 @@ export class MonthlyRecurrencePattern extends RecurrencePattern {
     }
 
   /** Is given start and end date
-    * @return moment of start, and the month
+    * @return the number of whole months between the start month and the date
     */
     private monthsBetween(start: Date, end: Date): number {
-        const endMoment = moment(end);
-        const startMoment = moment(start).startOf('month');
-
-        return endMoment.diff(startMoment, 'months');
+        // The previous Moment `diff(..., 'months')` measured from the start of
+        // the start month and truncated the partial month, which is exactly the
+        // calendar-month distance.
+        return differenceInCalendarMonths(end, startOfMonth(start));
     }
 }

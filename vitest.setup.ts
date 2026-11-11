@@ -9,6 +9,23 @@
  * target, so it cannot reach the application bundle.
  *
  * ---------------------------------------------------------------------------
+ * VITEST 5 STATUS (A2, 2026-11-10)
+ * ---------------------------------------------------------------------------
+ * Vitest 5.1.0 fixes this upstream: its jsdom environment lists `localStorage`
+ * and `sessionStorage` in `OTHER_KEYS` (the `getWindowKeys` allowlist), so on
+ * Node >= 26 jsdom's working implementations are installed and this file takes
+ * the "already the jsdom implementation" branch for both keys. It is kept as a
+ * capability-checked guard, not because 5.1.0 needs it: it costs two property
+ * reads, and it still protects a runner whose allowlist regresses, a future
+ * Node that changes the shadow, or any environment that publishes
+ * `globalThis.jsdom` with different storage semantics. The paragraphs below
+ * describe the 3.x/4.x behaviour that motivated the file, including the quoted
+ * `keysArray` shape, and the 24/47 numbers are historical (the current suite is
+ * recorded in `docs/TESTING_GUIDE.md` §5). A no-setup control run on Vitest 5 is
+ * the evidence that storage works natively; see that run before assuming this
+ * file is what makes the storage specs pass.
+ *
+ * ---------------------------------------------------------------------------
  * THE MECHANISM THIS TARGETS
  * ---------------------------------------------------------------------------
  * Two independent behaviours combine into a broken test environment:

@@ -7,8 +7,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component } from '@angular/core';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 
 /**
@@ -18,8 +18,9 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'rac-not-found',
   standalone: true,
-  imports: [TranslateModule, RouterLink],
+  imports: [TranslatePipe, RouterLink],
   templateUrl: './notFound.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./notFound.component.scss']
 })
 export class NotFoundComponent {

@@ -1,5 +1,5 @@
 import {ComponentFixture, TestBed, inject } from '@angular/core/testing';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 import { StorageService } from '../../../storage/storage.service';
 import { AppointmentsService } from '../../appointments.service';
 import { AdvancedSettingsComponent } from './advanced-settings.component';
@@ -11,8 +11,8 @@ describe('AdvancedSettingsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ AdvancedSettingsComponent, TranslateModule.forRoot(), ReactiveFormsModule ],
-      providers: [ StorageService, AppointmentsService ]
+      imports: [ AdvancedSettingsComponent, ReactiveFormsModule ],
+      providers: [ provideTranslateService(), StorageService, AppointmentsService ]
     })
     .compileComponents();
   });
@@ -50,4 +50,41 @@ describe('AdvancedSettingsComponent', () => {
   }));
 
   /* TODO: test createForm / ngOnOnit & ngOnChanges */
+});
+
+describe('AdvancedSettingsComponent with a stored legacy time-zone alias', () => {
+  let component: AdvancedSettingsComponent;
+  let fixture: ComponentFixture<AdvancedSettingsComponent>;
+
+  beforeEach(async () => {
+    localStorage.setItem('settings', JSON.stringify({ timeZone: 'US/Eastern' }));
+    await TestBed.configureTestingModule({
+      imports: [ AdvancedSettingsComponent, ReactiveFormsModule ],
+      providers: [ provideTranslateService(), StorageService, AppointmentsService ]
+    })
+    .compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(AdvancedSettingsComponent);
+    component = fixture.componentInstance;
+    component.appointment = TestBed.inject(AppointmentsService).defaultAppointment();
+    component.hideSettings = false;
+    fixture.detectChanges();
+  });
+
+  afterEach(() => localStorage.removeItem('settings'));
+
+  it('offers the stored alias and selects it instead of a blank control', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const select = host.querySelector<HTMLSelectElement>('select[formControlName="timezone"]');
+    if (!select) {
+      throw new Error('The time-zone select did not render');
+    }
+    const values = Array.from(select.options).map((option) => option.value);
+    expect(values).toContain('US/Eastern');
+    expect(select.value).toEqual('US/Eastern');
+    expect(component.appointment.timezone).toEqual('US/Eastern');
+    expect(component.appointment.floating).toBeUndefined();
+  });
 });

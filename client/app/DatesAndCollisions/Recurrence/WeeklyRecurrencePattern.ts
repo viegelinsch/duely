@@ -1,4 +1,4 @@
-import moment from 'moment';
+import { startOfWeek } from 'date-fns';
 import { RecurrencePattern } from './RecurrencePattern';
 import { EventCollisionData } from '../EventCollisionData';
 
@@ -31,9 +31,12 @@ export class WeeklyRecurrencePattern extends RecurrencePattern {
     }
 
     private weeksBetween(start: Date, end: Date): number {
-        const endMoment = moment(end);
-        const startMoment = moment(start).startOf('week');
+        // Same rule as the previous Moment `diff(..., 'weeks')`: the start is
+        // moved to the host week start (Sunday), the DST offset difference is
+        // removed, and the remaining whole weeks are truncated.
+        const startWeek = startOfWeek(start);
+        const zoneDelta = (end.getTimezoneOffset() - startWeek.getTimezoneOffset()) * 60000;
 
-        return endMoment.diff(startMoment, 'weeks');
+        return Math.trunc((end.getTime() - startWeek.getTime() - zoneDelta) / 604800000);
     }
 }

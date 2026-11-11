@@ -1,6 +1,6 @@
 type HolidaysCountry = { country: string; state?: string; region?: string };
 type HolidaysHoliday = { date: string; start: Date; end: Date; name: string; type: string; rule: string };
-import moment from 'moment-timezone';
+import { addDays, getISODay, getYear, isAfter, isBefore, isSameDay, parseISO, startOfDay, subDays } from 'date-fns';
 import { Collision } from '../CollisionDetector';
 import { EventCollisionData } from '../EventCollisionData';
 import { HolidayCatalogService } from '../HolidayCatalogService';
@@ -44,10 +44,10 @@ export abstract class RecurrencePattern {
         if (this.locations !== undefined) {
             const holidayCatalog = new HolidayCatalogService();
 
-            let year: number = moment(eventData.start).year();
+            let year: number = getYear(eventData.start);
             const until = (eventData.repeating!.until === undefined)
                 ? new Date('2080-12-31') : eventData.repeating!.until;
-            const untilYear = moment(until).year();
+            const untilYear = getYear(until);
 
             while (year <= untilYear) {
                 let holidays: HolidaysHoliday[] = holidayCatalog.getPublicHolidays(this.locations, this.language, year);
@@ -57,10 +57,16 @@ export abstract class RecurrencePattern {
                     holidays = this.removeDuplicates(holidays, 'date');
                 }
 
+                const startDay = startOfDay(eventData.start);
+                const untilDay = startOfDay(until);
                 for (const holiday of holidays) {
+                    // `holiday.date` is a date-only string, which both libraries
+                    // read as local midnight; the old `isBefore`/`isAfter` calls
+                    // compared at day granularity, so the operands are truncated
+                    // to local midnight here as well.
                     if (holiday.type === 'public'
-                        && moment(holiday.date).isBefore(eventData.start, 'days') === false
-                        && moment(holiday.date).isAfter(until, 'days') === false) {
+                        && isBefore(parseISO(holiday.date), startDay) === false
+                        && isAfter(parseISO(holiday.date), untilDay) === false) {
                         let d: Date = holiday.start;
                         const length = this.daysBetween(eventData.start, eventData.end);
 
@@ -76,7 +82,7 @@ export abstract class RecurrencePattern {
                                 pushDate.setHours( h, m, s, ms);
 
                                 if (collisions.length > 0) {
-                                    if (moment(collisions[collisions.length - 1].date).isSame(new Date(holiday.date), 'days') === false) {
+                                    if (isSameDay(collisions[collisions.length - 1].date, new Date(holiday.date)) === false) {
                                         collisions.push({date: pushDate, reason: holiday.name});
                                     }
                                 } else {
@@ -88,7 +94,7 @@ export abstract class RecurrencePattern {
                                 return collisions;
                             }
 
-                            d = moment(d).subtract(1, 'days').toDate();
+                            d = subDays(d, 1);
                         }
                     }
                 }
@@ -118,12 +124,12 @@ export abstract class RecurrencePattern {
 
                         if (isMatchResult.match === true) {
                             if (collisions.length > 0) {
-                                if (moment(collisions[collisions.length - 1].date).isSame(moment(d).add(i, 'days').toDate(), 'days')
+                                if (isSameDay(collisions[collisions.length - 1].date, addDays(d, i))
                                     === false) {
-                                    collisions.push({date: moment(d).add(i, 'days').toDate(), reason: reason});
+                                    collisions.push({date: addDays(d, i), reason: reason});
                                 }
                             } else {
-                                collisions.push({date: moment(d).add(i, 'days').toDate(), reason: reason});
+                                collisions.push({date: addDays(d, i), reason: reason});
                             }
                         }
 
@@ -131,7 +137,7 @@ export abstract class RecurrencePattern {
                             return collisions;
                         }
 
-                        d = moment(d).subtract(1, 'days').toDate();
+                        d = subDays(d, 1);
                     }
                 }
             }
@@ -169,20 +175,32 @@ export abstract class RecurrencePattern {
       * @return      number of days.
       */
     protected daysBetween(start: Date, end: Date): number {
-        const a = moment(start);
-        const b = moment(end);
-
-        return b.diff(a, 'days') + 1;
+        // Day distance of the previous Moment `end.diff(start, 'days')`: whole
+        // days truncated towards zero, with the host DST offset difference
+        // removed so a 23- or 25-hour local day still counts as one. A calendar
+        // difference would not be equivalent: an overnight event (22:00 to
+        // 02:00) is a single day pair here, not two.
+        const zoneDelta = (end.getTimezoneOffset() - start.getTimezoneOffset()) * 60000;
+        const days = Math.trunc((end.getTime() - start.getTime() - zoneDelta) / 86400000);
+        return days + 1;
     }
 
      /**
-      * Remove the time from a date.
+      * Remove the time from a date, without mutating the supplied Date.
+      *
+      * The user-exclusion branch compares the exclusion day against the event
+      * start day and afterwards copies the event's wall-clock time onto the
+      * collision date. Truncating `eventData.start` in place during the day
+      * comparison therefore dropped that time (midnight EXDATE entries and
+      * midnight user-exclusion collisions). Callers keep their own values and
+      * receive a truncated copy instead.
       * @param date  A date.
       * @return      The date without time.
       */
     protected dateWithoutTime(date: Date): Date {
-        date.setHours(0, 0, 0, 0);
-        return date;
+        const withoutTime = new Date(date);
+        withoutTime.setHours(0, 0, 0, 0);
+        return withoutTime;
     }
 
     /**
@@ -235,7 +253,7 @@ export abstract class RecurrencePattern {
      */
     protected isIn(weekdays: string[], date: Date): boolean {
         for (const weekday of weekdays) {
-            if (this.getIsoWeekday(weekday) === moment(date).isoWeekday()) {
+            if (this.getIsoWeekday(weekday) === getISODay(date)) {
                 return true;
             }
         }

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { TranslateModule } from '@ngx-translate/core';
+import { provideTranslateService } from '@ngx-translate/core';
 
 import { LegalComponent } from './legal.component';
 
@@ -10,7 +10,8 @@ describe('LegalComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ LegalComponent, TranslateModule.forRoot() ]
+      imports: [ LegalComponent ],
+      providers: [ provideTranslateService() ]
     })
     .compileComponents();
   });

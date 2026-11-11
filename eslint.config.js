@@ -74,7 +74,7 @@
  * is deliberately NOT enabled: the spec scopes template linting to the parser
  * and never mentions accessibility, and enabling a tier the plan did not scope
  * would inflate the baseline Phase 10 inherits. Adding it is a one-line spread
- * of `ngTemplatePlugin.configs.accessibility.rules` into the template block.
+ * of `angularEslint.configs.templateAccessibility.rules` into the template block.
  *
  * ---------------------------------------------------------------------------
  * DEPRECATION LINTING
@@ -110,6 +110,7 @@
 
 const js = require('@eslint/js');
 const tseslint = require('typescript-eslint');
+const angularEslint = require('angular-eslint');
 const ngPlugin = require('@angular-eslint/eslint-plugin');
 const ngTemplatePlugin = require('@angular-eslint/eslint-plugin-template');
 const ngTemplateParser = require('@angular-eslint/template-parser');
@@ -141,13 +142,14 @@ const tsRecommendedTypeChecked = mergePresetRules(
 // no type information required).
 const tsRecommended = mergePresetRules(tseslint.configs.recommended);
 
-// angular-eslint publishes its presets in the legacy eslintrc shape
-// (`{ parser: "<string>", plugins: ["<string>"], rules: {...} }`) because the
-// flat-config conversion lives in the `angular-eslint` umbrella package, which
-// is not a dependency here. Only the rule maps are consumed; the parser and
-// plugin registrations are wired up by hand below.
-const ngTsRecommended = ngPlugin.configs.recommended.rules;
-const ngTemplateRecommended = ngTemplatePlugin.configs.recommended.rules;
+// angular-eslint 22 no longer exports presets from the plugin packages: the
+// `configs.recommended` maps that v21 still carried in the legacy eslintrc shape
+// are gone, and the presets now live only in the `angular-eslint` umbrella
+// package as flat configs. Only the rule maps are consumed; the parser and plugin
+// registrations stay wired up by hand below, so the tiers keep their measured
+// rule counts (12 TypeScript rules, 3 template rules).
+const ngTsRecommended = angularEslint.configs.tsRecommended.rules;
+const ngTemplateRecommended = angularEslint.configs.templateRecommended.rules;
 
 // Node globals available to an ESM script. `__dirname`, `require`, `module` and
 // `exports` are deliberately ABSENT from this list: they do not exist in ESM, so

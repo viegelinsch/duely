@@ -7,8 +7,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Component } from '@angular/core';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 
@@ -19,8 +19,9 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'rac-about',
   standalone: true,
-  imports: [TranslateModule, MatButtonModule, RouterLink],
+  imports: [TranslatePipe, MatButtonModule, RouterLink],
   templateUrl: './about.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./about.component.scss']
 })
 export class AboutComponent {

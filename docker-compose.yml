@@ -31,7 +31,15 @@ services:
       - NODE_ENV=production
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      # The production stage installs no curl, so the previous probe could never
+      # pass. Node is the runtime the image actually ships: ask the server for the
+      # root document and treat only a 2xx answer as ready.
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:8000/').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))
       interval: 30s
       timeout: 10s
       retries: 3

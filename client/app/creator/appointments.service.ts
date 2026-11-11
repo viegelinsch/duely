@@ -11,12 +11,49 @@ import { StorageService } from '../storage/storage.service';
 import { CollisionDetector, Collision } from '../DatesAndCollisions/CollisionDetector';
 import { EventCollisionData } from '../DatesAndCollisions/EventCollisionData';
 
-import ical, { ICalCalendar, ICalEvent, ICalEventData, ICalAlarmData, ICalRepeatingOptions } from 'ical-generator';
+import ical, { ICalCalendar, ICalEvent, ICalEventData, ICalEventJSONData, ICalAlarmData } from 'ical-generator';
 type HolidaysCountry = { country: string; state?: string; region?: string };
-type ICalWeekday = string; // Weekday type for ical-generator
+// ical-generator 11 validates BYDAY against its ICalWeekday enum and no longer
+// accepts the RFC ordinal prefix ('2SA'). The same rule is expressed with
+// BYDAY + BYSETPOS, which the guard matrix accepts as the equivalent form.
+const WEEKDAY_BY_INDEX = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 import { Appointment } from './appointment';
 import { AlarmData } from './alarmData';
-import moment from 'moment-timezone';
+import { alarmTrigger } from './alarm-trigger';
+import { addWallHours, formatWallDate, wallDateFromParts } from '../shared/wall-clock';
+
+/**
+ * ical-generator's `toJSON()` payload declares dates as ISO strings, while the
+ * collision detector runs on `Date` values. This adapter is the single place
+ * that converts the serialised event into {@link EventCollisionData}; it
+ * replaces the previous blanket `as unknown as` cast, so a field change in a
+ * future major fails here instead of leaking into the recurrence patterns.
+ */
+function toCollisionData(data: ICalEventJSONData): EventCollisionData {
+  const asDate = (value: unknown): Date => value instanceof Date ? value : new Date(String(value));
+  const asNumber = (value: unknown): number | undefined =>
+    value === null || value === undefined ? undefined : Number(value);
+  const asNumbers = (value: unknown): number[] | undefined => {
+    if (value === null || value === undefined) return undefined;
+    return Array.isArray(value) ? value.map(item => Number(item)) : [Number(value)];
+  };
+  const repeating = typeof data.repeating === 'object' && data.repeating !== null ? data.repeating : null;
+  return {
+    start: asDate(data.start),
+    end: data.end == null ? asDate(data.start) : asDate(data.end),
+    repeating: repeating === null ? null : {
+      freq: String(repeating.freq),
+      interval: asNumber(repeating.interval) ?? 1,
+      count: asNumber(repeating.count),
+      until: repeating.until === undefined ? undefined : asDate(repeating.until),
+      byDay: repeating.byDay?.map(day => String(day)),
+      byMonth: asNumbers(repeating.byMonth),
+      byMonthDay: asNumbers(repeating.byMonthDay),
+      bySetPos: asNumbers(repeating.bySetPos)?.[0],
+      exclude: repeating.exclude?.map(asDate)
+    }
+  };
+}
 /**
  * This Service holds and grants access onto multiple appointments.
  */
@@ -85,13 +122,15 @@ export class AppointmentsService {
  * creats the format for the an appointment in the formular , returns the format
  */
   defaultAppointment(): Appointment {
-    const offset = moment().utcOffset();
-    const start = moment.utc().add(offset, 'minutes').startOf('hour');
-    const end = start.clone().add(1, 'hour');
+    // Default start: the next full hour of the *host* wall clock, stored in the
+    // UTC fields of the model value (see shared/wall-clock.ts).
+    const now = new Date();
+    const start = wallDateFromParts(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+    const end = addWallHours(start, 1);
     const app = <Appointment>{
       summary: '',
-      start: start.toDate(),
-      end: end.toDate(),
+      start: start,
+      end: end,
       description: '',
       status: 'confirmed',
       timezone: 'floating',
@@ -109,18 +148,25 @@ export class AppointmentsService {
         repByMonthly: 'MONTH',
         repByYearly: 'DAYMONTHYEAR',
         count: 1,
-        untilDate: moment.utc().format('YYYY-MM-DD'),
+        untilDate: formatWallDate(now),
         exclusions: [],
       },
       valid: [false, true, true, true]
     };
     return app;
   }
-/** gets Month and year, gives out the numbers of days that given month has */
+  /**
+   * Number of days in the given month.
+   *
+   * `month` is the zero-based `Date#getMonth()` index, like every other month
+   * value in this service. The previous implementation compared against
+   * one-based month numbers, so every caller (which passes `getMonth()`) read
+   * the wrong bucket: February returned 31, April 29/28, October 31.
+   */
   private getDaysInMonth(month: number, year: number): number {
-    if (month === 4 || month === 6 || month === 9 || month === 11) {
+    if (month === 3 || month === 5 || month === 8 || month === 10) {
       return 30;
-    } else if (month === 2) {
+    } else if (month === 1) {
       if ((year % 4 === 0 && year % 100 !== 0) || (year % 4 === 0 && year % 100 === 0 && year % 400 === 0)) {
         return 29;
       } else {
@@ -150,6 +196,13 @@ export class AppointmentsService {
     const start = new Date(event.start);
     const end = new Date(event.end!);
 
+    // Duely stores 'floating' as its sentinel for "no timezone" (see
+    // defaultAppointment and the advanced settings form). ical-generator 8+
+    // treats every string as a TZID and would emit DTSTART;TZID=floating, so the
+    // sentinel is mapped onto the library's explicit floating flag instead.
+    const timezone = event.timezone === 'floating' ? undefined : event.timezone;
+    const floating = event.timezone === 'floating' ? true : event.floating;
+
     const events: ICalEvent[] = [];
 
     // add eventss to calendar
@@ -165,8 +218,8 @@ export class AppointmentsService {
         description: event.description,
         allDay: event.allDay,
         status: event.status,
-        timezone: event.timezone,
-        floating: event.floating
+        timezone,
+        floating
       });
 
     } else if (event.recurringSettings.frequency === 'DAILY' || (event.recurringSettings.frequency === 'MONTHLY' &&
@@ -189,8 +242,8 @@ export class AppointmentsService {
           interval: event.recurringSettings.interval,
           until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
         },
-        timezone: event.timezone,
-        floating: event.floating
+        timezone,
+        floating
       });
 
     } else if (event.recurringSettings.frequency === 'WEEKLY') {
@@ -242,8 +295,8 @@ export class AppointmentsService {
           interval: event.recurringSettings.interval,
           until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
         },
-        timezone: event.timezone,
-        floating: event.floating
+        timezone,
+        floating
       });
 
     } else if (event.recurringSettings.frequency === 'MONTHLY') {
@@ -265,12 +318,14 @@ export class AppointmentsService {
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       } else if (event.recurringSettings.repByMonthly === 'WEEK') {
-        const count = (start.getDate() - (start.getDate() % 7)) / 7 + 1;
-        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
+        // One-based ordinal of the start weekday inside its month: day 7, 14,
+        // 21 and 28 are the 1st, 2nd, 3rd and 4th occurrence, not the 2nd, 3rd,
+        // 4th and 5th.
+        const count = Math.floor((start.getDate() - 1) / 7) + 1;
         events[0] = createEvent({
           start: event.start,
           end: event.end,
@@ -282,18 +337,20 @@ export class AppointmentsService {
           allDay: event.allDay,
           repeating: {
             freq: event.recurringSettings.frequency,
-            byDay: [weekdays[event.start.getDay()]],
+            byDay: [WEEKDAY_BY_INDEX[event.start.getDay()]],
+            bySetPos: count,
             count: event.recurringSettings.ends === 'COUNT' ? event.recurringSettings.count : undefined,
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       } else if (event.recurringSettings.repByMonthly === 'WEEKINV') {
-        const days = this.getDaysInMonth(event.start.getDate(), event.start.getFullYear()) - event.start.getDate();
+        // The reverse ordinal needs the month length, so the helper takes the
+        // month index (0-11), not the day of month.
+        const days = this.getDaysInMonth(event.start.getMonth(), event.start.getFullYear()) - event.start.getDate();
         const count = -(((days - (days % 7)) / 7) + 1);
-        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
         events[0] = createEvent({
           start: event.start,
           end: event.end,
@@ -305,13 +362,14 @@ export class AppointmentsService {
           allDay: event.allDay,
           repeating: {
             freq: event.recurringSettings.frequency,
-            byDay: [weekdays[event.start.getDay()]],
+            byDay: [WEEKDAY_BY_INDEX[event.start.getDay()]],
+            bySetPos: count,
             count: event.recurringSettings.ends === 'COUNT' ? event.recurringSettings.count : undefined,
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       } else if (event.recurringSettings.repByMonthly === 'WORK') {
         const currentDate = new Date(start);
@@ -328,12 +386,7 @@ export class AppointmentsService {
           }
           currentDate.setDate(currentDate.getDate() + 1);
         }
-        let daysArray = [];
-        if (isWorkDay) {
-          daysArray = ['MO', 'TU', 'WE', 'TH', 'FR'];
-        } else {
-          daysArray = ['SA', 'SU'];
-        }
+        const daysArray = isWorkDay ? ['MO', 'TU', 'WE', 'TH', 'FR'] : ['SA', 'SU'];
         events[0] = createEvent({
           start: event.start,
           end: event.end,
@@ -351,14 +404,16 @@ export class AppointmentsService {
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       }else if (event.recurringSettings.repByMonthly === 'WORKINV') {
         const currentDate = new Date(start);
+        // `start` is already in the target month, so jumping straight to the
+        // month's last day is safe: the previous ordering set the day first and
+        // then corrected the month, which had already rolled the date forward
+        // (February 20th became March 3rd before `setMonth` pulled it back).
         currentDate.setDate(this.getDaysInMonth(start.getMonth(), start.getFullYear()));
-        currentDate.setMonth(start.getMonth());
-        currentDate.setFullYear(start.getFullYear());
         const isWorkDay = start.getDay() !== 0 && start.getDay() !== 6;
         let workdays = 1;
         while (currentDate.valueOf() > start.valueOf()) {
@@ -369,12 +424,7 @@ export class AppointmentsService {
           }
           currentDate.setDate(currentDate.getDate() - 1);
         }
-        let daysArray = [];
-        if (isWorkDay) {
-          daysArray = ['MO', 'TU', 'WE', 'TH', 'FR'];
-        } else {
-          daysArray = ['SA', 'SU'];
-        }
+        const daysArray = isWorkDay ? ['MO', 'TU', 'WE', 'TH', 'FR'] : ['SA', 'SU'];
         events[0] = createEvent({
           start: event.start,
           end: event.end,
@@ -392,8 +442,8 @@ export class AppointmentsService {
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       }
 
@@ -401,8 +451,10 @@ export class AppointmentsService {
 
       // add multiple eventss to calendar which repeat every x-th weekday day of a year (Every second friday of the year)
       if (event.recurringSettings.repByYearly === 'WEEKYEAR') {
-        const count = (start.getDate() - (start.getDate() % 7)) / 7 + 1;
-        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
+        // One-based ordinal of the start weekday inside its month: day 7, 14,
+        // 21 and 28 are the 1st, 2nd, 3rd and 4th occurrence, not the 2nd, 3rd,
+        // 4th and 5th.
+        const count = Math.floor((start.getDate() - 1) / 7) + 1;
         events[0] = createEvent({
           start: event.start,
           end: event.end,
@@ -414,14 +466,15 @@ export class AppointmentsService {
           allDay: event.allDay,
           repeating: {
             freq: event.recurringSettings.frequency,
-            byDay: [weekdays[event.start.getDay()]],
+            byDay: [WEEKDAY_BY_INDEX[event.start.getDay()]],
+            bySetPos: count,
             byMonth: [start.getMonth() + 1],
             count: event.recurringSettings.ends === 'COUNT' ? event.recurringSettings.count : undefined,
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       } else if (event.recurringSettings.repByYearly === 'DAYMONTHYEARINV') {
         events[0] = createEvent({
@@ -442,13 +495,14 @@ export class AppointmentsService {
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       } else if (event.recurringSettings.repByYearly === 'WEEKINVYEAR') {
-        const days = this.getDaysInMonth(event.start.getDate(), event.start.getFullYear()) - event.start.getDate();
+        // The reverse ordinal needs the month length, so the helper takes the
+        // month index (0-11), not the day of month.
+        const days = this.getDaysInMonth(event.start.getMonth(), event.start.getFullYear()) - event.start.getDate();
         const count = -(((days - (days % 7)) / 7) + 1);
-        const weekdays = [count + 'SU', count + 'MO', count + 'TU', count + 'WE', count + 'TH', count + 'FR', count + 'SA'] as ICalWeekday[];
         events[0] = createEvent({
           start: event.start,
           end: event.end,
@@ -460,14 +514,15 @@ export class AppointmentsService {
           allDay: event.allDay,
           repeating: {
             freq: event.recurringSettings.frequency,
-            byDay: [weekdays[event.start.getDay()]],
+            byDay: [WEEKDAY_BY_INDEX[event.start.getDay()]],
+            bySetPos: count,
             byMonth: [start.getMonth() + 1],
             count: event.recurringSettings.ends === 'COUNT' ? event.recurringSettings.count : undefined,
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       } else if (event.recurringSettings.repByYearly === 'WORKYEAR') {
         const currentDate = new Date(start);
@@ -484,12 +539,7 @@ export class AppointmentsService {
           }
           currentDate.setDate(currentDate.getDate() + 1);
         }
-        let daysArray = [];
-        if (isWorkDay) {
-          daysArray = ['MO', 'TU', 'WE', 'TH', 'FR'];
-        } else {
-          daysArray = ['SA', 'SU'];
-        }
+        const daysArray = isWorkDay ? ['MO', 'TU', 'WE', 'TH', 'FR'] : ['SA', 'SU'];
         events[0] = createEvent({
           start: event.start,
           end: event.end,
@@ -508,14 +558,16 @@ export class AppointmentsService {
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       } else if (event.recurringSettings.repByYearly === 'WORKINVYEAR') {
         const currentDate = new Date(start);
+        // `start` is already in the target month, so jumping straight to the
+        // month's last day is safe: the previous ordering set the day first and
+        // then corrected the month, which had already rolled the date forward
+        // (February 20th became March 3rd before `setMonth` pulled it back).
         currentDate.setDate(this.getDaysInMonth(start.getMonth(), start.getFullYear()));
-        currentDate.setMonth(start.getMonth());
-        currentDate.setFullYear(start.getFullYear());
         const isWorkDay = start.getDay() !== 0 && start.getDay() !== 6;
         let workdays = 1;
         while (currentDate.valueOf() > start.valueOf()) {
@@ -526,12 +578,7 @@ export class AppointmentsService {
           }
           currentDate.setDate(currentDate.getDate() - 1);
         }
-        let daysArray = [];
-        if (isWorkDay) {
-          daysArray = ['MO', 'TU', 'WE', 'TH', 'FR'];
-        } else {
-          daysArray = ['SA', 'SU'];
-        }
+        const daysArray = isWorkDay ? ['MO', 'TU', 'WE', 'TH', 'FR'] : ['SA', 'SU'];
         events[0] = createEvent({
           start: event.start,
           end: event.end,
@@ -550,8 +597,8 @@ export class AppointmentsService {
             interval: event.recurringSettings.interval,
             until: event.recurringSettings.ends === 'UNTIL' ? event.recurringSettings.untilDate : undefined,
           },
-          timezone: event.timezone,
-          floating: event.floating
+          timezone,
+          floating
         });
       }
     }
@@ -573,27 +620,27 @@ export class AppointmentsService {
     this.collisions = [];
     // write collisions to excluded dates
     for (const ev of events) {
-      const repData = ev.repeating() as ICalRepeatingOptions | null;
-      const iCalEventData = ev.toJSON() as unknown as EventCollisionData;
+      // v7 leaked `Date` instances through this cast; v11 serialises `start`,
+      // `end` and `until` to ISO strings, so the payload must be adapted before
+      // the recurrence patterns see it.
+      const serialised = ev.toJSON();
+      const eventData = toCollisionData(serialised);
 
-      if (iCalEventData.repeating != null) {
+      if (eventData.repeating != null) {
         const collisionDetector = new CollisionDetector(holidayCountries, exclusionDates,
           this.StorageService.settings.language, this.translate.instant('EXCLUDED BY USER') as string);
-        const cols: Collision[] = collisionDetector.getCollisions(iCalEventData);
+        const cols: Collision[] = collisionDetector.getCollisions(eventData);
 
-        if (this.collisions.length === 0) {
-          this.collisions = cols;
-        } else {
-          this.collisions.concat(cols);
+        // `concat` returns a new array; the previous branch discarded the result
+        // whenever a second event existed.
+        this.collisions = this.collisions.concat(cols);
+        const exDates = cols.map(col => col.date);
+
+        // v11 emits an empty, malformed `EXDATE:` line when the exclusion set is
+        // empty, so only write back when the detector actually found collisions.
+        if (exDates.length > 0 && typeof serialised.repeating === 'object' && serialised.repeating !== null) {
+          ev.repeating({...serialised.repeating, exclude: exDates});
         }
-        const exDates = new Array<Date>();
-
-        for (const col of cols) {
-          exDates.push(col.date);
-        }
-
-        repData!.exclude = exDates;
-        ev.repeating(repData);
       }
     }
 
@@ -604,15 +651,16 @@ export class AppointmentsService {
           if ((val.repeat ?? 0) > 1) {
             events[i].createAlarm({
               type: val.type,
-              trigger: moment(start).clone().subtract(val.triggerDelay, val.triggerUnit as unknown as moment.unitOfTime.DurationConstructor).toDate(),
-              repeat: val.repeat,
-              interval: val.interval! > 0 ? (val.interval! * 60) : 1,
+              trigger: alarmTrigger(start, val),
+              // v11 requires the RFC 5545 repeat pair as an object; the flat
+              // `repeat`/`interval` numbers of v7 are rejected at runtime.
+              repeat: {times: val.repeat!, interval: val.interval! > 0 ? (val.interval! * 60) : 1},
               description: val.description,
             } as unknown as ICalAlarmData);
           } else {
             events[i].createAlarm({
               type: val.type,
-              trigger: moment(start).clone().subtract(val.triggerDelay, val.triggerUnit as unknown as moment.unitOfTime.DurationConstructor).toDate(),
+              trigger: alarmTrigger(start, val),
               description: val.description,
             } as unknown as ICalAlarmData);
           }

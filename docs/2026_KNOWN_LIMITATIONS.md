@@ -22,7 +22,10 @@ Sections **(a)–(g)** are the prescribed spine. Sections **(h)–(k)** carry (h
 The plan/reference retirement additions were checked against source at `f527f26`; the local handoff
 was reviewed against source at `889b3e5`. The complete 6,276-line local task board was reviewed at
 `74a271d`, including its terminal Phase 13 closure and later corrections to earlier OPEN records.
-Both migration cycles are complete; deferred work remains here or in `docs/TODO_UPGRADES.md`.
+Both migration cycles are complete. Upgrade prerequisites and upgrade-owned date/export repairs now
+live in `docs/TODO_UPGRADES.md`; the stable section labels below retain relocation pointers, not
+claims of resolution. Accepted and unrelated deferred work remains here. Preparing that execution
+plan does not authorize its implementation.
 These documentation reviews used existing verification records and did not rerun tests or browser checks.
 
 > **Line-number note.** Original closure citations were re-verified at `1f6fd97`; subsequent
@@ -31,67 +34,31 @@ These documentation reviews used existing verification records and did not rerun
 
 ---
 
-## (a) DEFERRED TO THE TEST-AND-DATE PHASE
+## (a) TEST-AND-DATE WORK — PARTLY RELOCATED TO THE UPGRADE PLAN
 
-Locked decision 3 ("no test work inside the migration cycle") and locked decision 9 ("no
-modernisation") keep the following loud and red. They are deferred to a future, user-initiated
-test-and-date phase, not lost. The recorded migration-closure baseline is **24 failed / 49 passed
-(73 total)**, failing-name md5 `172d78996b50c84e38211b529d76ab0b`; that partition must neither improve
-nor regress without separately authorized test work. Commit `74a271d` refreshed holiday fixtures to
-2032 and renamed the failing test; its focused run remained 1 failed / 2 passed. The full-suite
-partition and failing-name hash have not been remeasured since that authorized change.
+The migration's locked decisions 3 and 9 barred test work and modernisation within that completed
+cycle. The separately authorized upgrade cycle allows tests and necessary modernisation, but its
+execution still requires task-level approval. Upgrade-sensitive findings have been moved to
+`docs/TODO_UPGRADES.md` §2, which now owns their diagnosis, rationale, risks and acceptance criteria.
+Relocation does not mean repair, and the creator coverage decision in (a.3) remains separately gated.
 
-These restrictions describe the completed migration, not a permanent prohibition: decisions 1–2 in
-`docs/TODO_UPGRADES.md` allow test work and necessary modernisation in the separately authorized
-upgrade cycle. Unrelated documentation work does not authorize fixes or baseline changes.
+The recorded migration-closure baseline is **24 failed / 49 passed (73 total)**, failing-name md5
+`172d78996b50c84e38211b529d76ab0b`. Commit `74a271d` refreshed holiday fixtures to 2032 and renamed
+the failing test; its focused run stayed 1 failed / 2 passed. The full suite and hash have not been
+remeasured since that change. Upgrade task P0 must capture current evidence without overwriting
+historical evidence; no unrelated documentation task authorizes baseline changes.
 
-### (a.1) `saveAs` — 3 tests, `TypeError: Cannot redefine property: saveAs` (backlog §1(a), Q1)
+### (a.1) `saveAs` test seam — RELOCATED, NOT FIXED
 
-- **WHAT.** `web-storage.service.spec` (2 tests) and `electron-storage.service.spec` (1 test) fail
-  because `file-saver@2.0.5` is CJS-only (`main: dist/FileSaver.min.js`, no `module`/`exports`/`type`
-  field). esbuild inlines it and synthesises the module namespace with `defineProperty` omitting
-  `configurable`, so `vi.spyOn` cannot redefine the property. This is not a test-ordering defect.
-  Three options are recorded, none chosen:
-  1. validate `vi.mock('file-saver', …)` empirically before relying on it;
-  2. assert an observable side effect instead of the call;
-  3. introduce a thin injectable wrapper service around `saveAs`, shared by `WebStorageService` and
-     `ElectronStorageService` — better design, trivially mockable via TestBed providers, and it
-     removes a pattern the two specs currently duplicate.
-- **WHY ACCEPTED.** It is test work, barred by locked decision 3. The failures are loud, classified
-  and stable, so they cannot silently rot.
-- **RISK.** `vi.mock` may be **inert**: esbuild has already inlined the CJS module, so there may be no
-  module boundary left to intercept. An inert mock would produce a **silent false green** — strictly
-  worse than today's loud failure. Any future fix must validate the mock empirically before trusting
-  it.
-- **WHAT WOULD CHANGE THE DECISION.** A user waiver of decision 3 for these two spec files, plus
-  empirical proof that whichever option is chosen does not pass vacuously.
+Diagnosis and non-vacuous mock/side-effect requirements moved to `docs/TODO_UPGRADES.md` §2.1.
+Owner: A3 (Angular/test-runner alignment). This is upgrade-owned harness repair, not a requirement
+that every existing storage test be green before the first upgrade.
 
-### (a.2) `CollisionDetector.spec` — 1 test with TWO independent defects (backlog §1(b), Q2)
+### (a.2) Collision assertion defects — RELOCATED, NOT FIXED
 
-- **WHAT.** One spec, two separate bugs:
-  1. **Provably stale expectation.** `date-holidays` computes in the country's timezone identically
-     under `TZ=UTC` and `TZ=Europe/Berlin`, and `RecurrencePattern.ts` deliberately re-stamps the
-     holiday date with the event's time of day, while the spec asserts the raw library date. **No
-     `TZ` setting can satisfy the assertion** — it is not a timezone artefact.
-  2. **The assertion loops iterate `i` but assert on index `[0]`.** In
-     `client/app/DatesAndCollisions/CollisionDetector.spec.ts:49-52,82-85`, the user-date loop
-     checks only the first date and the holiday loop repeats one comparison 15 times, never checking
-     14 of the 15 expected holidays — including **Augsburger Friedensfest**, the entire reason the
-     second fixture location `{ country: 'de', state: 'by', region: 'a' }` exists.
-
-  The separate fixture refresh is **COMPLETE**: the user requested **2017 → 2032**, superseding the
-  parked 2037 proposal, and commit `74a271d` updated the seeds and all 15 holiday dates (`:15-20,55-71`).
-  Dates and Berlin-midnight offsets were independently checked against `date-holidays`, statutory/
-  calendar sources, Gregorian Easter calculation and `Intl.DateTimeFormat`. Spec type-checks passed;
-  the focused run retained the existing 1 failed / 2 passed partition. Neither defect above was fixed.
-- **WHY ACCEPTED.** Test work (decision 3). Fixing the index-0 loop will likely expose *more*
-  failures, so it needs a budget decision, not a drive-by fix. The authorized fixture refresh did not
-  authorize a collision-behaviour repair or assertion-loop changes.
-- **RISK.** The loop bug means 14 of 15 holiday assertions have never actually executed; the spec
-  gives false confidence about multi-location collision coverage. Blind year replacement can also
-  preserve invalid holiday dates or offsets.
-- **WHAT WOULD CHANGE THE DECISION.** A user-authorized test-and-date review with an agreed failure
-  budget for the newly-exposed assertions and independently checked fixtures for the chosen year.
+Diagnosis, the completed 2032 fixture provenance and all-date/reason verification moved to
+`docs/TODO_UPGRADES.md` §2.2. Owner: P1C, **before** date-holidays, ical-generator or date-library changes.
+The calendar-fixture refresh did not repair assertion loops or change collision-time policy.
 
 ### (a.3) `creator.component.spec` `saveText` — decided option C (backlog §1(d))
 
@@ -112,87 +79,31 @@ upgrade cycle. Unrelated documentation work does not authorize fixes or baseline
   resurface in the review); **B** — app-side model re-validation in `generateAndSaveICAL`
   (a Phase 3.x-class behavioural rework, barred by decision 9).
 
-### (a.4) Mixed `Moment | Date | string` representation of `untilDate` (backlog §2(g)-12, deviation D4)
+### (a.4) Mixed `untilDate` representations — RELOCATED, NOT FIXED
 
-- **WHAT.** The `untilDate` value is polymorphic across the code path: a `string` seed at rest
-  (`'YYYY-MM-DD'`), a local-midnight `Date` after any datepicker auto-snap, and a `Moment` in the
-  recurrence computation. It has zero current consumers that normalise it.
-- **WHY ACCEPTED.** Consolidating it is a date-handling refactor barred by decision 9 within the
-  migration cycle; it is a natural companion to the test-and-date phase that owns (a.1)–(a.3).
-- **RISK.** A future consumer that assumes one concrete type will mis-handle the other two; the
-  dual `formControlName="untilDate"` + `[(ngModel)]="enddate"` binding on the same control is the
-  same dual-binding debt class recorded as deviation D4.
-- **WHAT WOULD CHANGE THE DECISION.** The test-and-date phase normalising `untilDate` to a single
-  representation with a regression test.
+Full finding moved to `docs/TODO_UPGRADES.md` §2.4. P1F characterizes the existing boundaries;
+D2 normalized them during the date-library conversion, without an unrelated whole-form rewrite.
 
-### (a.5) Model-band anomaly: start time shifts 22:00 → 23:00 (backlog §2(g)-14)
+### (a.5) Reverse-date start-time anomaly — RELOCATED, NOT FIXED
 
-- **WHAT.** During a reverse end-date operation the start wall-clock time can shift from 22:00 to
-  23:00. Full diagnosis: `endDateListener`'s recompute-start branch compares **stale**
-  `appEnd`/`appStart` values captured *before* the preceding branch mutated the start, so the guard
-  fires on out-of-date inputs.
-- **WHY ACCEPTED.** Pre-existing — byte-identical in `98f603f` and its parent, **not** a `5a219bc`
-  regression. The candidate owner was the Phase 3.x appointment-form rework; that phase did not
-  absorb it, so it is deferred to the test-and-date phase.
-- **RISK.** A one-hour model-band error on a specific reverse-date interaction path. It is a model
-  defect that may not always be visible in the rendered view.
-- **WHAT WOULD CHANGE THE DECISION.** The appointment-form rework re-reading the post-branch-A start
-  inside branch B's guard, with a model-level (not view-level) regression test.
+Full finding and historical attribution moved to `docs/TODO_UPGRADES.md` §2.4. P1F supplies
+model-level coverage; D2 owns the stale-value repair, not the Angular-only upgrade.
 
-### (a.6) Nineteen deferred `appointments.service.spec` failures (Phase 6)
+### (a.6) Nineteen appointments-service failures — RELOCATED, NOT FIXED
 
-- **WHAT.** Phase 6 commit `201f166` unmasked 19 failures in this spec file, all still part of the
-  24-failure baseline. Together with the five tests in (a.1)–(a.3), these account for all 24:
+The 10 serialization, 7 ordinal and 2 ICS/timezone failures, their causes and prior null-guard
+repair moved to `docs/TODO_UPGRADES.md` §2.3. P1E establishes public-export guards; D1 owns
+ordinal/boundary repairs and contract-reviewed expectations. A package bump alone is not a repair.
 
-  | Group | Tests | Current failure |
-  |---|---|---|
-  | Recurring-event JSON expectations | 10 | `ical-generator` serializes `start`/`end` as ISO strings rather than `Date` objects; event-level timezone is `null` rather than inherited from the calendar. |
-  | Ordinal-weekday recurrence | 7 | Source constructs `byDay` values such as `'-3WE'`, which the current library rejects. The inverse branches also pass day-of-month, not month, to `getDaysInMonth()`. |
-  | ICS-string and simple-event expectations | 2 | Expected UTC `Z` suffix is absent; expected event-level `Europe/Berlin` timezone is `null`. The null-repeating crash that originally masked these assertions was **fixed** by `be16352`. |
+### (a.7) Serialized dates at the collision boundary — RELOCATED, NOT FIXED
 
-  Source sites: `client/app/creator/appointments.service.ts:273,296,405,451` (ordinal strings) and
-  `:294,449` (month argument). Representative assertions are in
-  `client/app/creator/appointments.service.spec.ts:170,233,252-254,294-296`.
-- **WHY ACCEPTED.** Tests and recurrence-behaviour changes are deferred under decisions 3 and 9.
-  The original Phase 6 classification survives in `201f166`; the two null-guard failures are
-  reclassified here from the recorded post-repair test output, not counted as an unresolved crash.
-- **RISK.** Ordinal-weekday recurring events can fail in production. Blindly changing JSON or ICS
-  expectations to match library output could hide timezone or recurrence regressions; the ten
-  serialization assertions also expose the production boundary issue in (a.7).
-- **WHAT WOULD CHANGE THE DECISION.** A user-initiated test-and-date phase that fixes ordinal
-  encoding/calculation and reviews date/timezone expectations against intended exported ICS
-  semantics, with non-vacuous regression coverage.
+Production defect moved to `docs/TODO_UPGRADES.md` §2.3. Owner: D1, following P1E regression
+coverage. Runtime date conversion must replace the cast; manually Date-valued fixtures are insufficient.
 
-### (a.7) Serialized event dates passed to Date-based collision code
+### (a.8) UNTIL picker hydration — RELOCATED, NOT FIXED
 
-- **WHAT.** `client/app/creator/appointments.service.ts:577` casts `ev.toJSON()` to
-  `EventCollisionData` without converting serialized dates back to `Date`. Collision code calls
-  `eventData.start.getHours()` and other Date methods in
-  `client/app/DatesAndCollisions/Recurrence/RecurrencePattern.ts:72-75,108-111`. Task #63 recorded
-  `TypeError: eventData.start.getHours is not a function` for recurring events carrying exclusions.
-  This is a production defect, **not only stale tests**; that observation is preserved here from the
-  retired task board.
-- **WHY ACCEPTED.** Pre-existing serialization drift, unchanged by the holiday-catalogue extraction;
-  its repair belongs to the deferred test-and-date phase. The type cast is not runtime conversion.
-- **RISK.** Affected recurring/exclusion exports can throw instead of producing ICS. Tests using
-  manually constructed Date-valued collision inputs do not cover this serialization boundary.
-- **WHAT WOULD CHANGE THE DECISION.** Normalize the event-to-collision boundary and verify real
-  `getICalString()` calls with recurring events, holiday exclusions and explicit excluded dates.
-
-### (a.8) UNTIL picker initially empty instead of restoring the model
-
-- **WHAT.** `RecurringSettingsComponent` initializes `enddate` to `null` and later assigns
-  `appointment.recurringSettings` without hydrating the picker from `untilDate`
-  (`client/app/creator/appointment-form/recurring-settings/recurring-settings.component.ts:101,133`).
-  The template binds both `formControlName="untilDate"` and `[(ngModel)]="enddate"` to the input
-  (`recurring-settings.component.html:145-149`). The first reveal can therefore be empty despite a
-  seeded or saved model date. This initialization defect is separate from the mixed types in (a.4).
-- **WHY ACCEPTED.** The original Phase 3.4 obligation was explicitly deferred by the recurrence
-  conversion (`8b1d40a`); date-model synchronization remains outside the completed migration.
-- **RISK.** The displayed UNTIL date does not reliably reflect the recurrence model; opening the
-  control can disturb the value through the retained dual binding.
-- **WHAT WOULD CHANGE THE DECISION.** Restore the picker from the model with calendar-day-safe
-  conversion, and test first reveal and reopening a saved appointment without changing its UNTIL.
+Full finding moved to `docs/TODO_UPGRADES.md` §2.4. P1F covers first reveal/reopening; D2 must
+restore the saved calendar day while retaining explicit OnPush notification.
 
 ### (a.9) Load-bearing reactive-form / `ngModel` dual bindings
 
@@ -266,19 +177,20 @@ upgrade cycle. Unrelated documentation work does not authorize fixes or baseline
   on `/` contain a real `<svg>` child).
 - **RISK.** None for users. The only risk is mis-reading the 44 as a production defect. It must
   **never** be documented as a user-facing limitation.
-- **WHAT WOULD CHANGE THE DECISION.** Nothing needs to. **G4's `npm test` icon count must still be
-  exactly 44** — the baseline contract is about not moving the test partition, and that is unchanged.
-  Adding `provideDuelyIcons()` to the 10 spec TestBeds would only silence cosmetic output and is
-  barred by decision 3.
+- **WHAT WOULD CHANGE THE DECISION.** No production repair is needed. The exact **44** count belongs
+  to the historical migration baseline, not a permanent gate for expanded upgrade tests. P0/A3 in
+  `docs/TODO_UPGRADES.md` must attribute warning-count changes to actual renders/harness changes,
+  not suppress diagnostics or treat these messages as user-facing errors. Adding icon providers
+  solely to silence output is not an upgrade prerequisite.
 
-### (b.3) Six CommonJS/AMD optimization-bailout specifiers (backlog §2(c))
+### (b.3) CommonJS/AMD optimization-bailout specifiers (backlog §2(c)) — five since I2, three since D2
 
-- **WHAT.** The production build reports CommonJS/AMD optimization bailouts for **six dependency
-  specifiers**: `moment-timezone`, `moment`, `file-saver`, `jalaali-js` (via `date-holidays-parser`
-  `Jalaali.js`), `deepmerge` (via `date-holidays-parser` `utils.js`) and `uuid-random` (via
-  `node_modules/ical-generator/dist/index.js`, which Webpack never reported). **Cite the dependencies,
-  never a count.**
-- **WHY ACCEPTED.** All six are upstream CJS packages with no ESM entry point; nothing in this
+- **WHAT.** The production build reports CommonJS/AMD optimization bailouts for **five dependency
+  specifiers**: `moment-timezone`, `moment`, `file-saver`, `deepmerge` (via `date-holidays-parser`
+  `utils.js`) and `uuid-random` (via `node_modules/ical-generator/dist/index.js`, which Webpack never
+  reported). The historical sixth, `jalaali-js`, left the list in D3/I2 because 2.0.1 ships an ES
+  module. **Cite the dependencies, never a count.**
+- **WHY ACCEPTED.** All five are upstream CJS packages with no ESM entry point; nothing in this
   repository can convert them. The esbuild message text is
   `▲ [WARNING] Module '<dep>' used by '<file>' is not ESM`.
 - **RISK.** A slightly larger, less-tree-shaken bundle. No correctness impact.
@@ -286,8 +198,18 @@ upgrade cycle. Unrelated documentation work does not authorize fixes or baseline
   **The count is nondeterministic and must never be gated on:** the CLI dedups per specifier over a
   nondeterministic traversal order, and the *named* importing file varies run to run
   (`creator.component.ts` vs `settings.component.ts` for `moment-timezone`; `web-storage.service.ts`
-  vs `electron-storage.service.ts` for `file-saver`). A single `ng build` reports 6; `build:prod`
-  (two builds) reports 12.
+  vs `electron-storage.service.ts` for `file-saver`). A single `ng build` reports 5; `build:prod`
+  (two builds) reports 10.
+- **MEASURED STATE.** I2 dropped `jalaali-js` and kept the other five. A4 (Angular 22.2.5 / build
+  22.2.6) reports the same five specifiers in both production builds, unchanged, with zero budget
+  warnings at a 2.40 MB initial total. `moment-timezone` is still one 0.6.6 copy, so the
+  `caldate`/`Equinox` import sites recorded in (h.5) still surface under a single specifier.
+- **D2 STATE (2026-11-10).** The production list is now **three** specifiers — `deepmerge`, `file-saver`
+  and `moment-timezone` — because no application file imports `moment` any more, so its bailout
+  disappears; the development build reports none. The client's own date library
+  (`date-fns` 4.4.0 / `@date-fns/tz` 1.5.0) ships ESM, so it never appears here. `moment-timezone`
+  remains solely because `date-holidays` → `date-holidays-parser` → `caldate` requires it; the count is
+  still nondeterministic in the importing-file field and must not be gated.
 
 ### (b.4) Four retained unreachable environment files — with ZERO compiler warnings
 
@@ -389,18 +311,74 @@ upgrade cycle. Unrelated documentation work does not authorize fixes or baseline
 - **WHAT WOULD CHANGE THE DECISION.** A scoped cleanup proving each candidate has no static or
   dynamically generated consumers, preserving the accent map, live labels and actual swatches.
 
-### (b.11) Express 4 runtime uses Express 5 type declarations
+### (b.11) Express runtime/type skew — RELOCATED, NOT FIXED
 
-- **WHAT.** `package.json:66,84` declares `express ^4.21.2` and `@types/express ^5.0.0`.
-  `server/package.json:36` also declares Express 4; its source is checked using root-installed
-  typings, with strict checking enabled in `server/tsconfig.json`.
-- **WHY ACCEPTED.** The skew was recorded as pre-existing by the Phase 6 review. Track C1 in
-  `docs/TODO_UPGRADES.md` plans to align it by upgrading Express; that change has not landed.
-- **RISK.** Type-check success does not prove that APIs described by another major behave the same
-  at runtime. The recorded server type-check passed; this review establishes no new compiler or
-  runtime failure from the mismatch.
-- **WHAT WOULD CHANGE THE DECISION.** Align the runtime and typings during the server upgrade and
-  verify static serving, fallback behaviour and error paths in Docker.
+Full finding moved to `docs/TODO_UPGRADES.md` §2.6. Owner: C1, aligning root/server runtime
+manifests and root typings atomically. It is not a global prerequisite for client upgrades;
+static serving, fallback behaviour and error paths must be checked at runtime.
+
+### (b.12) The lint presets now come from the `angular-eslint` umbrella package (recorded 2026-11-10 by A4)
+
+- **WHAT.** In angular-eslint **22.6.0** the plugin packages
+  (`@angular-eslint/eslint-plugin`, `-template`, `template-parser`) export **only** `{rules}`. The
+  `configs.recommended` shape that v21 still carried is gone, so `eslint.config.js` raised
+  `TypeError: Cannot read properties of undefined (reading 'recommended')` until it switched to
+  `require('angular-eslint')` and read `configs.tsRecommended.rules` /
+  `configs.templateRecommended.rules`. `angular-eslint` is therefore a new **direct devDependency**,
+  pinned to the same 22.6.0 as the plugins.
+- **WHY ACCEPTED.** The move is upstream-owned; the alternative is re-declaring the same rule lists by
+  hand, which would silently drift from the published preset. Rule outcomes are unchanged: 0 errors
+  and the same 7 `no-deprecated` warnings as I2.
+- **RISK.** The lint config now has a fourth pinned package that must move in lockstep with the three
+  plugins; a partial bump will fail at config load rather than at lint time, which is loud but abrupt.
+- **WHAT WOULD CHANGE IT.** An angular-eslint release that restores presets on the plugin packages, or
+  a future A5 (ESLint 10 + typescript-eslint) rewrite that builds its own flat config from the
+  plugin's `rules`/`tsPlugin`/`templatePlugin` exports.
+
+### (b.13) TypeScript 6 resolution conventions for the Node-side projects (recorded 2026-11-10 by A4)
+
+- **WHAT.** TypeScript 6 removes the `node10` module resolver (`TS5107`) and deprecates `baseUrl`
+  (`TS5101`). A4 aligned the three affected places instead of silencing the diagnostics:
+  `server/tsconfig.json` and `electron/tsconfig.json` now use `"module": "node16"` /
+  `"moduleResolution": "node16"` while keeping CommonJS output, the empty `baseUrl` in
+  `client/tsconfig.spec.json` is deleted (nothing used it), and the E2E type gate passes
+  `--ignoreConfig` when it compiles a bare file list next to a `tsconfig.json` (`TS5112`).
+  **No `ignoreDeprecations`, `as any` or `@ts-ignore` was added.**
+- **WHY ACCEPTED.** These are the compiler-supported migration paths for the removed/deprecated
+  options; keeping the old resolver required a suppression that the task forbids, and staying on
+  `node10` would silently break at TypeScript 7.
+- **RISK.** `node16` resolution is stricter about self-referencing and `exports` maps than `node10`.
+  Both Node-side projects build cleanly today, but a future import that relies on legacy resolution
+  will fail at type-check time rather than at runtime (the louder, preferred failure).
+- **WHAT WOULD CHANGE IT.** D4/E1 changing the server/Electron build tool or module format, or a
+  TypeScript release that replaces `node16` with a `nodenext`-only story. Re-run the four `tsc`
+  project gates plus the E2E file-list check whenever those configs move.
+
+### (b.14) Vitest 5.1.0 mock hoisting false-positives on async arrows (recorded 2026-11-10 by A2)
+
+- **WHAT.** `@vitest/mocker` now validates that `vi.mock` / `vi.hoisted` calls are registered at a
+  module's top level and rejects the file at transform time with `Error: N calls in "<file>" were
+  defined outside of the module's top level scope` when they are not. Under the Angular 22.2.6
+  `@angular/build:unit-test` pipeline this validation **false-positives**: a module whose hoisted calls
+  are correctly top-level is still rejected if the same module also declares an **async arrow function**
+  (for example an `it('…', async () => …)` callback). Async **function declarations** and async
+  **function expressions** pass, and removing the `async` keyword makes an arrow pass. A2 measured this
+  with 21 probe variants before changing any product code; both `storage/*.service.spec.ts` files were
+  affected because they combine `vi.mock('file-saver')` + `vi.hoisted` with async assertions.
+- **WHY ACCEPTED.** The workaround keeps every assertion: the awaited body moved into a module-level
+  `async function verifySavedFile(...)` and the `it` callback is synchronous and returns that promise.
+  This is ordinary test code, not a suppression — no `as any`, no `@ts-ignore`, no reduced assertion.
+  5.1.0 is the newest published 5.x at the time of the upgrade, so there is no patch release to wait
+  for; staying on Vitest 4 was not an option because A2's task is the runner upgrade itself.
+- **RISK.** Any future spec that registers `vi.mock`/`vi.hoisted` and uses an async arrow will fail at
+  transform time with a misleading "outside the module's top level scope" message that points at the
+  correct calls. The failure is loud (the whole file fails to load), never silent, so it cannot pass as
+  green. A reader who trusts the message could waste time restructuring correctly-placed mocks.
+- **WHAT WOULD CHANGE IT.** A Vitest release that fixes the scope analysis (check
+  `@vitest/mocker`'s hoisting validation against a minimal async-arrow plus `vi.mock` reproduction, run
+  through the Angular builder rather than a bare Vitest config, before removing the helper). If a future
+  spec must use an async arrow, prefer an `async function` declaration for the awaited part; do not
+  disable `vi.mock` hoisting or move mocks into the test body.
 
 ---
 
@@ -457,15 +435,16 @@ as *not deprecated* or *not worth the churn*; none is a defect.
   errors (baseline 607 → 573) without a rule-downgrade campaign on real violations.
 - **RISK.** None. **WHAT WOULD CHANGE IT.** A user reversal of the decision.
 
-### (c.7) The 8 `no-deprecated` warnings deliberately left untouched
+### (c.7) The `no-deprecated` warnings deliberately left untouched
 
-- **WHAT.** `@typescript-eslint/no-deprecated` is severity `warn` and reports **8** advisories:
-  `RouterTestingModule` ×4, the `ApplicationConfig` import path, `provideAnimationsAsync` (v23
-  intent-to-remove), and `saveAs` `autoBom` ×2.
+- **WHAT.** `@typescript-eslint/no-deprecated` is severity `warn` and reports, measured on the A4 tree
+  (Angular 22.2.5 / TypeScript 6.0.3), **7** advisories: `RouterTestingModule` ×4,
+  `provideAnimationsAsync` (intent to remove in v23), and `saveAs` `autoBom` ×2. The eighth —
+  the `ApplicationConfig` import path — is gone because the 22 migrations rewrote the import.
 - **WHY ACCEPTED.** Warnings do not affect the lint exit code (`npm run lint` exits 0). Each is
   either a not-yet-removed API or a spec-side usage barred by decision 3.
 - **RISK.** Advisory only — these APIs will need attention at a future Angular major.
-- **WHAT WOULD CHANGE IT.** The Angular 21/22 phase (see (e)), or a spec waiver for
+- **WHAT WOULD CHANGE IT.** The Angular 23 phase (see (e)), or a spec waiver for
   `RouterTestingModule`.
 
 ### (c.8) The template-accessibility lint tier (11 rules) left DISABLED
@@ -478,7 +457,9 @@ as *not deprecated* or *not worth the churn*; none is a defect.
 - **RISK.** **The 0 findings across the 11 templates must NEVER be cited as evidence of
   accessibility.** Template accessibility is effectively unlinted.
 - **WHAT WOULD CHANGE IT.** A user decision to enable the tier — a one-line spread of
-  `ngTemplatePlugin.configs.accessibility.rules` into the template block of `eslint.config.js`.
+  `angularEslint.configs.templateAccessibility.rules` into the template block of `eslint.config.js`
+  (angular-eslint 22 keeps the accessibility preset on the umbrella package, see (b.12); the v21
+  form `ngTemplatePlugin.configs.accessibility.rules` no longer exists).
 
 ---
 
@@ -489,12 +470,25 @@ as *not deprecated* or *not worth the churn*; none is a defect.
 - **WHAT.** At `74a271d`, **15** client TypeScript files import Moment: 10 from `moment-timezone`
   and 5 from `moment` (12 non-spec files and 3 specs). Moment is officially in maintenance mode.
 - **WHY ACCEPTED.** Replacement was excluded from the completed migration under decision 9. The
-  separately authorized upgrade cycle selected Luxon (`docs/TODO_UPGRADES.md` D2); implementation
-  is still pending and coupled to the deferred date work in (a.4), (a.5).
+  separately authorized upgrade cycle selected Luxon (`docs/TODO_UPGRADES.md` D2); the user then chose
+  `date-fns` + `@date-fns/tz` instead and D2 implemented it — see the addendum below.
 - **RISK.** Maintenance mode limits new feature development and leaves a large dependency footprint;
   it does not establish that timezone-data updates have stopped. No Europe/Berlin offset mismatch
   was found in the historical probes in (h.3), not an exhaustive correctness guarantee.
 - **WHAT WOULD CHANGE IT.** The date-handling phase migrating to a maintained library.
+- **D2 ADDENDUM (2026-11-10) — REPLACED, with a reviewed upstream remnant.** D2 converted the
+  application to `date-fns` 4.4.0 + `@date-fns/tz` 1.5.0 (the user's decision, superseding the Luxon
+  wording of `docs/TODO_UPGRADES.md` D2) and removed `moment-timezone` from the root `dependencies`;
+  the lock gained exactly `date-fns` and `@date-fns/tz` and lost no entry. No file under `client/`,
+  `server/`, `electron/` or `e2e/` imports Moment any more (66 sources scanned, 0 imports; the 16
+  remaining mentions are comments). `moment` 2.30.1 and `moment-timezone` 0.6.6 stay in the lock only
+  through `date-holidays` 3.39.1 → `date-holidays-parser` 3.7.0 → `caldate` 2.1.0, which declares
+  `"moment-timezone": "^0.6.6"`; the production build still reports `moment-timezone` via
+  `caldate/src/CalDate.js`, so the moderate
+  `moment` locale-path advisory stays open as an upstream-owned remnant. The Settings timezone list moved
+  from `moment.tz.names()` (**597**) to `Intl.supportedValuesOf('timeZone')` (418 canonical + `UTC` =
+  **419**, plus a saved alias when the stored value is one), and every persisted name still resolves.
+  See (h.3)'s D2 addendum for the trimmed-build question.
 
 ### (d.2) Deprecated `boolean@3.2.0` in the lock tree (`rimraf@2.6.3` REMOVED)
 
@@ -509,57 +503,94 @@ as *not deprecated* or *not worth the churn*; none is a defect.
 - **WHAT WOULD CHANGE IT.** An upstream `global-agent`/`@electron/get` release that drops it — the
   dependency-upgrade cycle's territory (`docs/TODO_UPGRADES.md`).
 
-### (d.3) `@angular/animations` npm-deprecated but a MANDATORY peer on v20
+### (d.3) Deprecated animations package — retention depends on actual usage, not a mandatory peer
 
-- **WHAT.** `@angular/animations ^20.3.18` (`package.json:53`) is npm-deprecated, yet it is a
-  **mandatory peer** of `@angular/platform-browser@20.3.18` and therefore cannot be removed while on
-  Angular 20.
-- **WHY ACCEPTED.** Not removable on v20 without breaking the peer contract.
-- **RISK.** A deprecation warning; the package is still functionally required.
-- **WHAT WOULD CHANGE IT.** The Angular 21/22 migration (see (e)) — animations is folded into the
-  platform in later majors.
+- **WHAT.** `@angular/animations ^20.3.18` is npm-deprecated. The lockfile marks its
+  `@angular/platform-browser@20.3.18` peer **optional**, correcting the former mandatory-peer claim.
+  The app still supplies `provideAnimationsAsync()` (`client/app/app.config.ts:22,46`).
+- **WHY ACCEPTED.** Removing an optional peer is not proof that the current animation/provider path
+  works without it; retention must follow actual application and Material usage.
+- **RISK.** A deprecation warning; premature removal can break the configured runtime path.
+- **WHAT WOULD CHANGE IT.** A3/A4 in `docs/TODO_UPGRADES.md` reviewing the selected versions' peer/API
+  contract and exercising Material controls before changing packages/providers. Do not assume later
+  majors automatically fold this API into the platform.
+- **A4 ADDENDUM (2026-11-10).** A3/A4 answered the question the other way: the package is **retained**
+  at `@angular/animations` **22.2.5** because `client/app/app.config.ts` still supplies
+  `provideAnimationsAsync()` and the Material controls it drives are exercised by the E2E gates. npm
+  marks it deprecated in v22, naming `animate.enter`/`animate.leave` as the successor; adopting that
+  API would change animation behaviour across every Material overlay and is **not** part of A4. The
+  dependency stays a direct pin until a task explicitly owns that migration.
 
-### (d.4) `engines.node ">= 24.0.0"` is too lax for a future Angular 22
+### (d.4) Runtime engine alignment — RELOCATED, NOT FIXED
 
-- **WHAT.** `package.json` `engines.node` is `">= 24.0.0"`. Angular 22 will require
-  `^22.22.3 || ^24.15.0 || >=26.0.0`.
-- **WHY ACCEPTED.** Correct for Angular 20 today; tightening it now would be premature.
-- **RISK.** An unguarded `npm install` on a too-old Node could pass the engine check yet break a
-  future Angular 22 install.
-- **WHAT WOULD CHANGE IT.** The Angular 21/22 phase tightening `engines.node`.
+The lax root/server/Electron `engines.node` ranges and their acceptance criteria moved to
+`docs/TODO_UPGRADES.md` §2.7. Owners: B0, A4 and E1. Align each manifest when its runtime changes,
+not only during final cleanup; Electron's embedded runtime is not necessarily the container runtime.
+**A4 state (2026-11-10):** all three manifests declare `node ^26.0.0` / `npm ^11.20.0`, which already
+satisfies Angular 22's `^22.22.3 || ^24.15.0 || >=26.0.0`, so A4 needed no engine edit;
+`npm ci --engine-strict` accepts the regenerated lock in both image stages. Root Node typings and the
+Electron-versus-container runtime measurement stay with D4/E1.
 
+### (d.5) The `date-holidays` low advisory has no upstream fix (recorded 2026-11-10 by D3)
+
+- **WHAT.** `npm audit` reports `date-holidays` (low) → `date-holidays-parser` (low) → `deepmerge` (low,
+  `GHSA-gcqx-w48m-w2h4`, prototype poisoning in `mergeObject()`). Upgrading date-holidays 3.27.0 →
+  3.39.1 leaves the chain intact: the full audit reads 48 → 48, and npm's only proposed "fix" is
+  `date-holidays@1.8.4`, a semver-major **downgrade** that is not executable. The upgrade does clear an
+  unrelated `js-yaml` high from the production scope (8 → 7), because date-holidays-parser 3.7.0 pins a
+  non-affected nested `js-yaml@5.5.0`.
+- **WHY ACCEPTED.** The merge operates on the package's own bundled rule data; Duely only passes
+  country/state/region codes, a language and a year into `Holidays.init()`/`getHolidays()`, so no
+  application-level object is merged.
+- **RISK.** A future date-holidays release that updates `deepmerge` is the only real remedy; until then
+  the low finding stays visible in every audit and must not be "fixed" by a downgrade or an override
+  pinning deepmerge across unrelated consumers.
+- **WHAT WOULD CHANGE THE DECISION.** An upstream date-holidays/parser release that moves off
+  `deepmerge`, or independent evidence that untrusted data can reach the merge path.
+
+### (d.6) Residual advisories, container findings and platform scope (recorded 2026-11-11 by E2)
+
+- **WHAT.** E2 reproduced the accepted tree from scratch and measured three separate surfaces.
+  **Development tree:** `npm audit` reads `0 critical / 4 high / 17 moderate / 3 low = 24`, the same set
+  I3 accepted; the four highs are transitive tool findings — `browserslist` (two unbounded-stats
+  advisories), `fast-uri` (authority/path parsing), `immutable` (hash-collision DoS) and `js-yaml`
+  (merge-key DoS) — reached through `@angular/build`, `eslint` and `electron-builder`. **Shipped set:**
+  `npm audit --omit=dev` reads `0 critical / 0 high / 1 moderate / 3 low = 4` (the `date-holidays` chain of
+  (d.5) plus a `moment` moderate), and the audit run inside the production image returns the same shape.
+  **Container:** `aquasec/trivy` on the production image reports `0 critical` and 54 high — 48 rows for
+  Debian 13.7 base packages (Debian lists a fixed version for 2 of them) and 6 for `undici@6.28.0` and
+  `brace-expansion@5.0.9` inside `/usr/local/lib/node_modules/npm`, i.e. npm's own bundled modules in the
+  base image, not the application's dependencies.
+- **WHY ACCEPTED.** E2's scope is the accepted lock and accepted images; it may not change either. The
+  four development highs are tool-only and unreachable from the shipped application; the container rows
+  belong to the base image (`node:26-slim`), where only a refreshed tag or Debian/npm release can move
+  them. `npm` reports a fix path inside its own ranges for the tool highs, and no override exists for any
+  of them.
+- **RISK.** The development findings are visible in every audit and will resurface in reviews; the
+  container rows mean the image carries known high-severity base-system and npm-bundled packages, even
+  though nothing from the application's dependency tree is high or critical. Both are supply-chain noise
+  around the shipped code rather than a defect in it, but they are not zero.
+- **WHAT WOULD CHANGE THE DECISION.** A later task that may touch the lock and can show a clean install
+  after updating the tool chain (`browserslist`, `fast-uri`, `immutable`, `js-yaml` parents), or a base
+  image refresh that carries the Debian and npm fixes. `docker scout` needs a Docker ID login in this
+  environment, so a second scanner is available only with credentials.
+- **PLATFORM SCOPE.** Linux arm64 in the container images is measured end to end. Electron 45.2.3 embeds
+  Node 24.22.2 / Chromium 156.0.8078.80, which `engines` (`^26.0.0`) cannot cover because the `electron`
+  devDependency pins it; the packaged main process needs only `electron`, `fs`, `path` and `url`. macOS
+  packaging stays with M1 and Windows stays unverified.
 
 ---
 
-## (e) ROADMAP POINTER — the Angular 20 → 21 → 22 migration is a SEPARATE FUTURE PHASE
+## (e) ROADMAP POINTER — framework upgrades now belong to the working upgrade plan
 
-- **WHAT.** The framework major-version migration is **not** part of the Bootstrap-to-Material cycle
-  and is deliberately deferred to its own future phase. The gates below were verified during planning
-  so the discovery work is not repeated.
-- **WHY ACCEPTED.** It is a distinct, large effort; bundling it into the Material migration would
-  have made the closing phase unbounded.
-- **RISK.** Staying on Angular 20 accrues deprecation advisories (see (c.7), (d.3)).
-- **WHAT WOULD CHANGE IT.** A user decision to open the migration phase.
+The Material migration is complete. `docs/TODO_UPGRADES.md` now owns the Angular 20 → 21 → 22
+path, current registry/peer evidence, test-runner ordering, strictness and theme safeguards. The
+older compatibility snapshot is superseded by that plan's dated metadata, which must be refreshed
+at execution time. In particular, Angular 21's build peer is stricter than its compiler peer.
 
-**Verified gates for the future phase:**
-
-- `ng update` offers **one major at a time** — the path is 20 → 21 → 22, not 20 → 22.
-- **TypeScript peer ranges:** Angular 20.3.31 requires `>=5.8 <6.0`; 21.2.23 requires `>=5.9 <6.1`;
-  22.1.6 requires `>=6.0 <6.1`. The repo's `typescript ~5.9.3` satisfies 20 and 21 but **not** 22 —
-  a TS 6.0 bump is on the critical path to 22.
-- **`zone.js ~0.15.0 || ~0.16.0`** and **`rxjs ^6.5.3 || ^7.4.0`** survive both hops unchanged; the
-  repo's `zone.js ~0.15.0` and `rxjs ~7.8.1` need no change.
-- **`@angular-devkit/build-angular` becomes npm-deprecated at 22.0.0.** This obligation is **already
-  discharged**: task #52 removed it (`aed844b`); `angular.json` uses only the esbuild
-  `@angular/build:application` / `:dev-server` / `:unit-test` builders. Current pipeline/output
-  guidance is in `INSTALL.md`.
-- **The `mat.theme()` / `mat.theme-overrides()` M3 token API survives unchanged to 22.1.6**, so
-  `client/styles/_theme.scss` needs **no rewrite** across both hops.
-- **`engines.node`** must be tightened at 22 (see (d.4)).
-
-**Companion cycle.** Dependency upgrades (the `boolean`/`@angular/animations` deprecations in (d),
-the Electron revival in (f), and the trimmed-timezone prerequisite in (h.3)) are tracked separately
-in `docs/TODO_UPGRADES.md`; that cycle should begin **after** this migration closes.
+The Webpack/build-angular retirement was already completed by task #52 (`aed844b`); do not restore
+it to make a new runner work. Necessary upgrade changes are allowed, but unrelated signals/DI,
+accessibility and theme rewrites remain deferred in (c), (i). Planning is not execution approval.
 
 ---
 
@@ -584,8 +615,10 @@ in `docs/TODO_UPGRADES.md`; that cycle should begin **after** this migration clo
   could not be verified in-container (blocker below), so any wiring would be unverifiable.
 - **RISK.** The packaged desktop app has no working "save to disk" dialog, and the Electron storage
   path is untested at runtime.
-- **WHAT WOULD CHANGE THE DECISION.** The dependency-upgrade cycle: install `libgtk-3-0`, extract
-  Electron manually, launch it, then implement and verify the dialog.
+- **WHAT WOULD CHANGE THE DECISION.** Upgrade task B0 in `docs/TODO_UPGRADES.md` owns clean-install
+  bootstrap; B12 owns GUI-launch, custom-protocol and Linux packaging verification. Neither activates the
+  currently inactive desktop-storage path or implements the save dialog; those need separate feature
+  authorization after the runtime can be exercised.
 
 **Three disproved beliefs — do NOT re-litigate them:**
 
@@ -708,6 +741,12 @@ repair.
   future timezone legislation.
 - **WHAT WOULD CHANGE THE DECISION.** Bounding the UNTIL date first (a datepicker `max` plus a
   validator) — itself an unauthorised behaviour change under locked decision 9.
+- **I2 ADDENDUM (2026-11-10).** The resolved specifier is now **`moment-timezone` 0.6.6** instead of
+  0.5.48 (single-version decision under (h.5)). It is the same CJS entry point
+  (`main: ./index.js`, no `module`/`exports`) and still carries the full packed database — 728,880 B
+  against 0.5.48's 727,104 B — so the DECLINED trimmed build stays declined and the "full data" premise
+  above still holds. The 2126 default UNTIL is untouched, and the recurrence specs keep their identical
+  52F/74P status with the same failure names on the combined tree.
 - **METHODOLOGY WARNING (transcribed alongside it).** All `moment-timezone` data builds wrap the
   **SAME** moment instance and register packed zone data into **ONE shared registry**, so loading two
   builds in a single process makes one silently overwrite the other and **BOTH report identical
@@ -719,6 +758,14 @@ repair.
   (returns 0), `tz.zone(...).untils` (throws "Invalid time value"). The reusable 13-timestamp table
   and expected offsets from the retired local measurement record are preserved in
   `docs/TODO_UPGRADES.md` D2.
+- **D2 ADDENDUM (2026-11-10) — the question moves upstream.** No application file imports
+  `moment-timezone` any more, so the DECLINED build choice is no longer the application's: the remaining
+  copy is `caldate`'s (see (d.1)), which needs a real zone database for holiday arithmetic, and its
+  2.79 MB holiday chunk still ships. The 2126 default UNTIL now runs through `date-fns` `addYears` and is
+  emitted as a date-only value, so the "trimmed build would shift 2126" argument no longer applies to
+  client code. The declaration above still stands — the trimmed build stays declined, and no new
+  evidence reopens it. The 13-timestamp table was re-measured in D2 in both images (150 offsets, 0
+  `Intl` mismatches).
 
 ### (h.4) `date-holidays` and its catalogue remain eagerly loaded
 
@@ -737,6 +784,51 @@ repair.
 - **WHAT WOULD CHANGE THE DECISION.** A user-authorized asynchronous loading design with initial
   payload measurements and location/recurrence/collision regression coverage. The declined trimmed
   timezone build in (h.3) is not a substitute.
+
+### (h.5) The integrated holiday upgrade pushes the initial bundle over budget — RESOLVED IN I2 (recorded 2026-11-10 by D3)
+
+- **WHAT.** In the D3 candidate the production initial bundle grows from **2.32 MB to 3.86 MB raw**
+  (gzip 372.75 kB → 384.71 kB) and exceeds the configured **2.55 MB** initial budget by 1.31 MB, so
+  `ng build --configuration production` emits an `initial exceeded maximum budget` **warning** and still
+  exits 0. Measured cause: date-holidays 3.39.1's parser (3.7.0) and `caldate` (2.1.0) both require
+  `moment-timezone ^0.6`, so npm installs nested `0.6.6` copies under each while the application's own
+  direct dependency stays hoisted at `0.5.48`; webpack bundles two timezone databases. The holiday data
+  itself only grew from 722,917 to 820,738 bytes, so the bulk of the increase is duplicated code, not
+  extra catalogue rows.
+- **WHY DEFERRED.** Resolving it means either a single `moment-timezone` version across the tree (an
+  npm `overrides` dependency decision) or a budget change; both are outside D3's authorized scope and
+  belong to I2. Nothing is repaired or silently widened yet — the warning is recorded as evidence.
+- **RISK.** Until I2 decides, the shipped initial payload carries a duplicated timezone database, and a
+  future budget enforcement change would turn the warning into a build failure.
+- **RESOLVED IN I2 (approved Option 1, single version).** `moment-timezone` is now a direct pin at
+  **0.6.6**, so the lock resolves exactly one entry (`node_modules/moment-timezone`) instead of the
+  hoisted 0.5.48 plus two nested copies. 0.6.6 keeps the shape (h.3) depends on: CommonJS,
+  `main: ./index.js`, full packed data (728,880 B against 0.5.48's 727,104 B). Measured on the combined
+  tree, the production initial total is **2.42 MB / gzip 388.83 kB** with **zero** budget warnings in
+  all four build logs, and the initial total stays below the unchanged 2.55 MB budget. The gzip figure
+  remains 16 kB above A1's 372.75 kB because 0.6.6's packed data is slightly larger and (h.4) still
+  ships it eagerly — that is the recorded (h.4) decision, not a new regression.
+- **WHAT WOULD REOPEN IT.** A future dependency that reintroduces a second `moment-timezone` range
+  (the lock review must keep resolving one entry), or a payload redesign under (h.4) that changes the
+  initial graph. The 2126 default `UNTIL` behaviour is unchanged: the recurrence specs hold the same
+  red/green set before and after (52F/74P, identical failure names), and the 2032 holiday fixture is
+  verified in UTC and Europe/Berlin on the combined tree.
+
+### (h.6) The Compose healthcheck could never pass in the shipped image — REPAIRED AND INTEGRATED IN I2
+
+- **WHAT.** `docker-compose.yml` probed readiness with `curl -f http://127.0.0.1:8000/`, but the
+  production stage installs neither `curl` nor `wget`; the command therefore exited **127** in every
+  container, so the service could never become healthy. The C1 candidate replaces it with an explicit
+  Node `fetch` probe, verified in a Compose override pinned to the prebuilt image (status `healthy`,
+  `ExitCode 0`) and proven non-vacuous (a container with no server returns 1).
+- **WHY ACCEPTED FOR NOW.** The candidate is frozen and not integrated; the accepted A1 tree still
+  carries the broken command, so the limitation stays true of the working tree until I2 lands it.
+- **RISK.** Any deployment that relies on the current health status observes a permanently unhealthy
+  container; orchestrators that restart on unhealthy would loop.
+- **I2 STATE.** The reviewed `docker-compose.yml` is now part of the working tree (one of C1's two
+  integrated paths, unchanged by the merge), so the entry is historical rather than current. The probe
+  behaviour itself keeps C1's measured evidence; I2 re-ran the container gates but did not repeat the
+  Compose healthcheck experiment.
 
 ---
 
@@ -777,7 +869,7 @@ Phase 13 visual pass is preserved separately in `docs/TESTING_GUIDE.md` §4.
   `MatDatepicker` has no such `@Input`. *Risk:* none functional (inert attribute); misleading intent.
   *Changes when:* the attribute is removed or week numbers are implemented properly.
 
-### (i.9) The missing `<base href="/">` (backlog item e / decision D20) — evaluated and SKIPPED
+### (i.9) The missing `<base href="/">` (backlog item e / decision D20) — evaluated, SKIPPED, then RESOLVED by B12
 
 - **WHAT.** `client/index.html` has **no `<base href="/">`** and references its assets **relatively**.
   At a **multi-segment** bogus path the SPA history fallback serves `index.html` at the wrong
@@ -795,6 +887,21 @@ Phase 13 visual pass is preserved separately in `docs/TESTING_GUIDE.md` §4.
 - **WHAT WOULD CHANGE THE DECISION.** An Electron-safe base mechanism — e.g. switching the desktop
   build to `HashLocationStrategy` (which needs no `<base>`) once `isElectron` can actually be turned
   on (see (f)), or a build-time `<base>` injection that differs per target.
+- **B12 RESOLUTION (2026-11-10).** The second condition was met by a different mechanism than the one
+  sketched above: the desktop no longer runs on `file://`. `electron/main.ts` serves the bundle from
+  the fixed origin `app://duely` (a privileged *standard* scheme), where `/` **is** the application
+  root, and `angular.json` now sets the shared, target-independent build option
+  `baseHref: "/"`. The emitted document carries `<base href="/">` before every script and link in
+  **both** builds (`dist/server/static/browser/index.html` and `dist/electron/static/browser/index.html`),
+  so relative chunk URLs resolve from the origin root on `http(s)` and on `app://` alike. Verified by
+  B12: the production image returns `/`, `/settings`, `/about`, `/legal`, `/404`,
+  `/bogus/deep/path` and `/bogus/deep/path/with/many/segments` as byte-identical documents with the
+  base tag first; the `server` Playwright project still loads `/settings` directly under Chromium
+  (22/0 E2E, unchanged); the desktop window renders `/settings`, `/about`, `/legal`, `/404`, a deep
+  unknown path (route fallback → `/404`) and the creator from `app://duely`; and the desktop build
+  contains no `file://` load path any more. Evidence:
+  `.git/duely-batch-20261110/b12/web.json`, `desktop.json`, `quality.json` and
+  `docs/TODO_UPGRADES.md` §B12.
 
 ### (i.10) Native time controls remain; `ngx-mat-timepicker` follow-up is parked
 
@@ -859,22 +966,11 @@ outcome of the consolidation, so all are preserved.
 - **WHAT WOULD CHANGE THE DECISION.** The user confirms the six current values as-is or supplies
   replacements, including capitalization (edit both locales together to preserve key parity).
 
-### (j.2) The i18n pass was never fully verified at runtime (§3(c), partly OPEN)
+### (j.2) Upgrade-sensitive locale verification — RELOCATED, NOT VERIFIED
 
-- **WHAT.** The 2026-09-11 i18n pass was verified by static analysis and type-check deltas only.
-  Four runtime checks were listed. Their state now: (1) rendered date-picker labels — **partly moot**,
-  the audited `ng2-datepicker` was replaced by the Material datepicker, so what needs checking is
-  Material's own locale-driven labels; (2) legal-notice page text — **CLOSED** by Phase 10.3, which
-  rebuilt `legal.component.ts` on `translate.onLangChange`; (3) the collision "excluded by user"
-  reason (`translate.instant('EXCLUDED BY USER')`, `appointments.service.ts`) — **no owner, never
-  exercised**; (4) the three new Settings fields (U6) — **no owner, never exercised in a running
-  app**.
-- **WHY ACCEPTED.** The original blocker (the bundle did not build) is gone — `npm run build:prod`
-  exits 0 and the artefact is runtime-probed — but items 1, 3 and 4 remain unowned runtime checks
-  that a key-parity unit test cannot discharge.
-- **RISK.** Three locale-driven strings have never been seen rendered in a running app.
-- **WHAT WOULD CHANGE THE DECISION.** A runtime/browser verification pass over the collision reason
-  and the three Settings fields in both locales.
+Remaining runtime checks and their provenance moved to `docs/TODO_UPGRADES.md` §2.5.
+Owner: P1W/A3/D2, with actual collision-export verification after D1. Legal cold-load rendering
+was already fixed; this relocation does not authorize wording changes from (j.1) or (j.4).
 
 ### (j.3) Five strings deliberately left untranslated (§3(d), CLOSED BY DECISION — U5 is permanent)
 
@@ -940,25 +1036,12 @@ answer survives retirement of both the inventory and execution plan.
   interactions with expanded creator forms, dropdowns, persistence and cancel. Check the
   empty-storage redirect as the default state, not as falsely labelled theme/accent variants.
 
-### (k.2) Green E2E counts do not prove date/timezone/recurrence/collision semantics
+### (k.2) Vacuous timezone/collision/export checks — RELOCATED, NOT FIXED
 
-- **WHAT.** The recorded 16 Playwright passes execute eight tests against two server projects, but
-  `e2e/app.e2e.spec.ts` contains coverage gaps:
-  - `:101-113` looks for nonexistent `select[name="timeZone"]` and conditionally skips selection/
-    assertions when none exists; the actual Settings control is named `timezone` via `formControlName`.
-  - `:144-148` is a collision placeholder with only logging, no setup or assertion.
-  - `:40-65` checks a download filename and saves the file, but never reads/asserts ICS contents.
-  - `:119-139` checks the daily-recurrence selector/panel, not recurring export semantics.
-  Thus neither the green E2E count nor static screenshots close all historical date/exclusion/
-  holiday, timezone, recurrence-pattern, collision and locale verification obligations.
-- **WHY ACCEPTED.** Migration verification restored executable tests and checked routing/rendering;
-  substantive test/date and coverage work remains user-gated. This review records the gap without
-  altering tests or their reported partition.
-- **RISK.** Vacuous tests and view-only checks give false confidence about settings persistence and
-  exported calendar values; known production issues in (a.6)–(a.8) can coexist with green E2E output.
-- **WHAT WOULD CHANGE THE DECISION.** A user-initiated coverage/test-and-date phase with unconditional
-  control assertions, saved/reloaded timezone checks, actual collision fixtures and ICS-content
-  assertions for recurring and excluded dates, plus locale checks from (j.2).
+The selector defect, assertion-free collision placeholder and missing ICS-content/recurrence checks
+moved to `docs/TODO_UPGRADES.md` §2.5. Owner: P1W **before** affected client upgrades; known-broken
+exports remain explicitly classified until D1/D2 repair them. Historical 16/0 is not a semantic gate.
+The broader visual matrix in (k.1) and general audit in (k.3) remain separate follow-ups.
 
 ### (k.3) General test-coverage and dead-code audit remains parked
 
@@ -973,3 +1056,23 @@ answer survives retirement of both the inventory and execution plan.
 - **WHAT WOULD CHANGE THE DECISION.** A user-authorized audit with non-vacuous behaviour coverage and
   evidence for each dead-code candidate. Any approved test changes must explicitly update the
   recorded baseline through Docker verification rather than silently dropping or skipping failures.
+
+### (k.4) The Material 22 datepicker toggle icon rasterises differently (measured, not a defect)
+
+- **WHAT.** The only artifact the A4 integration audit could not attribute to capture noise is
+  `e2e-results/…-reason-and-EXDATE-in-de-server/exclusion-de.png`, 64,838 B under I2 and 64,475 B
+  under Angular 22. A pixel diff of the two PNGs confines the whole difference to the **40×40 px
+  Material datepicker toggle-icon box** at (1073,1063): **324 of 1,922,984 pixels** differ, the
+  largest channel delta is **20/255**, and no pixel moves more than 32 levels. Field content, labels,
+  dates, borders and layout are identical.
+- **WHY ACCEPTED.** Each image is reproducible per image (`e2e-control-results` reproduces the A4
+  bytes, `e2e-base-control-results` reproduces the I2 bytes), so this is a deterministic rendering
+  change inside Material's own icon rasterisation, not a layout or data regression. The dev-page
+  capture of the same test differs between two runs of the *same* image, which is why only the
+  server-side capture is treated as layer-attributable.
+- **RISK.** Byte-level screenshot comparison of Material datepicker captures will keep failing across
+  this layer boundary. Do not treat a small PNG delta in that region as a functional regression, and
+  do not "fix" it by loosening a capture assertion.
+- **WHAT WOULD CHANGE THE DECISION.** A Material release that changes the icon again, or a capture
+  whose diff leaves that box (size, position or text change indicates a real regression and must be
+  investigated).

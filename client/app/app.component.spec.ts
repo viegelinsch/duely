@@ -9,7 +9,7 @@
 import { TestBed, inject, ComponentFixture } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 
 import { AppComponent } from './app.component';
 import { SettingsComponent } from './settings/settings.component';
@@ -25,7 +25,6 @@ describe('AppComponent', () => {
         await TestBed.configureTestingModule({
             imports: [
                 RouterTestingModule,
-                TranslateModule.forRoot(),
                 FormsModule,
                 ReactiveFormsModule,
                 // AppComponent is standalone (Phase 5.4) → imported, not declared.
@@ -34,6 +33,7 @@ describe('AppComponent', () => {
                 SettingsComponent
             ],
             providers: [
+                provideTranslateService(),
                 { provide: StorageService, useFactory: selectStorageService }
             ]
         }).compileComponents();

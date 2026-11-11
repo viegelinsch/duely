@@ -5,7 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import moment from 'moment-timezone';
+import {
+  clampWallHour, clampWallMinute, formatWallDate, parseWallTime, pickerDayFromModel, wallDayNumber,
+  withWallDay, withWallTime
+} from '../../shared/wall-clock';
 import { Component, Input, OnChanges, ViewChild, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RecurringSettingsComponent } from './recurring-settings/recurring-settings.component';
@@ -18,7 +21,7 @@ import { MatInputModule } from '@angular/material/input';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { StorageService } from '../../storage/storage.service';
 import type { Appointment } from '../appointment';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { AppointmentsService } from '../appointments.service';
 /**
  * The appointmentforms will be validated, created and initialized.
@@ -34,7 +37,7 @@ import { AppointmentsService } from '../appointments.service';
     MatInputModule,
     MatDatepickerModule,
     TextFieldModule,
-    TranslateModule,
+    TranslatePipe,
     AdvancedSettingsComponent,
     AlarmSettingsComponent,
     RecurringSettingsComponent
@@ -94,22 +97,22 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   }
   validateStartTime(): void {
     // if (!start.controls['time'].valid) {
-    //  this.appointmentForm.get('start.time').setValue(moment.utc(this.appointment.start).format('HH:mm'));
+    //  this.appointmentForm.get('start.time').setValue(formatWallDate(this.appointment.start, 'HH:mm'));
     // }
   }
   validateStartDate(): void {
     // if (!start.controls['date'].valid) {
-    //  this.appointmentForm.get('start.date').setValue(moment.utc(this.appointment.start).format('YYYY-MM-DD'));
+    //  this.appointmentForm.get('start.date').setValue(formatWallDate(this.appointment.start));
     // }
   }
   validateEndTime(): void {
     // if (!end.controls['time'].valid) {
-    //  this.appointmentForm.get('end.time').setValue(moment.utc(this.appointment.end).format('HH:mm'));
+    //  this.appointmentForm.get('end.time').setValue(formatWallDate(this.appointment.end!, 'HH:mm'));
     // }
   }
   validateEndDate(): void {
     // if (!end.controls['date'].valid) {
-    //  this.appointmentForm.get('end.date').setValue(moment.utc(this.appointment.end).format('YYYY-MM-DD'));
+    //  this.appointmentForm.get('end.date').setValue(formatWallDate(this.appointment.end!));
     // }
   }
   /** sets standart values to html forms */
@@ -172,19 +175,13 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   startDateListener(event: MatDatepickerInputEvent<Date>): void {
     const value = event.value;
     if (value != null && this.appointment.start != null && this.appointment.end != null) {
-      const startDate = moment.utc(this.appointment.start);
-      const endDate = moment.utc(this.appointment.end);
-      const duration = endDate.diff(startDate);
-      startDate.set({
-        year: value.getFullYear(),
-        month: value.getMonth(),
-        date: value.getDate()
-      });
-      this.appointment.start = startDate.toDate();
-      this.appointment.end = startDate.clone().add(duration).toDate();
-      const d = moment.utc(this.appointment.end);
-      this.appointmentForm.get('end.date')!.setValue(new Date(d.year(), d.month(), d.date()));
-      this.appointmentForm.get('end.time')!.setValue(moment.utc(this.appointment.end).format('HH:mm'));
+      // The duration is the distance between the two model instants, so it
+      // survives the wall-day replacement unchanged.
+      const duration = this.appointment.end.getTime() - this.appointment.start.getTime();
+      this.appointment.start = withWallDay(this.appointment.start, value.getFullYear(), value.getMonth(), value.getDate());
+      this.appointment.end = new Date(this.appointment.start.getTime() + duration);
+      this.appointmentForm.get('end.date')!.setValue(pickerDayFromModel(this.appointment.end));
+      this.appointmentForm.get('end.time')!.setValue(formatWallDate(this.appointment.end, 'HH:mm'));
       this.recurring.updateRepeatsBy();
       this.recurring.markForCheck();
     }
@@ -193,38 +190,33 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
   endDateListener(event: MatDatepickerInputEvent<Date>): void {
     const value = event.value;
     if (value != null && this.appointment.end != null) {
-      this.appointment.end.setUTCFullYear(value.getFullYear(), value.getMonth(), value.getDate());
-      const appEnd = moment.utc(this.appointment.end);
-      const appStart = moment.utc(this.appointment.start);
-      if (appEnd.year() === appStart.year()
-        && appEnd.month() === appStart.month()
-        && appEnd.date() < appStart.date()) {
-        const startDate = moment.utc(this.appointment.start);
-        const endDate = moment.utc(this.appointment.end);
-        startDate.set({
-          year: endDate.year(),
-          month: endDate.month(),
-          date: endDate.date()
-        });
-        this.appointment.start = startDate.toDate();
-        const d = moment.utc(this.appointment.start);
-        this.appointmentForm.get('start.date')!.setValue(new Date(d.year(), d.month(), d.date()));
+      this.appointment.end = withWallDay(this.appointment.end, value.getFullYear(), value.getMonth(), value.getDate());
+      const end = this.appointment.end;
+      const start = this.appointment.start;
+      if (end.getUTCFullYear() === start.getUTCFullYear()
+        && end.getUTCMonth() === start.getUTCMonth()
+        && end.getUTCDate() < start.getUTCDate()) {
+        // End day moved before the start day inside the same month: pull the
+        // start day back to the end day so the pair stays ordered.
+        this.appointment.start = withWallDay(start, end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
+        this.appointmentForm.get('start.date')!.setValue(pickerDayFromModel(this.appointment.start));
       }
-      if (appEnd.toDate().valueOf() < appStart.toDate().valueOf()) { // time's not correct yet
-        const startTime = moment.utc(this.appointment.start);
-        const endTime = moment.utc(this.appointment.end);
-        startTime.set({
-          hour: endTime.hour() >= 24 ? 23 : endTime.hour(),
-          minute: endTime.minute() >= 60 ? 59 : endTime.minute()
-        });
-        this.appointment.start = startTime.toDate();
-        this.appointmentForm.get('start.time')!.setValue(startTime.format('HH:mm'));
+      // The previous guard compared the *stale* start captured before the branch
+      // above, so a cross-day correction left an inverted pair and the time fix
+      // below overwrote a valid start time. Read the current start instead.
+      if (end.getTime() < this.appointment.start.getTime()) { // time's not correct yet
+        const startTime = withWallTime(this.appointment.start,
+          clampWallHour(end.getUTCHours()), clampWallMinute(end.getUTCMinutes()));
+        this.appointment.start = startTime;
+        this.appointmentForm.get('start.time')!.setValue(formatWallDate(startTime, 'HH:mm'));
       }
       if (Object.prototype.hasOwnProperty.call(this.appointment, 'recurringSettings')) {
-        if (moment.utc(this.appointment.end).isAfter(moment.utc(this.appointment.recurringSettings!.untilDate), 'day')) {
-          this.appointment.recurringSettings!.untilDate = moment.utc(this.appointment.end).format('YYYY-MM-DD'); // make a copy; producer stays a 'YYYY-MM-DD' string
-          const d = moment.utc(this.appointment.end);
-          this.recurring.recurringForm.controls['untilDate'].setValue(new Date(d.year(), d.month(), d.date()));
+        const endDay = wallDayNumber(this.appointment.end);
+        const untilDay = wallDayNumber(this.appointment.recurringSettings!.untilDate);
+        if (endDay !== null && untilDay !== null && endDay > untilDay) {
+          // make a copy; producer stays a 'YYYY-MM-DD' string
+          this.appointment.recurringSettings!.untilDate = formatWallDate(this.appointment.end);
+          this.recurring.recurringForm.controls['untilDate'].setValue(pickerDayFromModel(this.appointment.end));
         }
       }
     }
@@ -239,31 +231,21 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     if (!value.match(/\d{2}:\d{2}/)) {
       return;
     }
-    const startTime = moment.utc(this.appointment.start);
-    const endTime = moment.utc(this.appointment.end);
-    const diffHour = endTime.hour() - startTime.hour();
-    const diffMinute = endTime.minute() - startTime.minute();
-    let newDate: moment.Moment;
-    try {
-      newDate = moment.utc(value, 'HH:mm');
-    } catch {
-      newDate = moment.utc(this.appointment.start);
+    const start = this.appointment.start;
+    const end = this.appointment.end;
+    if (end == null) {
+      return;
     }
-    if (!newDate.isValid()) {
-      newDate = moment.utc(this.appointment.start);
-    }
-    startTime.set({
-      hour: newDate.hour() >= 24 ? 23 : newDate.hour(),
-      minute: newDate.minute() >= 60 ? 59 : newDate.minute()
-    });
-    this.appointment.start = startTime.toDate();
-    endTime.set({
-      hour: (startTime.hour() + diffHour) >= 24 ? 23 : (startTime.hour() + diffHour),
-      minute: (startTime.minute() + diffMinute) >= 60 ? 59 : (startTime.minute() + diffMinute)
-    });
+    const diffHour = end.getUTCHours() - start.getUTCHours();
+    const diffMinute = end.getUTCMinutes() - start.getUTCMinutes();
+    const typed = parseWallTime(value);
+    const hours = clampWallHour(typed === null ? start.getUTCHours() : typed.hours);
+    const minutes = clampWallMinute(typed === null ? start.getUTCMinutes() : typed.minutes);
+    this.appointment.start = withWallTime(start, hours, minutes);
     // Update endTime to keep duration
-    this.appointment.end = endTime.toDate();
-    this.appointmentForm.get('end.time')!.setValue(endTime.format('HH:mm'));
+    const newEnd = withWallTime(end, clampWallHour(hours + diffHour), clampWallMinute(minutes + diffMinute));
+    this.appointment.end = newEnd;
+    this.appointmentForm.get('end.time')!.setValue(formatWallDate(newEnd, 'HH:mm'));
   }
   /** changes nothing  */
   onEndDateChange(): void {
@@ -274,30 +256,21 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     if (!value.match(/\d{2}:\d{2}/)) {
       return;
     }
-    const endTime = moment.utc(this.appointment.end);
-    let newDate: moment.Moment;
-    try {
-      newDate = moment.utc(value, 'HH:mm');
-    } catch {
-      newDate = this.appointment.end ? moment.utc(this.appointment.end) : moment.utc(this.appointment.start);
+    const end = this.appointment.end;
+    if (end == null) {
+      return;
     }
-    if (!newDate.isValid()) {
-      newDate = this.appointment.end ? moment.utc(this.appointment.end) : moment.utc(this.appointment.start);
-    }
-    endTime.set({
-      hour: newDate.hour() >= 24 ? 23 : newDate.hour(),
-      minute: newDate.minute() >= 60 ? 59 : newDate.minute()
-    });
-    this.appointment.end = endTime.toDate();
+    const typed = parseWallTime(value);
+    const newEnd = withWallTime(end,
+      clampWallHour(typed === null ? end.getUTCHours() : typed.hours),
+      clampWallMinute(typed === null ? end.getUTCMinutes() : typed.minutes));
+    this.appointment.end = newEnd;
     // Update startTime if end would be before start.
-    if (this.appointment.end.valueOf() < this.appointment.start.valueOf()) {
-      const startTime = moment.utc(this.appointment.start);
-      startTime.set({
-        hour: endTime.hour() >= 24 ? 23 : endTime.hour(),
-        minute: endTime.minute() >= 60 ? 59 : endTime.minute()
-      });
-      this.appointment.start = startTime.toDate();
-      this.appointmentForm.get('start.time')!.setValue(startTime.format('HH:mm'));
+    if (newEnd.getTime() < this.appointment.start.getTime()) {
+      const startTime = withWallTime(this.appointment.start,
+        clampWallHour(newEnd.getUTCHours()), clampWallMinute(newEnd.getUTCMinutes()));
+      this.appointment.start = startTime;
+      this.appointmentForm.get('start.time')!.setValue(formatWallDate(startTime, 'HH:mm'));
     }
   }
   /** checks for validity of input of time and date form */
@@ -306,12 +279,12 @@ export class AppointmentFormComponent implements OnChanges, OnInit, OnDestroy {
     this.appointmentForm.patchValue({
       allDay: this.appointment.allDay,
       start: {
-        date: moment.utc(this.appointment.start).format('YYYY-MM-DD'),
-        time: moment.utc(this.appointment.start).format('HH:mm')
+        date: formatWallDate(this.appointment.start),
+        time: formatWallDate(this.appointment.start, 'HH:mm')
       },
       end: {
-        date: moment.utc(this.appointment.end).format('YYYY-MM-DD'),
-        time: moment.utc(this.appointment.end).format('HH:mm')
+        date: formatWallDate(this.appointment.end!),
+        time: formatWallDate(this.appointment.end!, 'HH:mm')
       }
     });
   }

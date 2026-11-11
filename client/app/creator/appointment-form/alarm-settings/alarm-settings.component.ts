@@ -8,7 +8,7 @@
 import { Component, Input, OnChanges, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators  } from '@angular/forms';
 import { AlarmData } from '../../alarmData';
-import moment from 'moment-timezone';
+import { alarmTrigger } from '../../alarm-trigger';
 import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -16,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import type { Appointment } from '../../appointment';
 import { StorageService } from '../../../storage/storage.service';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 /**
  * A service handling multiple alarms.
@@ -32,7 +32,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    TranslateModule
+    TranslatePipe
   ],
   templateUrl: './alarm-settings.component.html',
   styleUrls: ['./alarm-settings.component.scss']
@@ -144,9 +144,7 @@ export class AlarmSettingsComponent implements OnChanges, OnInit, OnDestroy {
 
   /** gets the alarm distanze and recalculates it as date */
   public recalculateTrigger(alarm: AlarmData): void {
-    const start = moment(this.appointment.start);
-    alarm.trigger = start.subtract(alarm.triggerDelay,
-      alarm.triggerUnit as unknown as moment.unitOfTime.DurationConstructor).toDate();
+    alarm.trigger = alarmTrigger(this.appointment.start, alarm);
   }
 
   /** get alarm intervall and caculates it to minutes */

@@ -20,6 +20,7 @@
             "outputPath": "dist/server/static",
             "index": "client/index.html",
             "browser": "client/main.ts",
+            "baseHref": "/",
             "polyfills": [
               "zone.js"
             ],

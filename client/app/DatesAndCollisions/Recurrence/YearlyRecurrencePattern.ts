@@ -1,4 +1,7 @@
-import moment from 'moment';
+import {
+  addDays, addWeeks, differenceInCalendarYears, getDate, getISODay, getMonth, isLastDayOfMonth, startOfYear, subDays,
+  subWeeks
+} from 'date-fns';
 import { RecurrencePattern } from './RecurrencePattern';
 import { EventCollisionData } from '../EventCollisionData';
 
@@ -40,7 +43,7 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
      * @param date          The date to check.
      */
     private lastDayOfMonth(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
-        if (+moment(date).endOf('month').toDate().setHours( 0, 0, 0, 0) === +moment(date).toDate().setHours( 0, 0, 0, 0)) {
+        if (isLastDayOfMonth(date) === true) {
             return this.isMatchOfInterval(eventData, date);
         }
 
@@ -58,19 +61,19 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
         const factorPart: string = byDayString.slice(0, index);
         const factor: number = Number(factorPart) === 0 ?  1 : Number(factorPart);
 
-        if (moment(date).isoWeekday() === this.getIsoWeekday(dayPart)) {
-            const month: number = moment(date).get('month');
+        if (getISODay(date) === this.getIsoWeekday(dayPart)) {
+            const month: number = getMonth(date);
 
             let counter = 0;
             let d = date;
             if (factor >= 0) {
-                while (moment(d).get('month') === month) {
-                    d = moment(d).subtract(1, 'week').toDate();
+                while (getMonth(d) === month) {
+                    d = subWeeks(d, 1);
                     counter++;
                 }
             } else {
-                while (moment(d).get('month') === month) {
-                    d = moment(d).add(1, 'week').toDate();
+                while (getMonth(d) === month) {
+                    d = addWeeks(d, 1);
                     counter--;
                 }
             }
@@ -93,25 +96,25 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
             let counter = 0;
 
             if (eventData.repeating!.bySetPos! >= 0) {
-                const month: number = moment(date).get('month');
+                const month: number = getMonth(date);
 
                 let d = date;
-                while (moment(d).get('month') === month) {
+                while (getMonth(d) === month) {
                     if (this.isIn(eventData.repeating!.byDay!, d) === true) {
 
                         counter++;
                     }
-                    d = moment(d).subtract(1, 'day').toDate();
+                    d = subDays(d, 1);
                 }
             } else {
-               const month: number = moment(date).get('month');
+               const month: number = getMonth(date);
 
                 let d = date;
-                while (moment(d).get('month') === month) {
+                while (getMonth(d) === month) {
                     if (this.isIn(eventData.repeating!.byDay!, d) === true) {
                         counter--;
                     }
-                    d = moment(d).add(1, 'day').toDate();
+                    d = addDays(d, 1);
                 }
             }
 
@@ -129,7 +132,7 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
      * @param date          The date to check.
      */
     private yearly(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
-        if (moment(date).date() === moment(eventData.start).date()) {
+        if (getDate(date) === getDate(eventData.start)) {
 
             return this.isMatchOfInterval(eventData, date);
         }
@@ -144,7 +147,7 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
     private isMatchOfInterval(eventData: EventCollisionData, date: Date): {match: boolean, break: boolean} {
         const diff = this.yearsBetween(eventData.start, date);
 
-        if (moment(eventData.start).get('month') === moment(date).get('month')) {
+        if (getMonth(eventData.start) === getMonth(date)) {
             if (diff % eventData.repeating!.interval === 0) {
                     if (eventData.repeating!.count !== undefined) {
                         if (diff / eventData.repeating!.interval > eventData.repeating!.count) {
@@ -166,12 +169,12 @@ export class YearlyRecurrencePattern extends RecurrencePattern {
    /** Count the years between the start and end date
      * @param start: Date     start date
      * @param end: Date        end date.
-     * @return 
+     * @return the number of whole years since the start year
      */
     private yearsBetween(start: Date, end: Date): number {
-        const endMoment = moment(end);
-        const startMoment = moment(start).startOf('year');
-
-        return endMoment.diff(startMoment, 'year');
+        // The previous Moment `diff(..., 'year')` measured from the start of the
+        // start year and truncated the partial year, which is exactly the
+        // calendar-year distance.
+        return differenceInCalendarYears(end, startOfYear(start));
     }
 }

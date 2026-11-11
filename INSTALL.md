@@ -7,8 +7,8 @@ from the repository root, not the retired SVN `trunk/source` directory. Dependen
 builds, linting, type-checks and tests must run inside Docker; do not install a second host toolchain.
 Python 2.7 and `windows-build-tools` are no longer required.
 
-The manifests require Node >=24.0.0 and npm >=10.2.0. Images use the floating `node:lts-slim` tag,
-not a pinned Node 24 image. Check the actual runtime with
+The root, `server/` and `electron/` manifests require Node `^26.0.0` and npm `^11.20.0`, and every
+`Dockerfile` stage starts from `node:26-slim`. Check the actual runtime with
 `docker compose run --rm duely-dev node --version`. If Docker is unavailable, stop rather than
 falling back to host execution.
 

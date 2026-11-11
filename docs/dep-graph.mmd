@@ -9,80 +9,82 @@ graph TD
     %% ─── root: runtime dependencies ───
     subgraph root_deps ["Runtime Dependencies"]
         direction LR
-        root_dep__angular_animations["@angular/animations\n^20.3.18"]
-        root_dep__angular_cdk["@angular/cdk\n^20.2.14"]
-        root_dep__angular_common["@angular/common\n^20.3.18"]
-        root_dep__angular_compiler["@angular/compiler\n^20.3.18"]
-        root_dep__angular_core["@angular/core\n^20.3.18"]
-        root_dep__angular_forms["@angular/forms\n^20.3.18"]
-        root_dep__angular_material["@angular/material\n^20.2.14"]
-        root_dep__angular_platform_browser["@angular/platform-browser\n^20.3.18"]
-        root_dep__angular_router["@angular/router\n^20.3.18"]
-        root_dep__ngx_translate_core["@ngx-translate/core\n^16.0.3"]
-        root_dep__ngx_translate_http_loader["@ngx-translate/http-loader\n^16.0.0"]
-        root_dep_compression(["compression\n^1.7.5"])
-        root_dep_date_holidays["date-holidays\n^3.24.0"]
-        root_dep_express(["express\n^4.21.2"])
+        root_dep__angular_animations["@angular/animations\n22.2.5"]
+        root_dep__angular_cdk["@angular/cdk\n22.2.6"]
+        root_dep__angular_common["@angular/common\n22.2.5"]
+        root_dep__angular_compiler["@angular/compiler\n22.2.5"]
+        root_dep__angular_core["@angular/core\n22.2.5"]
+        root_dep__angular_forms["@angular/forms\n22.2.5"]
+        root_dep__angular_material["@angular/material\n22.2.6"]
+        root_dep__angular_platform_browser["@angular/platform-browser\n22.2.5"]
+        root_dep__angular_router["@angular/router\n22.2.5"]
+        root_dep__date_fns_tz["@date-fns/tz\n1.5.0"]
+        root_dep__ngx_translate_core["@ngx-translate/core\n18.1.0"]
+        root_dep__ngx_translate_http_loader["@ngx-translate/http-loader\n18.1.0"]
+        root_dep_compression(["compression\n1.8.2"])
+        root_dep_date_fns["date-fns\n4.4.0"]
+        root_dep_date_holidays["date-holidays\n3.39.1"]
+        root_dep_express(["express\n5.3.0"])
         root_dep_file_saver["file-saver\n^2.0.5"]
-        root_dep_ical_generator["ical-generator\n^7.2.0"]
-        root_dep_moment_timezone["moment-timezone\n^0.5.47"]
+        root_dep_ical_generator["ical-generator\n11.1.3"]
         root_dep_rxjs["rxjs\n~7.8.1"]
-        root_dep_tslib["tslib\n^2.8.1"]
-        root_dep_zone_js["zone.js\n~0.15.0"]
+        root_dep_tslib["tslib\n2.9.1"]
+        root_dep_zone_js["zone.js\n~0.16.3"]
     end
     root --> root_deps
 
     %% ─── root: dev dependencies ───
     subgraph root_devs ["Dev Dependencies"]
         direction LR
-        root_dev__angular_eslint_eslint_plugin("@angular-eslint/eslint-plugin\n^20.7.0")
-        root_dev__angular_eslint_eslint_plugin_template("@angular-eslint/eslint-plugin-template\n^20.7.0")
-        root_dev__angular_eslint_template_parser("@angular-eslint/template-parser\n^20.7.0")
-        root_dev__angular_build("@angular/build\n^20.3.23")
-        root_dev__angular_cli("@angular/cli\n^20.3.23")
-        root_dev__angular_compiler_cli("@angular/compiler-cli\n^20.3.18")
-        root_dev__eslint_js("@eslint/js\n^9.39.5")
-        root_dev__playwright_test("@playwright/test\n^1.64.1")
+        root_dev__angular_eslint_eslint_plugin("@angular-eslint/eslint-plugin\n22.6.0")
+        root_dev__angular_eslint_eslint_plugin_template("@angular-eslint/eslint-plugin-template\n22.6.0")
+        root_dev__angular_eslint_template_parser("@angular-eslint/template-parser\n22.6.0")
+        root_dev__angular_build("@angular/build\n22.2.6")
+        root_dev__angular_cli("@angular/cli\n22.2.6")
+        root_dev__angular_compiler_cli("@angular/compiler-cli\n22.2.5")
+        root_dev__eslint_js("@eslint/js\n10.0.1")
+        root_dev__playwright_test("@playwright/test\n1.65.0")
         root_dev__types_compression("@types/compression\n^1.8.1")
         root_dev__types_express("@types/express\n^5.0.0")
         root_dev__types_file_saver("@types/file-saver\n^2.0.7")
-        root_dev__types_node("@types/node\n^22.10.2")
-        root_dev_concurrently("concurrently\n^9.1.0")
-        root_dev_electron(["electron\n^34.0.0"])
-        root_dev_electron_builder("electron-builder\n^26.0.12")
-        root_dev_esbuild("esbuild\n0.25.9")
-        root_dev_eslint("eslint\n^9.17.0")
-        root_dev_jsdom("jsdom\n^26.1.0")
-        root_dev_rimraf("rimraf\n^6.0.1")
-        root_dev_sass("sass\n^1.83.0")
+        root_dev__types_node("@types/node\n26.6.6")
+        root_dev_angular_eslint("angular-eslint\n22.6.0")
+        root_dev_concurrently("concurrently\n10.0.7")
+        root_dev_electron(["electron\n45.2.3"])
+        root_dev_electron_builder("electron-builder\n26.18.1")
+        root_dev_esbuild("esbuild\n0.28.2")
+        root_dev_eslint("eslint\n10.14.0")
+        root_dev_jsdom("jsdom\n31.0.0")
+        root_dev_rimraf("rimraf\n6.1.4")
+        root_dev_sass("sass\n1.108.1")
         root_dev_ts_node("ts-node\n^10.9.2")
-        root_dev_typescript("typescript\n~5.9.3")
-        root_dev_typescript_eslint("typescript-eslint\n^8.70.0")
-        root_dev_vitest("vitest\n^3.1.0")
+        root_dev_typescript("typescript\n6.0.3")
+        root_dev_typescript_eslint("typescript-eslint\n8.72.2")
+        root_dev_vitest("vitest\n5.1.0")
     end
     root --> root_devs
 
     %% ─── electron: dev dependencies ───
     subgraph electron_devs ["Dev Dependencies"]
         direction LR
-        electron_dev_electron(["electron\n^34.0.0"])
+        electron_dev_electron(["electron\n45.2.3"])
     end
     electron --> electron_devs
 
     %% ─── server: runtime dependencies ───
     subgraph server_deps ["Runtime Dependencies"]
         direction LR
-        server_dep_compression(["compression\n^1.7.5"])
-        server_dep_express(["express\n^4.21.2"])
+        server_dep_compression(["compression\n1.8.2"])
+        server_dep_express(["express\n5.3.0"])
     end
     server --> server_deps
 
     %% ─── Shared dependencies (appear in 2+ manifests) ───
     subgraph shared_section ["🔗 Shared Across Manifests"]
         direction LR
-        shared_compression[/"compression\nroot: ^1.7.5 | server: ^1.7.5"/]
-        shared_electron[/"electron\nroot: ^34.0.0 | electron: ^34.0.0"/]
-        shared_express[/"express\nroot: ^4.21.2 | server: ^4.21.2"/]
+        shared_compression[/"compression\nroot: 1.8.2 | server: 1.8.2"/]
+        shared_electron[/"electron\nroot: 45.2.3 | electron: 45.2.3"/]
+        shared_express[/"express\nroot: 5.3.0 | server: 5.3.0"/]
     end
 
     root -.->|shares| shared_compression
