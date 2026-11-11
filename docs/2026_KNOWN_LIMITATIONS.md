@@ -16,18 +16,19 @@ verification results in `docs/TESTING_GUIDE.md` §4.
 **Every entry states four things:** WHAT the limitation is · WHY it is accepted · WHAT the risk is ·
 WHAT WOULD CHANGE THE DECISION.
 
-Sections **(a)–(g)** are the prescribed spine. Sections **(h)–(l)** carry (h) architectural deferrals,
+Sections **(a)–(g)** are the prescribed spine. Sections **(h)–(m)** carry (h) architectural deferrals,
 (i) accepted UI defects and user-gated follow-ups, (j) the i18n backlog from the deleted
-`docs/TODO-untranslated-strings.md`, (k) remaining visual and functional verification gaps, and
-(l) the deferred macOS packaging acceptance that moved here from `docs/TODO_UPGRADES.md`.
+`docs/TODO-untranslated-strings.md`, (k) remaining visual and functional verification gaps,
+(l) the deferred macOS packaging acceptance that moved here from the retired upgrade board, and
+(m) what the 2026-11-11 dependency cycle deliberately left held.
 The plan/reference retirement additions were checked against source at `f527f26`; the local handoff
 was reviewed against source at `889b3e5`. The complete 6,276-line local task board was reviewed at
 `74a271d`, including its terminal Phase 13 closure and later corrections to earlier OPEN records.
-Both migration cycles are complete. Upgrade prerequisites and upgrade-owned date/export repairs now
-live in `docs/TODO_UPGRADES.md`; the stable section labels below retain relocation pointers, not
-claims of resolution. That upgrade board closed on 2026-11-11, and new work is tracked in
-`docs/AI_TASKBOARD.md`. Accepted and unrelated deferred work remains here. Preparing that execution
-plan does not authorize its implementation.
+Both migration cycles are complete. The dependency cycle that repaired most of (a), (b.11), (d.4),
+(j.2) and (k.2) ran from P0 to R2 and closed on 2026-11-11; its task board
+(`docs/TODO_UPGRADES.md`) was retired with it, its measured gate results are in
+`docs/TESTING_GUIDE.md` §4, and what it deliberately did not settle is recorded in (m).
+New work is tracked in `docs/AI_TASKBOARD.md`. Accepted and unrelated deferred work remains here.
 These documentation reviews used existing verification records and did not rerun tests or browser checks.
 
 > **Line-number note.** Original closure citations were re-verified at `1f6fd97`; subsequent
@@ -36,31 +37,36 @@ These documentation reviews used existing verification records and did not rerun
 
 ---
 
-## (a) TEST-AND-DATE WORK — PARTLY RELOCATED TO THE UPGRADE PLAN
+## (a) TEST-AND-DATE WORK — REPAIRED OR CLOSED BY THE 2026-11-11 CYCLE
 
 The migration's locked decisions 3 and 9 barred test work and modernisation within that completed
-cycle. The separately authorized upgrade cycle allows tests and necessary modernisation, but its
-execution still requires task-level approval. Upgrade-sensitive findings have been moved to
-`docs/TODO_UPGRADES.md` §2, which now owns their diagnosis, rationale, risks and acceptance criteria.
-Relocation does not mean repair, and the creator coverage decision in (a.3) remains separately gated.
+cycle. The separately authorized dependency cycle allowed both, and executed them: A3 replaced the
+`saveAs` seam, P1C/P1F/P1E/P1W added the regression guards, D1 repaired the export and ordinal
+defects, and D2 converted the date library and repaired the form/UNTIL defects. What remains in this
+section is (a.2)'s retained time policy, (a.3)'s coverage decision, and the two untouched refactors
+(a.9) and (a.10).
 
-The recorded migration-closure baseline is **24 failed / 49 passed (73 total)**, failing-name md5
-`172d78996b50c84e38211b529d76ab0b`. Commit `74a271d` refreshed holiday fixtures to 2032 and renamed
-the failing test; its focused run stayed 1 failed / 2 passed. The full suite and hash have not been
-remeasured since that change. Upgrade task P0 must capture current evidence without overwriting
-historical evidence; no unrelated documentation task authorizes baseline changes.
+The recorded migration-closure baseline was **24 failed / 49 passed (73 total)**, failing-name md5
+`172d78996b50c84e38211b529d76ab0b`. That is historical evidence now: the current gate target is
+**2 failed / 131 passed (133)** with exactly two accepted names (see (m)), and the measured record of
+every gate is in `docs/TESTING_GUIDE.md` §4.
 
-### (a.1) `saveAs` test seam — RELOCATED, NOT FIXED
+### (a.1) `saveAs` test seam — REPAIRED by A3 (2026-11-10)
 
-Diagnosis and non-vacuous mock/side-effect requirements moved to `docs/TODO_UPGRADES.md` §2.1.
-Owner: A3 (Angular/test-runner alignment). This is upgrade-owned harness repair, not a requirement
-that every existing storage test be green before the first upgrade.
+The three storage specs now pass under Vitest 4 without a production seam, and an isolated negative
+control still kills them, so the pass is not a declared or inert mock. No injectable `saveAs` boundary
+was added, so the no-argument storage factory is unchanged. Assertions cover the call, filename, MIME
+type and content; see the A3 record in `docs/TESTING_GUIDE.md` §4.
 
-### (a.2) Collision assertion defects — RELOCATED, NOT FIXED
+### (a.2) Collision assertion loops — repaired by P1C; the 2032 oracle stays red by policy
 
-Diagnosis, the completed 2032 fixture provenance and all-date/reason verification moved to
-`docs/TODO_UPGRADES.md` §2.2. Owner: P1C, **before** date-holidays, ical-generator or date-library changes.
-The calendar-fixture refresh did not repair assertion loops or change collision-time policy.
+Both loops now assert cardinality and every indexed date and reason, and the preserved 15-date
+Niedersachsen/Augsburg 2032 union is checked entry by entry. Repairing the loops exposed what the old
+index-0 loop hid: the holiday test compares raw country-midnight instants while `RecurrencePattern`
+copies the event's **host-local** time of day onto the holiday Dates. That time policy was
+deliberately retained (D1 and D2 changed neither the collision nor the holiday policy), so this one
+test remains red and is one of the two accepted failing names in (m). Making it green is a contract
+decision, not a test fix; the fixtures must not be rewritten to match the policy.
 
 ### (a.3) `creator.component.spec` `saveText` — decided option C (backlog §1(d))
 
@@ -80,32 +86,49 @@ The calendar-fixture refresh did not repair assertion loops or change collision-
   **A** — test-side `valid = [true, true, true, true]` one-liner (keeps happy-path coverage; may
   resurface in the review); **B** — app-side model re-validation in `generateAndSaveICAL`
   (a Phase 3.x-class behavioural rework, barred by decision 9).
+- **STATUS 2026-11-11.** The dependency cycle did not change this decision, so the test is one of the
+  two accepted failing names in (m).
 
-### (a.4) Mixed `untilDate` representations — RELOCATED, NOT FIXED
+### (a.4) Mixed `untilDate` representations — REPAIRED by D2 (2026-11-10)
 
-Full finding moved to `docs/TODO_UPGRADES.md` §2.4. P1F characterizes the existing boundaries;
-D2 normalized them during the date-library conversion, without an unrelated whole-form rewrite.
+`untilDate` now crosses one explicit date-only boundary instead of mixing a `YYYY-MM-DD` seed, a
+local-midnight picker Date and a Moment computation value, and the default 100-year value is emitted
+as the date-only `2126-11-10`. P1F's characterization guards the first reveal, reopening and exported
+values.
 
-### (a.5) Reverse-date start-time anomaly — RELOCATED, NOT FIXED
+Two boundary semantics remain **characterized rather than resolved**. The exported rule keeps the
+selected day's **midnight** cutoff (`UNTIL=20320210T000000`), so a 09:00 occurrence on that last day is
+excluded, and a supplied all-day boundary is passed through as an exclusive DTEND per RFC 5545. The
+guard is deliberately named "not an invented end-of-day policy": inclusive last-day or whole-day
+semantics would be a product decision no task has taken.
 
-Full finding and historical attribution moved to `docs/TODO_UPGRADES.md` §2.4. P1F supplies
-model-level coverage; D2 owns the stale-value repair, not the Angular-only upgrade.
+### (a.5) Reverse-date start-time anomaly — REPAIRED by D2 (2026-11-10)
 
-### (a.6) Nineteen appointments-service failures — RELOCATED, NOT FIXED
+The reverse-end-date branch now re-reads the start after the same-month day correction, so the
+22:00 → 23:00 model shift is gone. P1F's guard ("moving the end date backward must retain an already
+valid 22:00 start") passes in UTC and in Europe/Berlin.
 
-The 10 serialization, 7 ordinal and 2 ICS/timezone failures, their causes and prior null-guard
-repair moved to `docs/TODO_UPGRADES.md` §2.3. P1E establishes public-export guards; D1 owns
-ordinal/boundary repairs and contract-reviewed expectations. A package bump alone is not a repair.
+### (a.6) Nineteen appointments-service failures — REPAIRED by D1 (2026-11-10)
 
-### (a.7) Serialized dates at the collision boundary — RELOCATED, NOT FIXED
+All nineteen historical failures left the red set with `ical-generator` 11.1.3: the `'floating'`
+sentinel maps onto the library flag instead of a literal `TZID=floating`, ordinals are emitted as
+`BYDAY` + `BYSETPOS` (v11 rejects the `2WE` prefix at runtime), alarms use
+`repeat: {times, interval}`, and an empty exclusion set emits no `EXDATE`. 48 baseline failures were
+repaired with none added. The package bump alone would not have done it: the boundary and ordinal
+repairs are application changes, and P1E's public-flow guards prove them.
 
-Production defect moved to `docs/TODO_UPGRADES.md` §2.3. Owner: D1, following P1E regression
-coverage. Runtime date conversion must replace the cast; manually Date-valued fixtures are insufficient.
+### (a.7) Serialized dates at the collision boundary — REPAIRED by D1 (2026-11-10)
 
-### (a.8) UNTIL picker hydration — RELOCATED, NOT FIXED
+`appointments.service.ts` no longer casts `ev.toJSON()` to Date-valued `EventCollisionData`; the
+values pass through a typed `toCollisionData()` adapter, so recurrence code receives Dates and
+`eventData.start.getHours is not a function` is gone. P1E's exclusion, holiday and COUNT guards cover
+that boundary.
 
-Full finding moved to `docs/TODO_UPGRADES.md` §2.4. P1F covers first reveal/reopening; D2 must
-restore the saved calendar day while retaining explicit OnPush notification.
+### (a.8) UNTIL picker hydration — REPAIRED by D2 (2026-11-10)
+
+The recurrence settings hydrate the saved UNTIL through `pickerDayFromWallValue`, so first reveal and
+reopening show the saved calendar day (April 3, 2032 in the guard) without a timezone shift, and the
+explicit OnPush notification is retained.
 
 ### (a.9) Load-bearing reactive-form / `ngModel` dual bindings
 
@@ -180,10 +203,9 @@ restore the saved calendar day while retaining explicit OnPush notification.
 - **RISK.** None for users. The only risk is mis-reading the 44 as a production defect. It must
   **never** be documented as a user-facing limitation.
 - **WHAT WOULD CHANGE THE DECISION.** No production repair is needed. The exact **44** count belongs
-  to the historical migration baseline, not a permanent gate for expanded upgrade tests. P0/A3 in
-  `docs/TODO_UPGRADES.md` must attribute warning-count changes to actual renders/harness changes,
-  not suppress diagnostics or treat these messages as user-facing errors. Adding icon providers
-  solely to silence output is not an upgrade prerequisite.
+  to the historical migration baseline, not a permanent gate; A3 measured **73** once more specs
+  executed and attributed the change to real renders, suppressing nothing. Adding icon providers
+  solely to silence output is still not a repair.
 
 ### (b.3) CommonJS/AMD optimization-bailout specifiers (backlog §2(c)) — five since I2, three since D2
 
@@ -313,11 +335,16 @@ restore the saved calendar day while retaining explicit OnPush notification.
 - **WHAT WOULD CHANGE THE DECISION.** A scoped cleanup proving each candidate has no static or
   dynamically generated consumers, preserving the accent map, live labels and actual swatches.
 
-### (b.11) Express runtime/type skew — RELOCATED, NOT FIXED
+### (b.11) Express runtime/type skew — REPAIRED by C1 (2026-11-10)
 
-Full finding moved to `docs/TODO_UPGRADES.md` §2.6. Owner: C1, aligning root/server runtime
-manifests and root typings atomically. It is not a global prerequisite for client upgrades;
-static serving, fallback behaviour and error paths must be checked at runtime.
+Root and server runtime manifests and the root typings now agree: Express **5.3.0** in both, with
+`@types/express` 5.0.6 and compression 1.8.2 unchanged. No `server/app.ts` edit was needed — the
+accepted fallback and missing-asset policies are Express-5 compatible as written — and the 18-case
+probe matrix (routes, deep links, absent assets, error responses, compression, licence artefact)
+matched the pre-upgrade status, bytes and body hashes. The only differences are four `mime-types@3`
+header spellings, e.g. `charset=UTF-8` → `utf-8`, `application/javascript` → `text/javascript` and
+`image/x-icon` → `image/vnd.microsoft.icon`. The `proxy-addr` critical advisory left the tree with the
+upgrade.
 
 ### (b.12) The lint presets now come from the `angular-eslint` umbrella package (recorded 2026-11-10 by A4)
 
@@ -472,15 +499,15 @@ as *not deprecated* or *not worth the churn*; none is a defect.
 - **WHAT.** At `74a271d`, **15** client TypeScript files import Moment: 10 from `moment-timezone`
   and 5 from `moment` (12 non-spec files and 3 specs). Moment is officially in maintenance mode.
 - **WHY ACCEPTED.** Replacement was excluded from the completed migration under decision 9. The
-  separately authorized upgrade cycle selected Luxon (`docs/TODO_UPGRADES.md` D2); the user then chose
-  `date-fns` + `@date-fns/tz` instead and D2 implemented it — see the addendum below.
+  separately authorized upgrade cycle first selected Luxon; the user then chose
+  `date-fns` + `@date-fns/tz` instead and its D2 task implemented that — see the addendum below.
 - **RISK.** Maintenance mode limits new feature development and leaves a large dependency footprint;
   it does not establish that timezone-data updates have stopped. No Europe/Berlin offset mismatch
   was found in the historical probes in (h.3), not an exhaustive correctness guarantee.
 - **WHAT WOULD CHANGE IT.** The date-handling phase migrating to a maintained library.
 - **D2 ADDENDUM (2026-11-10) — REPLACED, with a reviewed upstream remnant.** D2 converted the
-  application to `date-fns` 4.4.0 + `@date-fns/tz` 1.5.0 (the user's decision, superseding the Luxon
-  wording of `docs/TODO_UPGRADES.md` D2) and removed `moment-timezone` from the root `dependencies`;
+  application to `date-fns` 4.4.0 + `@date-fns/tz` 1.5.0 (the user's decision, superseding the earlier
+  Luxon wording) and removed `moment-timezone` from the root `dependencies`;
   the lock gained exactly `date-fns` and `@date-fns/tz` and lost no entry. No file under `client/`,
   `server/`, `electron/` or `e2e/` imports Moment any more (66 sources scanned, 0 imports; the 16
   remaining mentions are comments). `moment` 2.30.1 and `moment-timezone` 0.6.6 stay in the lock only
@@ -502,8 +529,8 @@ as *not deprecated* or *not worth the churn*; none is a defect.
 - **WHY ACCEPTED.** `boolean` is a transitive optional dependency of the Electron toolchain with no
   direct upgrade path.
 - **RISK.** A deprecation warning at install; no runtime surface (it is dev/optional).
-- **WHAT WOULD CHANGE IT.** An upstream `global-agent`/`@electron/get` release that drops it — the
-  dependency-upgrade cycle's territory (`docs/TODO_UPGRADES.md`).
+- **WHAT WOULD CHANGE IT.** An upstream `global-agent`/`@electron/get` release that drops it. The
+  closed dependency cycle did not touch it.
 
 ### (d.3) Deprecated animations package — retention depends on actual usage, not a mandatory peer
 
@@ -513,9 +540,9 @@ as *not deprecated* or *not worth the churn*; none is a defect.
 - **WHY ACCEPTED.** Removing an optional peer is not proof that the current animation/provider path
   works without it; retention must follow actual application and Material usage.
 - **RISK.** A deprecation warning; premature removal can break the configured runtime path.
-- **WHAT WOULD CHANGE IT.** A3/A4 in `docs/TODO_UPGRADES.md` reviewing the selected versions' peer/API
-  contract and exercising Material controls before changing packages/providers. Do not assume later
-  majors automatically fold this API into the platform.
+- **WHAT WOULD CHANGE IT.** Reviewing the selected versions' peer/API contract and exercising the
+  Material controls before changing packages or providers. A3/A4 did exactly that and kept the package
+  (see the addendum). Do not assume later majors automatically fold this API into the platform.
 - **A4 ADDENDUM (2026-11-10).** A3/A4 answered the question the other way: the package is **retained**
   at `@angular/animations` **22.2.5** because `client/app/app.config.ts` still supplies
   `provideAnimationsAsync()` and the Material controls it drives are exercised by the E2E gates. npm
@@ -523,15 +550,16 @@ as *not deprecated* or *not worth the churn*; none is a defect.
   API would change animation behaviour across every Material overlay and is **not** part of A4. The
   dependency stays a direct pin until a task explicitly owns that migration.
 
-### (d.4) Runtime engine alignment — RELOCATED, NOT FIXED
+### (d.4) Runtime engine alignment — RESOLVED by B0/A4/D4/E1 (2026-11-10)
 
-The lax root/server/Electron `engines.node` ranges and their acceptance criteria moved to
-`docs/TODO_UPGRADES.md` §2.7. Owners: B0, A4 and E1. Align each manifest when its runtime changes,
-not only during final cleanup; Electron's embedded runtime is not necessarily the container runtime.
-**A4 state (2026-11-10):** all three manifests declare `node ^26.0.0` / `npm ^11.20.0`, which already
-satisfies Angular 22's `^22.22.3 || ^24.15.0 || >=26.0.0`, so A4 needed no engine edit;
-`npm ci --engine-strict` accepts the regenerated lock in both image stages. Root Node typings and the
-Electron-versus-container runtime measurement stay with D4/E1.
+All three manifests declare `node ^26.0.0` / `npm ^11.20.0`, which already satisfies Angular 22's
+`^22.22.3 || ^24.15.0 || >=26.0.0`, so A4 needed no engine edit; `npm ci --engine-strict` accepts the
+regenerated lock in both image stages on container Node 26.13.0. D4 aligned the root Node typings
+(`@types/node` 26.6.6, both `types: ["node"]` gates 0), and E1 measured the two runtimes separately:
+Electron 45.2.3 embeds Node 24.22.2 / Chromium 156.0.8078.80, which `engines` neither covers nor can
+cover because the `electron` devDependency pins it, while the packaged main process needs only
+`electron`, `fs`, `path` and `url` from that runtime. The Windows optional-node pruning was never
+authorized and stays conditional.
 
 ### (d.5) The `date-holidays` low advisory has no upstream fix (recorded 2026-11-10 by D3)
 
@@ -584,7 +612,9 @@ Electron-versus-container runtime measurement stay with D4/E1.
   is the dev-only ESLint/electron-builder tooling chain whose only offered fix is a downgrade, and the
   `date-holidays` chain of (d.5). The container rows stand unchanged, because the base image did not
   move (the production image's base layers are byte-identical to E2's), so the recorded "re-scan on the
-  next base-image bump" rule still governs them. See the R2 record in `docs/TODO_UPGRADES.md`.
+  next base-image bump" rule still governs them. The refresh was lockfile-only: `package.json` stayed
+  byte-identical and exactly ten transitive patch bumps entered the lock, with no additions or
+  removals. The full gate record is in `docs/TESTING_GUIDE.md` §4.
 - **PLATFORM SCOPE.** Linux arm64 in the container images is measured end to end. Electron 45.2.3 embeds
   Node 24.22.2 / Chromium 156.0.8078.80, which `engines` (`^26.0.0`) cannot cover because the `electron`
   devDependency pins it; the packaged main process needs only `electron`, `fs`, `path` and `url`. macOS
@@ -592,20 +622,21 @@ Electron-versus-container runtime measurement stay with D4/E1.
 
 ---
 
-## (e) ROADMAP POINTER — framework upgrades now belong to the working upgrade plan
+## (e) ROADMAP POINTER — the framework upgrade path is closed
 
-The Material migration is complete. `docs/TODO_UPGRADES.md` now owns the Angular 20 → 21 → 22
-path, current registry/peer evidence, test-runner ordering, strictness and theme safeguards. The
-older compatibility snapshot is superseded by that plan's dated metadata, which must be refreshed
-at execution time. In particular, Angular 21's build peer is stricter than its compiler peer.
+The Material migration is complete, and so is the Angular 20 → 21 → 22 path that followed it: the
+dependency cycle ran from P0 to R2 and closed on 2026-11-11. The delivered state is Angular 22.2.5 /
+build 22.2.6, TypeScript 6.0.3, Vitest 5.1.0 + jsdom 31, `date-fns` 4.4.0 + `@date-fns/tz` 1.5.0 and
+Express 5.3.0, on Node 26.13.0. Gate evidence is in `docs/TESTING_GUIDE.md` §4; the deliberate version
+holds and the deb-only packaging scope are in (m).
 
-The Webpack/build-angular retirement was already completed by task #52 (`aed844b`); do not restore
-it to make a new runner work. Necessary upgrade changes are allowed, but unrelated signals/DI,
-accessibility and theme rewrites remain deferred in (c), (i). Planning is not execution approval.
+The Webpack/build-angular retirement was completed earlier by task #52 (`aed844b`); do not restore it
+to make a new runner work. Unrelated signals/DI, accessibility and theme rewrites remain deferred in
+(c), (i) — the cycle did not touch them.
 
-The board's one deferred item, macOS packaging acceptance (task **M1**), has since moved out of it and
-is recorded in (l): it needs a macOS host and runs interactively with the user, so it was never part of
-the numbered upgrade sequence.
+The board's one deferred item, macOS packaging acceptance (task **M1**), moved out of it and is
+recorded in (l): it needs a macOS host and runs interactively with the user, so it was never part of
+the numbered sequence.
 
 ---
 
@@ -630,10 +661,11 @@ the numbered upgrade sequence.
   could not be verified in-container (blocker below), so any wiring would be unverifiable.
 - **RISK.** The packaged desktop app has no working "save to disk" dialog, and the Electron storage
   path is untested at runtime.
-- **WHAT WOULD CHANGE THE DECISION.** Upgrade task B0 in `docs/TODO_UPGRADES.md` owns clean-install
-  bootstrap; B12 owns GUI-launch, custom-protocol and Linux packaging verification. Neither activates the
-  currently inactive desktop-storage path or implements the save dialog; those need separate feature
-  authorization after the runtime can be exercised.
+- **WHAT WOULD CHANGE THE DECISION.** B0, B12 and E1 completed the clean-install bootstrap, the
+  `app://duely` protocol, the Xvfb launch and the Linux deb packaging, so the "runtime cannot be
+  exercised" blocker is retired. None of them activated the inactive desktop-storage path or
+  implemented the save dialog: those need separate feature authorization, now against a runtime that
+  can actually be launched on Linux.
 
 **Three disproved beliefs — do NOT re-litigate them:**
 
@@ -752,8 +784,8 @@ repair.
 - **RISK OF THE STATUS QUO.** No offset mismatch was found in the recorded Europe/Berlin probes:
   `require('moment-timezone')` resolves to `index.js` carrying the **FULL** data, matching independent
   `Intl.DateTimeFormat` results at the 13 timestamps spanning **1980–2200** preserved in
-  `docs/TODO_UPGRADES.md` D2. These sampled results do not establish every instant/zone or guarantee
-  future timezone legislation.
+  `docs/TESTING_GUIDE.md` §5, "The date-library timezone and export oracle". These sampled results do
+  not establish every instant/zone or guarantee future timezone legislation.
 - **WHAT WOULD CHANGE THE DECISION.** Bounding the UNTIL date first (a datepicker `max` plus a
   validator) — itself an unauthorised behaviour change under locked decision 9.
 - **I2 ADDENDUM (2026-11-10).** The resolved specifier is now **`moment-timezone` 0.6.6** instead of
@@ -772,7 +804,7 @@ repair.
   **Unreliable load probes — do not use:** `tz.zoneExists()` (deprecated, warns), `tz.names.length`
   (returns 0), `tz.zone(...).untils` (throws "Invalid time value"). The reusable 13-timestamp table
   and expected offsets from the retired local measurement record are preserved in
-  `docs/TODO_UPGRADES.md` D2.
+  `docs/TESTING_GUIDE.md` §5, "The date-library timezone and export oracle".
 - **D2 ADDENDUM (2026-11-10) — the question moves upstream.** No application file imports
   `moment-timezone` any more, so the DECLINED build choice is no longer the application's: the remaining
   copy is `caldate`'s (see (d.1)), which needs a real zone database for holiday arithmetic, and its
@@ -915,8 +947,7 @@ Phase 13 visual pass is preserved separately in `docs/TESTING_GUIDE.md` §4.
   (22/0 E2E, unchanged); the desktop window renders `/settings`, `/about`, `/legal`, `/404`, a deep
   unknown path (route fallback → `/404`) and the creator from `app://duely`; and the desktop build
   contains no `file://` load path any more. Evidence:
-  `.git/duely-batch-20261110/b12/web.json`, `desktop.json`, `quality.json` and
-  `docs/TODO_UPGRADES.md` §B12.
+  `.git/duely-batch-20261110/b12/web.json`, `desktop.json` and `quality.json`.
 
 ### (i.10) Native time controls remain; `ngx-mat-timepicker` follow-up is parked
 
@@ -950,6 +981,25 @@ Phase 13 visual pass is preserved separately in `docs/TESTING_GUIDE.md` §4.
   icon actions, supplies meaningful translated names and appropriate help, and verifies keyboard,
   focus and assistive-technology behaviour in a browser.
 
+### (i.12) Three interactions the desktop run documented instead of changing
+
+- **WHAT.** E1's 800×600 desktop interaction run recorded three pre-existing behaviours and left them
+  alone. (1) `MAT_DATE_LOCALE` is resolved when the first date picker is created, so after a language
+  change typed dates parse in the previous locale until the app is reloaded; the export proves the
+  parsed day, so this is a locale-format mismatch, not a lost value. (2) A named-zone export
+  emits `TZID` parameters without a `VTIMEZONE` block. (3) The remove button's click bubbles to the
+  card-header toggle, so removing an appointment also collapses the survivor.
+- **WHY ACCEPTED.** All three are pre-existing provider/template/export behaviour, not regressions from
+  the cycle, and each fix is a behavioural change outside an upgrade's scope: (1) needs locale
+  re-resolution on language change, (2) needs VTIMEZONE generation plus a decision about which payloads
+  ship zone definitions, (3) needs event propagation stopped in the template.
+- **RISK.** A user who switches language and immediately types a date can get a differently parsed day
+  until reload; an ICS consumer without its own zone database cannot resolve a named `TZID` from the
+  export alone; a removal also hides the remaining card, which reads as data loss until it is reopened.
+- **WHAT WOULD CHANGE THE DECISION.** A user-authorized UI/export pass that reproduces each behaviour in
+  a browser or parser, fixes it with the semantics above, and updates the affected E2E assertions
+  rather than deleting them.
+
 ---
 
 ## (j) i18n CARRY-FORWARD
@@ -981,11 +1031,15 @@ outcome of the consolidation, so all are preserved.
 - **WHAT WOULD CHANGE THE DECISION.** The user confirms the six current values as-is or supplies
   replacements, including capitalization (edit both locales together to preserve key parity).
 
-### (j.2) Upgrade-sensitive locale verification — RELOCATED, NOT VERIFIED
+### (j.2) Upgrade-sensitive locale verification — VERIFIED by P1W/D2 (2026-11-10)
 
-Remaining runtime checks and their provenance moved to `docs/TODO_UPGRADES.md` §2.5.
-Owner: P1W/A3/D2, with actual collision-export verification after D1. Legal cold-load rendering
-was already fixed; this relocation does not authorize wording changes from (j.1) or (j.4).
+The remaining runtime checks were implemented rather than relocated: Settings metadata and Material
+date labels run in EN and DE, and the exclusion reason with its `EXDATE` was verified through real
+downloads and a bounded collision setup. The German Material day-label guard flipped green when D2
+supplied `MAT_DATE_LOCALE` from the saved language, without editing the E2E spec. The one remaining
+locale quirk is recorded in (i.12): `MAT_DATE_LOCALE` is resolved when the first picker is created, so
+a language change needs one reload before typed dates use the new locale. Wording questions from
+(j.1) and (j.4) remain untouched.
 
 ### (j.3) Five strings deliberately left untranslated (§3(d), CLOSED BY DECISION — U5 is permanent)
 
@@ -1051,12 +1105,15 @@ answer survives retirement of both the inventory and execution plan.
   interactions with expanded creator forms, dropdowns, persistence and cancel. Check the
   empty-storage redirect as the default state, not as falsely labelled theme/accent variants.
 
-### (k.2) Vacuous timezone/collision/export checks — RELOCATED, NOT FIXED
+### (k.2) Vacuous timezone/collision/export checks — REPLACED by real guards (2026-11-10)
 
-The selector defect, assertion-free collision placeholder and missing ICS-content/recurrence checks
-moved to `docs/TODO_UPGRADES.md` §2.5. Owner: P1W **before** affected client upgrades; known-broken
-exports remain explicitly classified until D1/D2 repair them. Historical 16/0 is not a semantic gate.
-The broader visual matrix in (k.1) and general audit in (k.3) remain separate follow-ups.
+P1W removed the conditional timezone bypass, replaced the assertion-free collision placeholder with a
+bounded real exclusion setup (date and reason), and made the download assertions read the ICS content.
+It also required real save/reload persistence and a fixed-date `DAILY COUNT 3` export, and verified
+Settings metadata plus Material date labels in both locales. The guards are now 22 E2E executions on
+both server projects, and the nine deliberate negative controls show they die when the behaviour they
+describe is broken. Historical 16/0 is no longer cited as a gate. The broader visual matrix in (k.1)
+and the audit in (k.3) remain separate follow-ups.
 
 ### (k.3) General test-coverage and dead-code audit remains parked
 
@@ -1096,9 +1153,10 @@ The broader visual matrix in (k.1) and general audit in (k.3) remain separate fo
 
 ## (l) MACOS PACKAGING ACCEPTANCE — DEFERRED, RUNS INTERACTIVELY WITH THE USER
 
-> **Relocated 2026-11-11** from `docs/TODO_UPGRADES.md` §4, where it was task **M1**, at the user's
-> request to move it here and deal with it later. The identifier **M1** is kept so the B12/E1/E2/R1/R2
-> records that name it stay readable. Nothing about the task changed in the move, and no earlier
+> **Relocated 2026-11-11** from the upgrade board's §4, where it was task **M1**, at the user's
+> request to move it here and deal with it later. The board itself was retired the same day. The
+> identifier **M1** is kept so the B12/E1/E2/R1/R2 records that name it stay readable in Git history
+> and in `docs/TESTING_GUIDE.md` §4. Nothing about the task changed in the move, and no earlier
 > approval carries over to it.
 
 - **WHAT.** The macOS target of the electron manifest has never been built, installed or launched. B12
@@ -1126,3 +1184,58 @@ The broader visual matrix in (k.1) and general audit in (k.3) remain separate fo
   its limits recorded, or an explicit statement that macOS distribution stays unsupported. Do not claim
   macOS support from configuration alone, do not cross-build macOS artifacts in a Linux container, and
   do not let this task block anything else.
+
+---
+
+## (m) THE 2026-11-11 DEPENDENCY CYCLE — CLOSED, AND WHAT STAYS HELD
+
+The Angular 20 → 22 cycle ran from P0 to R2 and closed on 2026-11-11. Its task board
+(`docs/TODO_UPGRADES.md`) was retired with it; the measured gate record is in
+`docs/TESTING_GUIDE.md` §4. The closing baseline is **16/16 gates at the expected status** — units
+**2F/131P (133)** with exactly the two accepted names, Europe/Berlin **1F/23P (24)**, E2E **22/0**
+twice, lint **0E/7W** — so the suite is *not* green and must not be described as such. The two names
+are the 2032 holiday oracle in (a.2) and `CreatorComponent.saveText` under option C in (a.3).
+
+Everything else the cycle repaired is recorded in (a), (b.11), (d.1), (d.4), (j.2) and (k.2). The
+date-model boundary it established is documented in the code: `Appointment.start`/`end` stay native
+`Date`s whose **UTC fields** carry the picked wall clock, and `client/app/shared/wall-clock.ts` is the
+only converter between the wall-clock and instant views.
+
+### (m.1) Three deliberately unpulled versions
+
+- **WHAT.** At closure, 43 of the 46 root-manifest entries, both `server/` entries and the `electron/`
+  entry were at the newest published version. Three were not pulled: `electron` **45.2.3** (45.3.0
+  published the day before), `sass` **1.108.1** (1.108.2 published that morning) and `typescript`
+  **6.0.3**, whose 7.0.2 release is excluded by `@angular/build` 22.2.6's peer range
+  `typescript: ">=6.0 <6.1"`. `electron-builder` 26.18.1 sits on the `v26` dist-tag and is *ahead* of
+  `latest` (26.18.0), not behind. Node 26.13.0 is Active LTS ("Lithium") and `npm ls --all` reports
+  0 problems with no invalid peer.
+- **WHY ACCEPTED.** Each is a compatibility or evidence decision, not an oversight: an Electron bump
+  changes the shipped deb and invalidates the desktop launch/packaging measurements, a `sass` bump
+  moves the CSS the production build is pinned to byte-for-byte, and TypeScript cannot move until the
+  build peer range does. Pulling them inside a security-only refresh would have required rerunning
+  desktop and packaging evidence that refresh did not own.
+- **RISK.** Two patch-level bug-fix releases stay unapplied, and this record must not be read as
+  "everything is current". A later Electron bump has to re-measure the desktop and packaging evidence
+  rather than reuse the B12/E1/E2/I4/R2 numbers.
+- **WHAT WOULD CHANGE THE DECISION.** An authorized task per package: Electron with a rebuilt image, a
+  relaunched `app://duely` window, a re-measured deb and a re-scanned container; `sass` with a
+  byte-comparison of the production stylesheet plus the build gates; TypeScript when `@angular/build`
+  widens its peer range.
+
+### (m.2) Linux packaging scope is the deb only
+
+- **WHAT.** `electron/package.json` declares `build.linux.target: ["deb"]`. B12 measured an `arm64`
+  AppImage as part of its one-off acceptance evidence (127,595,082 B, verified by `--appimage-extract`
+  and an unpacked-tree launch, never by a FUSE mount). The user decided on 2026-11-10 that the project
+  does not need AppImage packaging, and E1a then reduced the target to the deb. macOS is recorded in
+  (l); Windows was never built, installed or launched.
+- **WHY ACCEPTED.** The deb is the artifact every measured build ships — installed, payload read back,
+  `postinst`-verified and launched — while the AppImage was never executed in its normal mounted form.
+  Shipping an artifact whose acceptance is weaker than the deb's would overstate support.
+- **RISK.** Anyone reading the older B12 output finds an AppImage that no current build produces.
+  Linux arm64 in the container images is the only measured platform; no claim about macOS or Windows
+  follows from `electron-builder` configuration.
+- **WHAT WOULD CHANGE THE DECISION.** An explicit, per-platform packaging request that rebuilds and
+  actually installs or mounts each artifact and repeats the route, locale and sandbox checks the deb
+  received.

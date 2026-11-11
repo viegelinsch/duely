@@ -11,9 +11,9 @@ migration-closure snapshot, **P0 baseline run**, **isolated P1 candidate results
 **I1 integrated regression baseline**, **B0 clean-install/runtime verification**, **A1 reviewed
 bounded security refresh**, the **A5/D1/D4 batch plus I3 integration**, the **D2 date-library
 migration**, the **B12 desktop protocol/launch/packaging acceptance**, the **I4 combined-snapshot
-rebuild**, the **E1 risk-focused review and runtime verification** and the **E2 clean reproduction and
-final audit** (§4). The separate Material migration reference has been retired; completed history
-remains in Git.
+rebuild**, the **E1 risk-focused review and runtime verification**, the **E2 clean reproduction and
+final audit** and the **R1 documentation refresh with R2 post-cycle assurance** (§4). The separate
+Material migration reference has been retired; completed history remains in Git.
 
 ---
 
@@ -222,6 +222,38 @@ touch real `dist/`. A deliberate distribution build uses
 `docker compose run --rm duely-dev npm run build:prod`; it writes both output trees (INSTALL.md).
 Inspect `git status --porcelain` and `docker ps` afterward, preserving existing user work and
 stopping only containers created for the verification. No commit is implied by running gates.
+
+### The 16-command battery and its acceptance rules
+
+Every upgrade batch ran the same battery inside its own image and recorded each child-process exit,
+not the pipeline's. The sixteen gates are, in this order: `dependency-tree` (`npm ls --all`,
+0 problems), the four `tsc` projects (G1 app, G1b server, G1c Electron, G2 spec), `e2e-types`, a
+deliberate negative control (exit 2), lint, units under `TZ=UTC`, the focused `Europe/Berlin` run,
+the development and production probe builds, the two distribution builds (`dist/server` and
+`dist/electron`), the E2E run and a repeat control E2E run. A task records the subset it actually ran,
+with exit codes, and explains every gate it skipped.
+
+The acceptance rules below survived the cycle and bind any later task:
+
+- Capture full logs and process exits before extracting names. A successful pipeline or parser must
+  not hide a failed compiler, test or audit process, and an empty capture is not success.
+- Identity is part of the baseline: stable failing names **plus** source/lock/image identity and
+  causes. A changed reporter may require a reviewed extractor.
+- Preserve `.git/duely-failing-names-baseline.txt` and write a new task-specific capture instead of
+  overwriting it. The historical hash `172d78996b50c84e38211b529d76ab0b` predates the 2032 title
+  change.
+- Allowed changes require evidence: an actually repaired scenario, an approved semantic expectation,
+  new coverage exposing existing debt, or an attributable runner/rendering change. Never drop or skip
+  red tests, retune budgets, silence warnings or widen assertions merely to match output. The
+  `saveText` option C stays separately gated (Known Limitations (a.3)).
+- Required repair regressions must be green, while separately deferred failures stay explicitly named
+  and red. Every unexplained difference stops acceptance, even if totals happen to match.
+- Compare harness noise by dependency specifier, not by unstable counts: icon messages are
+  harness-only, and CommonJS bailouts are identified by package.
+- Browser testing is mandatory for a touched UI, provider or form path. Start the server **inside
+  Docker** and exercise golden paths and edge cases with in-container Playwright or a browser
+  connection on an explicitly published unique port. If that cannot be done, say so instead of calling
+  UI changes verified. Reference baselines and screenshots must not be overwritten.
 
 ### Latest recorded closure snapshot (2026-11-09)
 
@@ -1070,6 +1102,38 @@ packages.
   keep each harness mistake beside its passing run. The finalize records 62 modified paths — the 61 it
   froze plus `INSTALL.md`, which E2 itself corrected — with nothing staged. **R1 next.**
 
+### Documentation refresh and post-cycle assurance (R1, R2) — DONE, 2026-11-11
+
+R1 refreshed the README and deliberately added no version table; the regenerated dependency graph was
+byte-identical to the committed `docs/dep-graph.mmd` (`bfd0cf99…`), so the manifests had not moved.
+
+R2 followed on the user's request to re-check actuality, compatibility and security. It stayed
+read-only until the verdict was accepted, then applied as a **lockfile-only** change —
+`npm audit fix --package-lock-only` with `package.json` byte-identical and exactly ten transitive patch
+bumps (`baseline-browser-mapping`, `browserslist`, `caniuse-lite`, `electron-to-chromium`, `fast-uri`,
+`immutable`, `js-yaml`, `moment`, `node-releases`, `update-browserslist-db`), no additions, removals or
+tree pruning.
+
+- **Audits:** full tree **24 → 18** (0C/4H/17M/3L → 0C/**0**H/15M/3L); production `--omit=dev`
+  **4 → 3** (0C/0H/1M/3L → 0C/0H/**0**M/3L); the deployed server image likewise **4 → 3**. The
+  remaining moderates are the dev-only ESLint/typescript-eslint/electron-builder chain, all offering
+  only a downgrade; the three lows are the `date-holidays` chain of Known Limitations (d.5).
+- **Gates 16/16 at E2's exact status:** units **2F/131P (133)**, Europe/Berlin **1F/23P (24)**, E2E
+  **22/0** twice, lint **0E/7W**, every type, build and dependency gate 0, negative control 2.
+- **No CSS risk taken:** the production stylesheet is byte-identical (`styles-TLKQQXXL.css`,
+  `0c637f9d…`), and the only semantic bundle change is `moment` 2.31.0 inside the ICS chunk
+  (61,305 → 61,211 B plus one licence line); the rest is esbuild symbol-suffix reallocation. A
+  consecutive rebuild is byte-identical, and `dist/electron`/`dist/server` each grew 2,164 B.
+- **Packaging and runtime:** `duely_2.0.0_arm64.deb` **97,279,596 B**, payload read back and verified;
+  the rebuilt production container answered **HTTP 200**; production layers 1–5 are byte-identical to
+  E2's image, so no container re-scan was due (Known Limitations (d.6)).
+- **Left deliberately:** `electron` 45.3.0, `sass` 1.108.2, TypeScript 6.0.3 and the downgrade-only
+  advisories — see Known Limitations (m).
+- **Evidence:** `.git/duely-batch-20261110/dependency-refresh/` (`manifests-before.sha256`,
+  `manifests-after-fix.sha256`, `lock.diff`, `gates.sh` with `gate-codes.txt` and the 16 gate logs,
+  `css-before.txt`, the `dist-*` listings, `audit-fix.json`, the three `audit-after-*.json` files,
+  `outdated-after.json` and `deb.json`).
+
 ---
 
 ## 5. The baseline contract (must not move without authorization)
@@ -1112,6 +1176,13 @@ is retained **as historical evidence**, not the current main-tree gate target:
 > **1F/23P (24)**, and E2E is **22 expected / 0 unexpected** (0 skipped/flaky) with an identical control
 > run. Use the §4 D2 table as the live target.
 
+> **Final target after the cycle (E1a, reproduced by R2, 2026-11-11).** E1a added one alias-list spec,
+> so the suite ends at **2 failed / 131 passed (133)** over **2 failed / 16 passed files (18)** with the
+> same two names — the 2032 holiday oracle (Known Limitations (a.2)) and `CreatorComponent.saveText`
+> under option C ((a.3)) — focused Europe/Berlin **1F/23P (24)**, E2E **22/0** twice, lint **0E/7W**.
+> R2 reproduced every count unchanged after a lockfile-only refresh. This is the live target; the
+> notes above are its history.
+
 | Metric | Value |
 |---|---|
 | Tests | **24 failed / 49 passed (73 executing)** |
@@ -1131,6 +1202,56 @@ user-facing (Known Limitations (b.2)); browser registration uses bundled literal
 The deferred failing-name partition must **neither improve nor regress** without the user-initiated
 test/date or coverage phase. Do not silently fix, drop, skip or rebaseline a deferred test. If the
 partition changes unexpectedly, stop and investigate while preserving unrelated working-tree edits.
+
+### The date-library timezone and export oracle (D2, 2026-11-11)
+
+D2 selected **`date-fns` 4.4.0 + `@date-fns/tz` 1.5.0** (user decision, superseding the earlier Luxon
+choice). Neither that choice nor ical-generator's optional peer is proof of automatic VTIMEZONE
+generation or of future timezone laws. `@date-fns/tz` reads Intl/runtime timezone data: do not claim a
+bundled tz payload, a fixed gzip saving, exhaustive IANA correctness, or that the rejected alternatives
+must be re-evaluated before proceeding.
+
+The oracle below survived from the retired 2026 migration record, where full Moment data and an
+independent `Intl.DateTimeFormat` agreed on **Europe/Berlin +120 minutes** at every instant. Test old
+and new libraries in **separate processes**: Moment builds share one zone registry, so loading two in
+a single process silently overwrites one and makes both report identical offsets. Cross-check
+`timeZoneName: 'shortOffset'` with the selected runtime.
+
+| UTC instant | Expected offset (minutes) |
+|---|---|
+| `1980-06-15T12:00:00Z` | 120 |
+| `2020-07-15T12:00:00Z` | 120 |
+| `2026-07-15T12:00:00Z` | 120 |
+| `2030-07-15T12:00:00Z` | 120 |
+| `2031-03-30T01:30:00Z` | 120 |
+| `2031-06-01T12:00:00Z` | 120 |
+| `2031-07-15T12:00:00Z` | 120 |
+| `2035-06-15T12:00:00Z` | 120 |
+| `2035-07-15T12:00:00Z` | 120 |
+| `2035-10-28T00:30:00Z` | 120 |
+| `2080-07-15T12:00:00Z` | 120 |
+| `2126-07-15T12:00:00Z` | 120 |
+| `2200-06-15T12:00:00Z` | 120 |
+
+Extend it with winter +60, both sides of the spring and autumn transitions, DST gaps and folds,
+negative-offset zones and a non-hour-offset zone, saved user-selected zones and aliases, `UTC`,
+leap/month/year boundaries, a date-only UNTIL and a 100-year projection. Test offsets at far dates
+without generating enormous recurrence lists, and distinguish instant-preserving conversion from
+wall-time/date-preserving arithmetic. Investigate changed runtime timezone legislation instead of
+blindly updating fixtures. Agreement with `Intl` is not wholly independent of the library, because
+`@date-fns/tz` wraps it — the isolated Moment comparison, known transition expectations and semantic
+ICS/consumer checks remain the additional evidence.
+
+D2 measured it in both images: 25 instants × 6 zones = **150 offsets, 0 mismatches**; both sides of the
+2031/2035 transitions; `America/New_York`, `Asia/Kolkata`, `Australia/Lord_Howe` (+10:30) and `UTC`;
+the aliases `Asia/Calcutta`, `US/Eastern` and `Etc/UTC` resolving to canonical offsets; the default
+UNTIL emitted as the date-only `2126-11-10`; leap-day projections `2025-02-28` (+1 y) and `2124-02-29`
+(+100 y); and the four alarm offsets identical between libraries. Two deliberate non-equalities are
+recorded with reasons (DST-gap end, old local formatting).
+
+The declined trimmed Moment build stays declined (Known Limitations (h.3)); adding an UNTIL cap to make
+it viable would be an unauthorised behaviour change. Luxon, dayjs and Temporal remain historical
+alternatives, not current standards-status claims.
 
 ---
 
@@ -1487,15 +1608,17 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
 
 ## 10. Related documents
 
-- [Known Limitations](2026_KNOWN_LIMITATIONS.md) — current diagnosis/disposition of deferred test/date
-  work (a), harness-only icon warnings (b.2), other accepted/deferred work (b)–(j), and verification gaps (k).
+- [Known Limitations](2026_KNOWN_LIMITATIONS.md) — diagnosis/disposition of the repaired test/date
+  family (a) and its two accepted red tests, harness-only icon warnings (b.2), other accepted/deferred
+  work (b)–(l), verification gaps (k) and what the 2026-11-11 cycle deliberately left held (m).
 - [README](../README.md) — current standalone, layout/theme/icon and Settings development guidance.
 - [Installation](../INSTALL.md) — Docker setup, build-output/runtime paths and licence artefact distribution.
-- [Upgrade task board](TODO_UPGRADES.md) — P0/P1/I1/B0 results, the integrated I2 + A4 + A2 baseline,
-  the A5 + D1 + D4 checkpoint, downstream contracts and the timezone oracle.
 - [AI task board](AI_TASKBOARD.md) — the open ledger for future tasks, their completion records and the
   standing execution contract.
 
-The completed migration task board and local STATE handoff were consolidated and retired on
-2026-11-09; their remaining issues live in Known Limitations. Tracked implementation history remains
-in Git, but the git-excluded session records were never tracked and cannot be recovered from Git.
+The dependency-upgrade cycle and its `docs/TODO_UPGRADES.md` board closed and were retired on
+2026-11-11; its plan and per-task records remain in Git history, its gate results are preserved in §4
+of this guide, and the items it deliberately left held are recorded in Known Limitations (m). The
+completed migration task board and local STATE handoff were consolidated and retired on 2026-11-09;
+their remaining issues live in Known Limitations. Tracked implementation history remains in Git, but
+the git-excluded session records were never tracked and cannot be recovered from Git.

@@ -1,13 +1,14 @@
 # Duely — AI Task Board
 
 **Created:** 2026-11-11 · **Branch:** `dev-v2` · **State:** no open task.
-**Predecessor:** [the upgrade task board](TODO_UPGRADES.md), closed with every numbered task DONE
-and its single deferred item moved to [Known Limitations](2026_KNOWN_LIMITATIONS.md) (l).
+**Predecessor:** the upgrade task board (`docs/TODO_UPGRADES.md`), retired on 2026-11-11 after every
+numbered task closed and its single deferred item moved to
+[Known Limitations](2026_KNOWN_LIMITATIONS.md) (l).
 
 This file is the ledger for future work. A task exists once it is written here, and writing it does
-**not** authorize it. The upgrade cycle's completion records stay in `TODO_UPGRADES.md`, which is
-history from here on; this board carries that document's execution contract and evidence habits
-forward and points at its gate recipe instead of duplicating it.
+**not** authorize it. The upgrade cycle's plan and per-task records remain in Git history and its
+measured gate results in [`docs/TESTING_GUIDE.md`](TESTING_GUIDE.md) §4; this board carries that
+document's execution contract and evidence habits forward instead of duplicating them.
 
 ---
 
@@ -51,9 +52,10 @@ running. `DONE` — verified and recorded. `BLOCKED` — waiting on something ou
 `DEFERRED` — moved to Known Limitations, whose section the ledger names. `CANCELLED` — dropped by
 the user.
 
-**Deferred elsewhere.** macOS packaging acceptance (M1) stays in Known Limitations (l), and the
-accepted or upstream-owned items of (a)–(k) stay there too. They become tasks here only when the
-user asks for one, at which point the ledger row names the section it came from.
+**Deferred elsewhere.** macOS packaging acceptance (M1) stays in Known Limitations (l), the accepted
+or upstream-owned items of (a)–(k) stay there too, and the version holds plus the deb-only packaging
+scope from the closed cycle are in (m). They become tasks here only when the user asks for one, at
+which point the ledger row names the section it came from.
 
 ---
 
@@ -86,13 +88,13 @@ committed. Records are written into this file, not into a separate handoff docum
 
 ## 4. Gates and evidence
 
-[`docs/TODO_UPGRADES.md`](TODO_UPGRADES.md) §5 holds the gate recipe the upgrade cycle used: the
-dependency tree, the four `tsc` projects, `e2e-types`, a deliberate negative control, lint, the unit
-runs, focused runs, probe and distribution builds, and E2E with a repeat control.
-[`docs/TESTING_GUIDE.md`](TESTING_GUIDE.md) §2 and §3 hold the container commands and the test
-layout. A task starts from that battery, records the subset it actually ran with exit codes, and
-explains every gate it skipped. Maintained results go to the Testing Guide; this board links to them
-rather than duplicating them.
+[`docs/TESTING_GUIDE.md`](TESTING_GUIDE.md) §4 holds the battery a task starts from: the dependency
+tree, the four `tsc` projects, `e2e-types`, a deliberate negative control, lint, the unit runs, the
+focused runs, the probe and distribution builds, and E2E with a repeat control — with the
+acceptance rules that govern changes to the baseline. §2 and §3 of the same guide hold the container
+commands and the test layout. A task records the subset it actually ran with exit codes, and explains
+every gate it skipped. Maintained results go to the Testing Guide; this board links to them rather
+than duplicating them.
 
 ---
 
@@ -103,6 +105,6 @@ rather than duplicating them.
 | What work is open, and what closed it | this file |
 | Why an accepted defect was not fixed | `docs/2026_KNOWN_LIMITATIONS.md` |
 | How to run a gate or a test suite | `docs/TESTING_GUIDE.md` |
-| What the dependency cycle changed | `docs/TODO_UPGRADES.md` (closed record) |
+| What the dependency cycle changed | `docs/TESTING_GUIDE.md` §4; Known Limitations (m) |
 | How to build, install and package | `README.md`, `INSTALL.md` |
 | Declared and resolved versions | `package.json`, `package-lock.json` |

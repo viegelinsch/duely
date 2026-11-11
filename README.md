@@ -206,8 +206,8 @@ This repository has no contribution guide. The working rules are the [Testing Gu
 the standing constraints in [the AI task board](docs/AI_TASKBOARD.md), which is also the ledger for
 future tasks. Git history and tags preserve completed migration records; open or accepted items live
 in [Known Limitations](docs/2026_KNOWN_LIMITATIONS.md), not a separate migration plan/reference. The
-dependency-upgrade cycle, closed on 2026-11-11, stays recorded in
-[the upgrade task board](docs/TODO_UPGRADES.md).
+dependency-upgrade cycle closed on 2026-11-11; its gate results are preserved in the Testing Guide §4
+and what it deliberately left held is recorded in Known Limitations (m).
 
 ## Versioning
 

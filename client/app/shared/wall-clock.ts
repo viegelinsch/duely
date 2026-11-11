@@ -6,8 +6,8 @@ import { tz } from '@date-fns/tz';
  * the collision patterns.
  *
  * Duely keeps a wall clock, not an instant: `Appointment.start`/`end` are native
- * `Date`s whose **UTC fields** carry the date and time the user picked (the I3
- * decision recorded in TODO_UPGRADES.md). A native instant still had to be
+ * `Date`s whose **UTC fields** carry the date and time the user picked (the
+ * model boundary adopted in the I3/D2 work). A native instant still had to be
  * chosen for storage and for ical-generator, and this module is the single place
  * that converts between the two views.
  *
