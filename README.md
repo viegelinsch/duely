@@ -203,9 +203,10 @@ the production container copies all of `dist/server` and keeps them.
 
 This repository has no contribution guide. The working rules are the [Testing Guide](docs/TESTING_GUIDE.md)
 (§2 keeps every install, build, lint, type-check and test command in Docker; §3 the test layout) and
-the upgrade task board's standing constraints. Git history and tags preserve completed migration
-records; open or accepted items live in [Known Limitations](docs/2026_KNOWN_LIMITATIONS.md), not a
-separate migration plan/reference. Dependency-upgrade work is tracked in
+the standing constraints in [the AI task board](docs/AI_TASKBOARD.md), which is also the ledger for
+future tasks. Git history and tags preserve completed migration records; open or accepted items live
+in [Known Limitations](docs/2026_KNOWN_LIMITATIONS.md), not a separate migration plan/reference. The
+dependency-upgrade cycle, closed on 2026-11-11, stays recorded in
 [the upgrade task board](docs/TODO_UPGRADES.md).
 
 ## Versioning

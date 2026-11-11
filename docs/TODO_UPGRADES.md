@@ -43,6 +43,12 @@ installs, downgrades or misleading green gates.
 This replaces the former upgrade task board. The Material migration is complete. Preparing this
 plan, including its research agents, does **not** authorize dependency changes, commits or pushes.
 
+**Closed 2026-11-11:** every task in this plan is DONE and its one deferred item (M1) lives in Known
+Limitations (l). New work is tracked in [`docs/AI_TASKBOARD.md`](AI_TASKBOARD.md), which carries this
+document's execution contract and evidence rules forward. This file remains the measured record of the
+cycle: its §1 contract, §5 gate recipe and task records are still the reference, but no new task is
+added here.
+
 ---
 
 ## 1. Execution contract

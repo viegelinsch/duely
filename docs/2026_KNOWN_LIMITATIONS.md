@@ -25,7 +25,8 @@ was reviewed against source at `889b3e5`. The complete 6,276-line local task boa
 `74a271d`, including its terminal Phase 13 closure and later corrections to earlier OPEN records.
 Both migration cycles are complete. Upgrade prerequisites and upgrade-owned date/export repairs now
 live in `docs/TODO_UPGRADES.md`; the stable section labels below retain relocation pointers, not
-claims of resolution. Accepted and unrelated deferred work remains here. Preparing that execution
+claims of resolution. That upgrade board closed on 2026-11-11, and new work is tracked in
+`docs/AI_TASKBOARD.md`. Accepted and unrelated deferred work remains here. Preparing that execution
 plan does not authorize its implementation.
 These documentation reviews used existing verification records and did not rerun tests or browser checks.
 

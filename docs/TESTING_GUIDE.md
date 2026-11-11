@@ -1493,6 +1493,8 @@ context (`page.clock.install()` in Playwright 1.45+), or mask the date-input reg
 - [Installation](../INSTALL.md) — Docker setup, build-output/runtime paths and licence artefact distribution.
 - [Upgrade task board](TODO_UPGRADES.md) — P0/P1/I1/B0 results, the integrated I2 + A4 + A2 baseline,
   the A5 + D1 + D4 checkpoint, downstream contracts and the timezone oracle.
+- [AI task board](AI_TASKBOARD.md) — the open ledger for future tasks, their completion records and the
+  standing execution contract.
 
 The completed migration task board and local STATE handoff were consolidated and retired on
 2026-11-09; their remaining issues live in Known Limitations. Tracked implementation history remains
